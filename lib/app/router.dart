@@ -14,6 +14,7 @@ import '../features/planner/presentation/planner_screen.dart';
 import '../features/wardrobe/domain/garment.dart';
 import '../features/wardrobe/presentation/garment_form_screen.dart';
 import '../features/wardrobe/presentation/wardrobe_screen.dart';
+import '../features/wear/presentation/wear_picker_screen.dart';
 import 'app_shell.dart';
 
 abstract final class AppRoutes {
@@ -25,6 +26,8 @@ abstract final class AppRoutes {
   static const outfits = '/conjuntos';
   static const style = '/estilo';
   static const settings = '/definicoes';
+  static const wear = '/vesti';
+  static String correctWear(String eventId) => '/vesti/$eventId';
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -70,6 +73,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/guarda-roupa/peca/:id',
         builder: (context, state) =>
             GarmentFormScreen(id: GarmentId(state.pathParameters['id']!)),
+      ),
+      GoRoute(
+        path: AppRoutes.wear,
+        builder: (context, state) => const WearPickerScreen(),
+      ),
+      GoRoute(
+        path: '/vesti/:id',
+        builder: (context, state) =>
+            WearPickerScreen(eventId: state.pathParameters['id']),
       ),
       GoRoute(
         path: AppRoutes.settings,

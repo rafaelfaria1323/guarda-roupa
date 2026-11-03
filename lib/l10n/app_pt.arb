@@ -288,5 +288,64 @@
       }
     }
   },
-  "close": "Fechar"
+  "close": "Fechar",
+  "wearTodayTitle": "Hoje",
+  "wearDay": "{date}",
+  "@wearDay": {
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "yMMMMEEEEd"
+      }
+    }
+  },
+  "wearTodayNone": "Ainda não registaste o que vestiste hoje.",
+  "wearTodayButton": "Vesti hoje",
+  "wearAnother": "Registar outro conjunto",
+  "wearCorrect": "Corrigir",
+  "wearUndo": "Desfazer",
+  "wearRecorded": "Utilização registada.",
+  "wearCorrected": "Utilização corrigida.",
+  "wearUndone": "Utilização desfeita.",
+  "wearPickTitle": "O que vestiste hoje?",
+  "wearCorrectTitle": "Corrigir utilização",
+  "wearSave": "Guardar",
+  "wearPickHint": "Só conta como utilização o que confirmares aqui. Planear não conta.",
+  "wearPickEmpty": "Ainda não há peças no guarda-roupa.",
+  "wearSelected": "{count, plural, =0{Nenhuma peça escolhida} =1{1 peça escolhida} other{{count} peças escolhidas}}",
+  "@wearSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wearDeletedGarment": "Peça eliminada",
+  "wearProblem": "{problem, select, noGarments{Escolhe pelo menos uma peça.} tooManyGarments{No máximo 30 peças por utilização.} futureDay{Não se regista um dia que ainda não chegou.} unknownGarment{Uma das peças já não existe.} other{Não foi possível guardar.}}",
+  "@wearProblem": {
+    "placeholders": {
+      "problem": {
+        "type": "String"
+      }
+    }
+  },
+  "wearNotFound": "Esta utilização já não existe.",
+  "wearSaveFailed": "Não foi possível guardar neste dispositivo.",
+  "garmentWearHistory": "Utilizações",
+  "garmentWearCount": "{count, plural, =0{Ainda não foi usada.} =1{Usada 1 vez.} other{Usada {count} vezes.}}",
+  "@garmentWearCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "garmentWearMore": "{count, plural, =1{e mais 1.} other{e mais {count}.}}",
+  "@garmentWearMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

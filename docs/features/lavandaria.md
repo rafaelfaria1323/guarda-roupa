@@ -1,6 +1,17 @@
 # Feature — Lavandaria e recomendações de cuidado
 
-Estado: necessária no MVP; thresholds iniciais são propostas editáveis.
+Estado: necessária no MVP; valores iniciais decididos em P-07 (2026-11-03), editáveis.
+
+## Valores decididos (P-07)
+
+| Grupo | Aviso de lavagem após |
+|---|---|
+| T-shirts, tops e roupa desportiva | cada utilização |
+| Camisas e polos | 2 utilizações |
+| Camisolas, calças, ganga, saias e vestidos | 4 utilizações |
+| Casacos e calçado | sem aviso |
+
+Contam só utilizações confirmadas (“Vesti hoje”) desde a última limpeza registada. O aviso é informativo: nunca muda a disponibilidade sozinho.
 
 ## Dois conceitos separados
 

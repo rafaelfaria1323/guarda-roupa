@@ -7,6 +7,8 @@ import 'package:powersync/powersync.dart';
 ///   depois de as operações serem aceites.
 /// - `garment_operations`: insert-only. Cada linha é uma operação de domínio
 ///   (ADR-008) enviada para `apply_garment_operation`. O `id` é o `op_id`.
+/// - `wear_events` / `wear_operations`: o mesmo par para as utilizações
+///   reais (`apply_wear_operation`); o `event_id` identifica a utilização.
 /// - `sync_conflicts`: local-only. Resultados `merged`/`conflict`/`rejected`
 ///   que o utilizador tem de ver.
 const localSchema = Schema([
@@ -35,6 +37,21 @@ const localSchema = Schema([
   ]),
   Table.insertOnly('garment_operations', [
     Column.text('garment_id'),
+    Column.text('kind'),
+    Column.text('data'),
+    Column.text('created_at'),
+  ]),
+  Table('wear_events', [
+    Column.text('owner_id'),
+    Column.text('worn_on'),
+    Column.text('garment_ids'),
+    Column.text('plan_entry_id'),
+    Column.text('created_at'),
+    Column.text('updated_at'),
+    Column.text('voided_at'),
+  ]),
+  Table.insertOnly('wear_operations', [
+    Column.text('event_id'),
     Column.text('kind'),
     Column.text('data'),
     Column.text('created_at'),

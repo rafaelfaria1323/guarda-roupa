@@ -14,6 +14,10 @@ import '../../wardrobe/domain/garment_photo.dart';
 abstract interface class OperationUploader {
   Future<Map<String, Object?>> apply(Map<String, Object?> operation);
 
+  /// Envia uma operação de utilização (`apply_wear_operation`). Mesmas
+  /// regras de erro que [apply].
+  Future<Map<String, Object?>> applyWear(Map<String, Object?> operation);
+
   /// Envia um ficheiro de foto. Idempotente; lança em falha de rede.
   Future<void> uploadPhotoFile(
     String photoId,
@@ -30,6 +34,9 @@ abstract interface class OperationUploader {
 ///
 /// - `garment_operations` (PUT): enviadas ao servidor. Resultados diferentes
 ///   de `applied` ficam em `sync_conflicts` para o utilizador ver.
+/// - `wear_operations` (PUT): enviadas a `apply_wear_operation`, com as
+///   mesmas regras; em `sync_conflicts`, `garment_id` guarda o id da
+///   utilização.
 /// - Escritas em `garments`: são só a visão otimista local; o servidor não
 ///   aceita escrita direta, por isso não se enviam.
 /// - `attach_photo`: os ficheiros vão primeiro; o servidor só liga a foto se
@@ -48,28 +55,42 @@ final class OperationUploadQueue {
 
       final outcomes = <(CrudEntry, Map<String, Object?>)>[];
       for (final entry in transaction.crud) {
-        if (entry.table != 'garment_operations' || entry.op != UpdateType.put) {
-          continue;
-        }
+        if (entry.op != UpdateType.put) continue;
         final data = entry.opData ?? const {};
         final kind = data['kind'];
         final payload = jsonDecode(data['data'] as String? ?? '{}');
-        if (kind == 'attach_photo') await _uploadFiles(db, payload);
-        final result = await _uploader.apply({
-          'op_id': entry.id,
-          'garment_id': data['garment_id'],
-          'kind': kind,
-          'data': payload,
-        });
-        outcomes.add((entry, result));
+        switch (entry.table) {
+          case 'garment_operations':
+            if (kind == 'attach_photo') await _uploadFiles(db, payload);
+            outcomes.add((
+              entry,
+              await _uploader.apply({
+                'op_id': entry.id,
+                'garment_id': data['garment_id'],
+                'kind': kind,
+                'data': payload,
+              }),
+            ));
+          case 'wear_operations':
+            outcomes.add((
+              entry,
+              await _uploader.applyWear({
+                'op_id': entry.id,
+                'event_id': data['event_id'],
+                'kind': kind,
+                'data': payload,
+              }),
+            ));
+        }
       }
 
       final detached = [
         for (final (entry, _) in outcomes)
-          ..._removedPhotos(
-            entry.opData?['kind'],
-            jsonDecode(entry.opData?['data'] as String? ?? '{}'),
-          ),
+          if (entry.table == 'garment_operations')
+            ..._removedPhotos(
+              entry.opData?['kind'],
+              jsonDecode(entry.opData?['data'] as String? ?? '{}'),
+            ),
       ];
       for (final photoId in detached) {
         try {
@@ -91,7 +112,7 @@ final class OperationUploadQueue {
             'reason, details, created_at) VALUES (uuid(), ?, ?, ?, ?, ?, ?, ?)',
             [
               entry.id,
-              entry.opData?['garment_id'],
+              entry.opData?['garment_id'] ?? entry.opData?['event_id'],
               entry.opData?['kind'],
               outcome is String ? outcome : 'rejected',
               result['reason'],
