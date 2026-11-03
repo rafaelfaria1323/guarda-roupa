@@ -2,6 +2,23 @@
 
 Estado: necessária na base utilizável; recuperação sobre conta sincronizada existente exige protocolo aprovado.
 
+Implementado (2026-11-03): exportação e verificação do formato v1.
+
+- **Conteúdo:** `manifest.json` (formato, versão, `exported_at`, contagens, `pending_operations` e a lista de ficheiros com caminho, MIME, tamanho e SHA-256), `data/garments.json` com as colunas do servidor, sem `owner_id`, e `photos/{id}/main.jpg|thumb.jpg`.
+- **Snapshot:** é lido numa transação de leitura. As peças eliminadas ficam de fora.
+- **Fotografias:** as que faltam neste dispositivo são descarregadas e verificadas pelo hash. Se faltar alguma, a exportação falha.
+- **Verificação antes de gravar:** o ZIP é relido pelo mesmo leitor que a recuperação vai usar.
+- **O leitor rejeita o ficheiro inteiro** quando:
+  - não é um ZIP desta app;
+  - é de uma versão mais recente;
+  - tem caminhos fora das pastas esperadas (`..`), ficheiros não declarados, tamanhos ou hashes errados, ou fotos em falta;
+  - tem peças inválidas;
+  - excede os limites de número e tamanho de ficheiros.
+- **Gravação:** usa o "Guardar como" do sistema (`file_saver`), que no Android grava fora da pasta privada (SAF). Na Web, a mensagem diz que a transferência começou, não que o ficheiro ficou guardado.
+- **Memória:** o ZIP é construído todo em memória, o que é suficiente para algumas centenas de peças com até 5 fotos cada.
+
+Por fazer: aplicar a recuperação num destino vazio, com escolha do ficheiro e preview.
+
 ## Objetivo
 
 Permitir recuperar dados e fotografias sem depender de um browser, dispositivo ou free tier específico.

@@ -20,6 +20,8 @@ Sincronização não é backup: uma eliminação também se pode propagar. A có
 
 Pré-requisito bloqueante: o exportador já implementa snapshot consistente, dados versionados e imagens, conforme a especificação.
 
+Implementado (2026-11-03): **Definições > Dados e backup > Exportar backup**. Hoje o âmbito são as peças (incluindo arquivadas) e as suas fotografias; conjuntos, planos e histórico entram quando existirem. Fotos que não estejam neste dispositivo são descarregadas da cloud; se alguma faltar, a exportação falha com a contagem e não grava nada.
+
 1. Abrir a app e consultar o estado de sync e a data da última atualização.
 2. Se houver rede, permitir que a sincronização termine quando for seguro. Não descartar operações locais para conseguir um indicador verde.
 3. Se só existir acesso offline, permitir exportação apenas quando todos os assets necessários estão locais; o manifest deve identificar o corte e as pendências.
