@@ -1,0 +1,21 @@
+{
+  "@@locale": "pt",
+  "appTitle": "Guarda-roupa",
+  "navPlanner": "Planeador",
+  "navWardrobe": "Guarda-roupa",
+  "navOutfits": "Conjuntos",
+  "navStyle": "Estilo",
+  "settings": "Definições",
+  "plannerEmpty": "Ainda não há planeamento.",
+  "plannerEmptyHint": "O planeamento diário e semanal chega nos incrementos 5 e 6.",
+  "wardrobeEmpty": "Ainda não tens peças.",
+  "wardrobeEmptyHint": "Adicionar peças com fotografia chega no incremento 1.",
+  "outfitsEmpty": "Ainda não há conjuntos guardados.",
+  "outfitsEmptyHint": "Guardar e classificar conjuntos chega no incremento 4.",
+  "styleEmpty": "Ainda não há inspirações.",
+  "styleEmptyHint": "Referências e preferências de estilo chegam no incremento 4.",
+  "settingsAccount": "Conta e sincronização",
+  "settingsAccountHint": "Login com Google e sincronização entre dispositivos chegam no incremento 1.",
+  "settingsBackup": "Dados e backup",
+  "settingsBackupHint": "Exportação e recuperação chegam no incremento 2."
+}

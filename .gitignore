@@ -12,3 +12,6 @@ build/
 .env.*
 !.env.example
 .DS_Store
+
+# Gerado por flutter gen-l10n
+lib/l10n/app_localizations*.dart
