@@ -6,6 +6,7 @@ Implementado (2026-11-03): exportação e verificação do formato v2 (lê tamb�
 
 - **Conteúdo:** `manifest.json` (formato, versão, `exported_at`, contagens, `pending_operations` e a lista de ficheiros com caminho, MIME, tamanho e SHA-256), `data/garments.json` com as colunas do servidor, sem `owner_id`, `data/history.json` (desde a v2) e `photos/{id}/main.jpg|thumb.jpg`.
 - **Histórico (v2):** utilizações (“Vesti hoje”) e limpezas ativas — as desfeitas ficam de fora — e os valores de lavagem/rotatividade escolhidos por categoria e por peça. Só entra o que refere peças exportadas: uma utilização com uma peça entretanto eliminada fica só com as restantes. O plano (`plan_entry_id`) não entra. Um backup v1 continua a ser lido (sem histórico); um v2 sem `data/history.json`, ou com histórico que refira peças que não estão no ficheiro, datas inválidas ou valores fora dos limites, é rejeitado por inteiro.
+- **Ainda não incluído:** conjuntos guardados (entram no próximo formato).
 - **Snapshot:** é lido numa transação de leitura. As peças eliminadas ficam de fora.
 - **Fotografias:** as que faltam neste dispositivo são descarregadas e verificadas pelo hash. Se faltar alguma, a exportação falha.
 - **Verificação antes de gravar:** o ZIP é relido pelo mesmo leitor que a recuperação vai usar.

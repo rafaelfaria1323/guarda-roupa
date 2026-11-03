@@ -29,7 +29,7 @@ void main() {
     );
 
     await tester.tap(find.byIcon(Icons.style_outlined));
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(find.text('Ainda não há conjuntos guardados.'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.auto_awesome_outlined));

@@ -3,9 +3,9 @@
 # Cada utilizador recebe só as suas peças. As peças eliminadas (tombstone,
 # deleted_at preenchido) saem do stream e são removidas dos dispositivos.
 # O PowerSync replica sem RLS; o filtro por auth.user_id() é a autorização
-# do lado da sincronização. As escritas passam por apply_garment_operation
-# e apply_wear_operation. Utilizações e limpezas desfeitas (voided_at) saem
-# do stream.
+# do lado da sincronização. As escritas passam por apply_garment_operation,
+# apply_wear_operation e apply_outfit_operation. Utilizações e limpezas
+# desfeitas (voided_at) e conjuntos eliminados (deleted_at) saem do stream.
 config:
   edition: 3
 
@@ -22,3 +22,6 @@ streams:
   user_care_policies:
     auto_subscribe: true
     query: SELECT * FROM care_policies WHERE owner_id = auth.user_id()
+  user_outfits:
+    auto_subscribe: true
+    query: SELECT * FROM outfits WHERE owner_id = auth.user_id() AND deleted_at IS NULL
