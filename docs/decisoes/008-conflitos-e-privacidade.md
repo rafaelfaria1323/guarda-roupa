@@ -1,6 +1,6 @@
 # ADR-008 — Conflitos, sessões e privacidade (P-04)
 
-Estado: **Proposto** (2026-11-03). Aguarda aprovação do utilizador; só depois P-04 passa a "Decidido".
+Estado: **Decidido** (2026-11-03). As três decisões abaixo foram aprovadas pelo utilizador; falta validar na POC.
 
 Pressupostos já decididos: Supabase Free, Google OAuth, apenas o proprietário (P-01, P-02, P-16) e PowerSync como primeira POC (P-03).
 
@@ -77,7 +77,7 @@ Cenários da POC mínima em [Pendências](../pendencias.md) (passos 4 a 8) e E2E
 4. Fazer logout com fotos por enviar. O logout é bloqueado, com as três opções.
 5. Entrar com uma segunda conta Google não autorizada. O acesso é negado no servidor.
 
-## Decisões pedidas ao utilizador
+## Decisões aprovadas pelo utilizador (2026-11-03)
 
 1. Aprovar a ordem conservadora de disponibilidade (`needs_cleaning` > `washing` > `drying` > `available`).
 2. Aprovar que edições de plano com base desatualizada se tornem propostas.
