@@ -17,7 +17,23 @@ Implementado (2026-11-03): exportação e verificação do formato v1.
 - **Gravação:** usa o "Guardar como" do sistema (`file_saver`), que no Android grava fora da pasta privada (SAF). Na Web, a mensagem diz que a transferência começou, não que o ficheiro ficou guardado.
 - **Memória:** o ZIP é construído todo em memória, o que é suficiente para algumas centenas de peças com até 5 fotos cada.
 
-Por fazer: aplicar a recuperação num destino vazio, com escolha do ficheiro e preview.
+Recuperação (primeiro modo, só para destino vazio):
+
+- **Percurso:** Definições › Recuperar backup › escolher o ZIP (`file_selector`).
+- **Antes de mostrar o preview, valida o ficheiro** com o leitor acima.
+- **Valida também o destino:**
+  - a conta não pode ter peças;
+  - com cloud, a primeira sincronização tem de ter terminado, porque antes disso não se sabe se a conta está vazia.
+- **Preview:** data, contagens de peças e fotografias, e as alterações que ainda não estavam sincronizadas na exportação.
+- **Aplicação:**
+  - acontece só depois de confirmar e corre numa única transação;
+  - o destino é verificado de novo dentro da transação; se entretanto deixou de estar vazio, nada é escrito.
+- **IDs novos para peças e fotografias:** nada ressuscita uma peça eliminada nem colide com IDs que o servidor já conhece, mesmo quando o backup é desta mesma conta.
+  - Mantém a data de criação original.
+  - O estado (disponibilidade, arquivo) e as fotografias entram como operações normais: `create`, `set_availability`, `attach_photo`, `archive`. A fila envia os ficheiros antes de ligar as fotos.
+- **Sem replay de histórico:** ainda não há utilizações nem eventos para recuperar.
+
+Bloqueado até P-11: recuperar por cima de uma conta com dados (juntar ou substituir).
 
 ## Objetivo
 

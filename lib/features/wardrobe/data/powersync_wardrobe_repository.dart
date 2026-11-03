@@ -62,38 +62,7 @@ final class PowerSyncWardrobeRepository implements WardrobeRepository {
     final garment = (created as Ok<Garment, List<DraftProblem>>).value;
 
     return _guard(() async {
-      await _db.writeTransaction((tx) async {
-        final attributes = GarmentRow.attributeColumns(garment.attributes);
-        await tx.execute(
-          'INSERT INTO garments (id, owner_id, category, name, brand, notes, '
-          'colors, availability, archived_at, created_at, updated_at, version, '
-          '${attributes.keys.join(', ')}) '
-          'VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, 0'
-          '${', ?' * attributes.length})',
-          [
-            garment.id.value,
-            _ownerId,
-            garment.category.id,
-            garment.name,
-            garment.brand,
-            garment.notes,
-            GarmentRow.encodeColors(garment.colors),
-            garment.availability.id,
-            GarmentRow.iso(garment.createdAt),
-            GarmentRow.iso(garment.updatedAt),
-            ...attributes.values,
-          ],
-        );
-        await _recordOperation(tx, garment.id, 'create', {
-          'category': garment.category.id,
-          'name': garment.name,
-          'brand': garment.brand,
-          'notes': garment.notes,
-          'colors': GarmentRow.colorsJson(garment.colors),
-          ...garment.attributes.toColumns(),
-          'created_at': GarmentRow.iso(garment.createdAt),
-        });
-      });
+      await _db.writeTransaction((tx) => _insert(tx, garment));
       return Ok(garment);
     });
   }
@@ -144,6 +113,119 @@ final class PowerSyncWardrobeRepository implements WardrobeRepository {
     );
     await _recordOperation(tx, id, 'edit', {'changes': changes});
     return Ok(next);
+  });
+
+  /// Insere uma peça nova (sem fotos nem estado) e regista o `create`.
+  Future<void> _insert(SqliteWriteContext tx, Garment garment) async {
+    final attributes = GarmentRow.attributeColumns(garment.attributes);
+    await tx.execute(
+      'INSERT INTO garments (id, owner_id, category, name, brand, notes, '
+      'colors, availability, archived_at, created_at, updated_at, version, '
+      '${attributes.keys.join(', ')}) '
+      'VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, 0'
+      '${', ?' * attributes.length})',
+      [
+        garment.id.value,
+        _ownerId,
+        garment.category.id,
+        garment.name,
+        garment.brand,
+        garment.notes,
+        GarmentRow.encodeColors(garment.colors),
+        garment.availability.id,
+        GarmentRow.iso(garment.createdAt),
+        GarmentRow.iso(garment.updatedAt),
+        ...attributes.values,
+      ],
+    );
+    await _recordOperation(tx, garment.id, 'create', {
+      'category': garment.category.id,
+      'name': garment.name,
+      'brand': garment.brand,
+      'notes': garment.notes,
+      'colors': GarmentRow.colorsJson(garment.colors),
+      ...garment.attributes.toColumns(),
+      'created_at': GarmentRow.iso(garment.createdAt),
+    });
+  }
+
+  /// Recuperação de backup: todas as peças numa só transação, e só se não
+  /// houver nenhuma peça nesta conta (destino vazio). Devolve `false` sem
+  /// escrever nada se houver.
+  ///
+  /// IDs novos para peças e fotos: um backup não ressuscita peças eliminadas
+  /// nem colide com o que o servidor já conhece. Para a cloud são operações
+  /// normais (create, estado, arquivo e fotos), enviadas pela fila.
+  Future<bool> importGarments(
+    List<Garment> garments,
+    Map<(String, PhotoVariant), Uint8List> photoFiles,
+  ) => _db.writeTransaction((tx) async {
+    final existing = await tx.get(
+      'SELECT count(*) AS n FROM garments WHERE deleted_at IS NULL',
+    );
+    if (existing['n'] != 0) return false;
+
+    for (final source in garments) {
+      final now = DateTime.now();
+      var garment = Garment(
+        id: GarmentId(_factory.newId()),
+        category: source.category,
+        name: source.name,
+        brand: source.brand,
+        notes: source.notes,
+        colors: source.colors,
+        attributes: source.attributes,
+        availability: Availability.available,
+        createdAt: source.createdAt,
+        updatedAt: now,
+      );
+      await _insert(tx, garment);
+
+      if (source.availability != Availability.available) {
+        garment = _factory.withAvailability(garment, source.availability);
+        await tx.execute('UPDATE garments SET availability = ? WHERE id = ?', [
+          source.availability.id,
+          garment.id.value,
+        ]);
+        await _recordOperation(tx, garment.id, 'set_availability', {
+          'from': Availability.available.id,
+          'to': source.availability.id,
+        });
+      }
+
+      for (final photo in source.photos) {
+        final added = GarmentPhoto(
+          id: _factory.newId(),
+          width: photo.width,
+          height: photo.height,
+          bytes: photo.bytes,
+          thumbBytes: photo.thumbBytes,
+          sha256: photo.sha256,
+        );
+        for (final variant in PhotoVariant.values) {
+          final bytes = photoFiles[(photo.id, variant)];
+          if (bytes == null) throw StateError('Foto em falta: ${photo.id}');
+          await PhotoFiles.put(tx, added.id, variant, bytes);
+        }
+        garment = _factory.withPhotos(garment, [...garment.photos, added]);
+        await _writePhotos(tx, garment);
+        await _recordOperation(tx, garment.id, 'attach_photo', {
+          'photo': GarmentRow.photoJson(added),
+        });
+      }
+
+      if (source.isArchived) {
+        garment = _factory.archive(garment);
+        await tx.execute('UPDATE garments SET archived_at = ? WHERE id = ?', [
+          GarmentRow.iso(garment.archivedAt),
+          garment.id.value,
+        ]);
+        await _recordOperation(tx, garment.id, 'archive', {
+          'archived_at': GarmentRow.iso(garment.archivedAt),
+        });
+      }
+    }
+    return true;
   });
 
   /// Uma alteração por atributo diferente, com o valor de base para o

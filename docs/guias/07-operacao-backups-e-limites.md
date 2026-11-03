@@ -58,6 +58,8 @@ Substituir pelo caminho real. Este hash ajuda a comparar cópias, mas não verif
 
 Pré-requisito: importador implementado e modo de recuperação aprovado. Até P-11 estar fechada, não fazer merge/substituição sobre uma conta cloud com dados existentes.
 
+Implementado (2026-11-03): **Definições > Dados e backup > Recuperar backup**, só para uma conta sem peças e, com cloud, depois da primeira sincronização. A app recusa contas com peças e mostra o motivo.
+
 1. Manter a instalação/conta original intacta e o backup guardado.
 2. Preparar um destino de experiência vazio, autenticado e autorizado para aquele modo de recuperação.
 3. Confirmar isolamento e regras de ownership: o importador não pode recuperar tokens nem contornar autorização para copiar dados entre contas.
@@ -73,6 +75,8 @@ Pré-requisito: importador implementado e modo de recuperação aprovado. Até P
 13. Registar E2E-13 e eliminar apenas dados de experiência identificados, depois de validar o resultado.
 
 Uma conta nova não autoriza automaticamente importar um backup de outra identidade; esse caminho tem de estar explicitamente suportado pelo importador.
+
+No importador atual o backup não leva identidade (sem `owner_id` nem tokens). Recuperar cria peças e fotografias novas na conta com sessão iniciada, pelas mesmas operações autorizadas de quem as cria à mão; o servidor nunca copia dados entre contas. Importar o ficheiro de outra pessoa equivale a ela ter-te dado esse ficheiro.
 
 Se falhar, preservar ZIP, dados originais e diagnóstico redigido. Não testar apagando a base pessoal e “vendo se volta”.
 
