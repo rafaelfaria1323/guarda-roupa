@@ -849,6 +849,113 @@ void main() {
       },
     );
 
+    group('imagens (v5)', () {
+      test('a imagem vai com a inspiração e é verificada', () async {
+        final i = ok(
+          await inspirations.createInspiration(
+            const InspirationDraft(title: 'Com imagem'),
+          ),
+        );
+        final image = ok(await inspirations.setImage(i.id, photo(7))).image!;
+        ok(
+          await inspirations.createInspiration(
+            const InspirationDraft(title: 'Sem imagem'),
+          ),
+        );
+        final zip = await export();
+        expect(manifestOf(zip)['version'], 5);
+        final contents = ok(BackupCodec.decode(zip));
+        expect(contents.summary.photos, 0, reason: 'não são peças');
+        expect(contents.summary.inspirationImages, 1);
+        final withImage = contents.history.inspirations.firstWhere(
+          (x) => x.id == i.id,
+        );
+        expect(withImage.image, image);
+        expect(
+          contents.photoFiles[(image.id, PhotoVariant.main)],
+          photo(7).main,
+        );
+
+        final main = BackupFormat.photoPath(image.id, PhotoVariant.main);
+        expect(
+          BackupCodec.decode(downgrade(zip, 5, [main])),
+          isA<Err<BackupContents, BackupProblem>>(),
+          reason: 'imagem em falta',
+        );
+        final style = jsonIn(zip, BackupFormat.stylePath);
+        final altered = [
+          for (final x in style['inspirations']! as List)
+            {
+              ...(x as Map<String, Object?>),
+              if (x['image'] != null)
+                'image': {
+                  ...(x['image']! as Map<String, Object?>),
+                  'sha256': 'ab' * 32,
+                },
+            },
+        ];
+        expect(
+          BackupCodec.decode(
+            withJson(zip, BackupFormat.stylePath, {
+              ...style,
+              'inspirations': altered,
+            }),
+          ),
+          isA<Err<BackupContents, BackupProblem>>(),
+          reason: 'imagem alterada',
+        );
+        final orphan = [
+          for (final x in style['inspirations']! as List)
+            {...(x as Map<String, Object?>), 'image': null},
+        ];
+        expect(
+          BackupCodec.decode(
+            withJson(zip, BackupFormat.stylePath, {
+              ...style,
+              'inspirations': orphan,
+            }),
+          ),
+          isA<Err<BackupContents, BackupProblem>>(),
+          reason: 'ficheiros sem dono',
+        );
+      });
+
+      test('sem a imagem local nem cloud, a exportação avisa', () async {
+        final i = ok(
+          await inspirations.createInspiration(
+            const InspirationDraft(title: 'x'),
+          ),
+        );
+        final image = ok(await inspirations.setImage(i.id, photo(7))).image!;
+        await db.execute('DELETE FROM photo_files');
+        final result = await BackupExporter(db: db).export();
+        expect(
+          result,
+          isA<Err<Uint8List, BackupProblem>>().having(
+            (e) => e.failure,
+            'failure',
+            isA<MissingPhotos>(),
+          ),
+        );
+        final remote = await BackupExporter(
+          db: db,
+          remote: (p, v) async => p.id == image.id ? photo(7).bytesOf(v) : null,
+        ).export();
+        expect(remote, isA<Ok<Uint8List, BackupProblem>>());
+      });
+
+      test('backup v4 (sem imagens) continua a ser lido', () async {
+        ok(
+          await inspirations.createInspiration(
+            const InspirationDraft(title: 'x'),
+          ),
+        );
+        final v4 = downgrade(await export(), 4, const []);
+        final contents = ok(BackupCodec.decode(v4));
+        expect(contents.history.inspirations.single.image, isNull);
+      });
+    });
+
     test('backup v3 (sem estilo) continua a ser lido', () async {
       ok(
         await inspirations.createInspiration(

@@ -477,6 +477,14 @@
       }
     }
   },
+  "backupPreviewStyleImages": "{count, plural, =1{Inclui 1 imagem de inspiração.} other{Inclui {count} imagens de inspirações.}}",
+  "@backupPreviewStyleImages": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "backupPreviewPending": "{count, plural, =1{Inclui 1 alteração que ainda não tinha sido sincronizada.} other{Inclui {count} alterações que ainda não tinham sido sincronizadas.}}",
   "@backupPreviewPending": {
     "placeholders": {

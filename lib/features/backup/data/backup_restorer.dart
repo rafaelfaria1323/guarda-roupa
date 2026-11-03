@@ -73,6 +73,7 @@ final class BackupRestorer {
           history: contents.history,
           newIds: newIds,
           now: DateTime.now(),
+          photoFiles: contents.photoFiles,
         ),
       );
       return done ? Ok(contents.garments.length) : const Err(AccountNotEmpty());

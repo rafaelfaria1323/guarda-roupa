@@ -27,6 +27,9 @@ import 'package:guarda_roupa/features/wear/domain/calendar_day.dart';
 import 'package:powersync/powersync.dart';
 
 import '../../support/test_database.dart';
+
+import 'package:guarda_roupa/features/wardrobe/data/photo_files.dart';
+
 import '../account_sync/data/operation_upload_queue_test.dart'
     show ScriptedUploader;
 import '../wardrobe/domain/fakes.dart';
@@ -435,4 +438,42 @@ void main() {
       ]);
     },
   );
+
+  test('recupera a imagem da inspiração com id novo; os ficheiros sobem '
+      'antes de ligar', () async {
+    final from = PowerSyncInspirationRepository(db: source, ownerId: 'user-a');
+    final i = ok(
+      await from.createInspiration(
+        const InspirationDraft(
+          title: 'Camada comprida',
+          proportions: {Proportion.longLayer},
+        ),
+      ),
+    );
+    final original = ok(await from.setImage(i.id, photo(9))).image!;
+
+    final contents = ok(await restorer().inspect(await backupOfSource()));
+    expect(contents.summary.inspirationImages, 1);
+    ok(await restorer().apply(contents));
+
+    final to = PowerSyncInspirationRepository(db: target, ownerId: 'user-b');
+    final restored = (await to.watchInspirations().first).single;
+    expect(restored.proportions, {Proportion.longLayer});
+    final image = restored.image!;
+    expect(image.id, isNot(original.id));
+    expect(image.sha256, original.sha256);
+    expect(
+      await PhotoFiles.get(target, image.id, PhotoVariant.main),
+      photo(9).main,
+    );
+
+    final server = ScriptedUploader();
+    await OperationUploadQueue(server).upload(target);
+    expect(server.log, [
+      'style create_inspiration',
+      'upload ${image.id}/main',
+      'upload ${image.id}/thumb',
+      'style set_inspiration_image',
+    ]);
+  });
 }

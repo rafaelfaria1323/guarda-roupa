@@ -30,10 +30,8 @@ Estado: abordagem assistida confirmada; interpretação visual avançada adiada.
   - a tabela `inspirations` é escrita por `apply_style_operation` (`create_inspiration`, `edit_inspiration` campo a campo, `delete_inspiration`, `set_inspiration_image`, `remove_inspiration_image`) e sincronizada pelo stream `user_inspirations`;
   - a tabela `style_preferences` é escrita pela mesma função (`create_preference`, `edit_preference`, `delete_preference`) e sincronizada pelo stream `user_style_preferences`;
   - as duas partilham a fila local `style_operations`.
-- Por fazer:
-  - a imagem no backup (as proporções já entram);
-  - uso no motor.
-- Backup (formato v4): inspirações (com proporções) e preferências entram e são recuperadas com ids novos. A imagem ainda não entra: depois de recuperar, a inspiração fica sem imagem.
+- Por fazer: uso no motor (incremento 5).
+- Backup: inspirações (com proporções, desde a v4, e imagem, desde a v5) e preferências entram e são recuperadas com ids novos ([backups](backups-e-recuperacao.md)).
 
 ## Objetivo
 
