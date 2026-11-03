@@ -4,14 +4,26 @@ Quando: incremento 1, depois de P-01/P-02/P-03/P-04/P-16. Pré-requisito: projet
 
 Tu executas os passos no dashboard e guardas as passwords no teu gestor. Não envies passwords nem secrets no chat. No fim, envia **só** o URL da instância PowerSync.
 
-## 1. Aplicar o schema
+## 1. Aplicar o schema (automático, pela CI)
 
-1. Supabase > projeto `zeibzbepuexeudzyrqzq` > **SQL Editor** > **New query**.
-2. Colar todo o conteúdo de [`supabase/migrations/20261103000001_garments.sql`](../../supabase/migrations/20261103000001_garments.sql) e executar (**Run**).
-   Depois, numa query nova, fazer o mesmo com [`supabase/migrations/20261104000001_archive_local_timestamp.sql`](../../supabase/migrations/20261104000001_archive_local_timestamp.sql). Os ficheiros de `supabase/migrations/` aplicam-se sempre por ordem do nome, e cada um só uma vez.
-3. Confirmar em **Table Editor** que existem `garments`, `allowed_users` e `applied_operations`, todas com **RLS enabled**.
+As migrações de `supabase/migrations/` são aplicadas pelo workflow [`supabase.yml`](../../.github/workflows/supabase.yml) depois de a CI passar na `main`. Em cada PR que mexa em migrações, o job "Migrações a aplicar (dry-run)" mostra o que vai ser aplicado. Configuração, uma só vez:
 
-Se der erro, não alteres o SQL à mão: copia a mensagem de erro (sem dados pessoais) e envia-a.
+1. Supabase > **Account** > **Access Tokens** > **Generate new token** (nome: `github-actions-guarda-roupa`). Copiar o token.
+2. GitHub > `rafaelfaria1323/guarda-roupa` > **Settings** > **Secrets and variables** > **Actions** > **New repository secret**:
+   - `SUPABASE_ACCESS_TOKEN`: o token do passo 1;
+   - `SUPABASE_DB_PASSWORD`: a password da base do projeto (Supabase > **Project Settings** > **Database**).
+3. **Só se já aplicaste alguma migração à mão** (SQL Editor), regista-a como aplicada para não correr duas vezes. No teu terminal, na pasta do repo:
+
+   ```bash
+   supabase link --project-ref zeibzbepuexeudzyrqzq
+   supabase migration repair --status applied 20261103000001
+   ```
+
+   Repete o `repair` para cada ficheiro que aplicaste à mão (o número é o início do nome). `supabase migration list` mostra o estado local vs remoto.
+4. GitHub > **Actions** > **Supabase** > **Run workflow** (branch `main`). O passo "Migrações pendentes" lista o que vai aplicar.
+5. Confirmar em **Table Editor** que existem `garments`, `allowed_users` e `applied_operations`, todas com **RLS enabled**.
+
+Se o workflow falhar, não alteres o SQL à mão: envia o link do run (o log não contém a password).
 
 ## 2. Autorizar a tua conta (P-16)
 
