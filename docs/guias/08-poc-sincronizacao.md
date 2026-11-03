@@ -8,10 +8,10 @@ Tu executas os passos no dashboard e guardas as passwords no teu gestor. Não en
 
 As migrações de `supabase/migrations/` são aplicadas pelo workflow [`supabase.yml`](../../.github/workflows/supabase.yml) depois de a CI passar na `main`. Em cada PR que mexa em migrações, o job "Migrações a aplicar (dry-run)" mostra o que vai ser aplicado. Configuração, uma só vez:
 
-1. Supabase > **Account** > **Access Tokens** > **Generate new token** (nome: `github-actions-guarda-roupa`). Copiar o token.
-2. GitHub > `rafaelfaria1323/guarda-roupa` > **Settings** > **Secrets and variables** > **Actions** > **New repository secret**:
-   - `SUPABASE_ACCESS_TOKEN`: o token do passo 1;
-   - `SUPABASE_DB_PASSWORD`: a password da base do projeto (Supabase > **Project Settings** > **Database**).
+1. Supabase > projeto `zeibzbepuexeudzyrqzq` > **Connect** > separador **Session pooler** (porta 5432). Copiar o URI `postgresql://postgres.zeibzbepuexeudzyrqzq:[YOUR-PASSWORD]@...pooler.supabase.com:5432/postgres` e trocar `[YOUR-PASSWORD]` pela password da base. Se a password tiver caracteres como `@`, `:`, `/` ou `#`, usa uma só com letras e números (ou faz reset em **Project Settings** > **Database**).
+2. GitHub > `rafaelfaria1323/guarda-roupa` > **Settings** > **Secrets and variables** > **Actions** > **New repository secret**: nome `SUPABASE_DB_URL`, valor o URI do passo 1.
+
+   Não é preciso access token: o CLI liga diretamente à base. A password já dá acesso total à base, por isso guarda-a só aí e no teu gestor de passwords.
 3. **Só se já aplicaste alguma migração à mão** (SQL Editor), regista-a como aplicada para não correr duas vezes. No teu terminal, na pasta do repo:
 
    ```bash

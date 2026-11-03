@@ -45,4 +45,4 @@ job (só acrescenta um shard se poupar pelo menos 30 s). Depois distribui os fic
 (algoritmo LPT). As estimativas podem ser afinadas por variáveis de ambiente quando houver tempos reais.
 Alterações só a documentação não correm os jobs Flutter.
 
-As migrações Supabase são aplicadas pelo workflow `supabase.yml` depois de a CI passar na `main` (dry-run nos PRs). Requer os secrets `SUPABASE_ACCESS_TOKEN` e `SUPABASE_DB_PASSWORD` no GitHub; ver o [guia 08](docs/guias/08-poc-sincronizacao.md).
+As migrações Supabase são aplicadas pelo workflow `supabase.yml` depois de a CI passar na `main` (dry-run nos PRs). Requer o secret `SUPABASE_DB_URL` (URI do Session pooler) no GitHub; ver o [guia 08](docs/guias/08-poc-sincronizacao.md).
