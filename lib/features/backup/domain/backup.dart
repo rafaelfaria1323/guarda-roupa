@@ -1,21 +1,28 @@
 import 'dart:typed_data';
 
+import '../../care/domain/care_policies.dart';
+import '../../care/domain/cleaning_event.dart';
 import '../../wardrobe/domain/garment.dart';
 import '../../wardrobe/domain/garment_photo.dart';
+import '../../wear/domain/wear_event.dart';
 
 /// Formato do ficheiro de backup (docs/features/backups-e-recuperacao.md).
 ///
 /// ZIP com `manifest.json` (formato, versão, data, contagens e a lista de
-/// ficheiros com tamanho e SHA-256), `data/garments.json` e as fotografias
-/// em `photos/{id}/main.jpg|thumb.jpg`. Sem tokens, chaves ou URLs.
+/// ficheiros com tamanho e SHA-256), `data/garments.json`,
+/// `data/history.json` (desde a v2: utilizações, limpezas e valores de
+/// lavagem/rotatividade) e as fotografias em `photos/{id}/main.jpg|thumb.jpg`.
+/// Sem tokens, chaves ou URLs.
 abstract final class BackupFormat {
   static const name = 'guarda-roupa-backup';
 
   /// Sobe quando o leitor antigo deixar de perceber o conteúdo.
-  static const version = 1;
+  /// v1: peças e fotografias. v2: + `data/history.json`.
+  static const version = 2;
 
   static const manifestPath = 'manifest.json';
   static const garmentsPath = 'data/garments.json';
+  static const historyPath = 'data/history.json';
 
   static String photoPath(String photoId, PhotoVariant variant) =>
       'photos/$photoId/${variant.id}.jpg';
@@ -33,11 +40,15 @@ final class BackupSummary {
     required this.garments,
     required this.photos,
     required this.pendingOperations,
+    this.wears = 0,
+    this.cleanings = 0,
   });
 
   final DateTime exportedAt;
   final int garments;
   final int photos;
+  final int wears;
+  final int cleanings;
 
   /// Alterações ainda por sincronizar no momento da exportação (estão
   /// incluídas no backup, mas não tinham chegado à cloud).
@@ -49,13 +60,50 @@ final class BackupContents {
     required this.summary,
     required this.garments,
     required this.photoFiles,
+    this.history = BackupHistory.empty,
   });
 
   final BackupSummary summary;
   final List<Garment> garments;
 
+  /// Vazio num backup v1.
+  final BackupHistory history;
+
   /// Bytes por (foto, variante), já verificados.
   final Map<(String, PhotoVariant), Uint8List> photoFiles;
+}
+
+/// Um valor de lavagem/rotatividade escolhido (linha de `care_policies`).
+final class BackupPolicy {
+  const BackupPolicy({
+    required this.scope,
+    required this.target,
+    this.laundryAfter,
+    this.rotationDays,
+  });
+
+  final PolicyScope scope;
+
+  /// Id da categoria ou da peça.
+  final String target;
+  final int? laundryAfter;
+  final int? rotationDays;
+}
+
+/// Histórico que acompanha as peças: só o que está ativo (desfeitos ficam
+/// de fora) e só para peças que vão no backup.
+final class BackupHistory {
+  const BackupHistory({
+    this.wears = const [],
+    this.cleanings = const [],
+    this.policies = const [],
+  });
+
+  static const empty = BackupHistory();
+
+  final List<WearEvent> wears;
+  final List<CleaningEvent> cleanings;
+  final List<BackupPolicy> policies;
 }
 
 sealed class BackupProblem {

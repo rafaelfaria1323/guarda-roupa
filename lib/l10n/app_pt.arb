@@ -114,7 +114,7 @@
   "signOutDiscardConfirmBody": "Esta ação não pode ser desfeita.",
   "cancel": "Cancelar",
   "settingsBackup": "Dados e backup",
-  "settingsBackupHint": "ZIP com as peças e as fotografias, para guardares fora da app. Não é encriptado: guarda-o num local privado.",
+  "settingsBackupHint": "ZIP com as peças, as fotografias, as utilizações, as limpezas e os teus valores de lavagem e rotação, para guardares fora da app. Não é encriptado: guarda-o num local privado.",
   "garmentPhotos": "Fotografias",
   "photoTake": "Tirar fotografia",
   "photoPick": "Escolher da galeria",
@@ -270,6 +270,17 @@
       }
     }
   },
+  "backupPreviewHistory": "{wears, plural, =0{Sem utilizações} =1{1 utilização} other{{wears} utilizações}} e {cleanings, plural, =0{nenhuma limpeza} =1{1 limpeza} other{{cleanings} limpezas}} registadas.",
+  "@backupPreviewHistory": {
+    "placeholders": {
+      "wears": {
+        "type": "int"
+      },
+      "cleanings": {
+        "type": "int"
+      }
+    }
+  },
   "backupPreviewPending": "{count, plural, =1{Inclui 1 alteração que ainda não tinha sido sincronizada.} other{Inclui {count} alterações que ainda não tinham sido sincronizadas.}}",
   "@backupPreviewPending": {
     "placeholders": {
@@ -278,7 +289,7 @@
       }
     }
   },
-  "backupPreviewHow": "As peças são criadas de novo nesta conta e depois sincronizadas.",
+  "backupPreviewHow": "As peças e o histórico são criados de novo nesta conta e depois sincronizados.",
   "backupRestoreConfirm": "Recuperar",
   "backupRestored": "{count, plural, =0{Backup recuperado (sem peças).} =1{Recuperada 1 peça.} other{Recuperadas {count} peças.}}",
   "@backupRestored": {

@@ -8,15 +8,20 @@ import 'package:guarda_roupa/core/domain/result.dart';
 import 'package:guarda_roupa/features/backup/data/backup_codec.dart';
 import 'package:guarda_roupa/features/backup/data/backup_exporter.dart';
 import 'package:guarda_roupa/features/backup/domain/backup.dart';
+import 'package:guarda_roupa/features/care/data/powersync_care_repository.dart';
+import 'package:guarda_roupa/features/care/domain/care_policies.dart';
 import 'package:guarda_roupa/features/wardrobe/data/powersync_wardrobe_repository.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_attributes.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_category.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_color.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_photo.dart';
+import 'package:guarda_roupa/features/wear/data/powersync_wear_repository.dart';
+import 'package:guarda_roupa/features/wear/domain/calendar_day.dart';
 import 'package:powersync/powersync.dart';
 
 import '../../support/test_database.dart';
+import '../wardrobe/domain/fakes.dart';
 
 T ok<T, F>(Result<T, F> r) => switch (r) {
   Ok(:final value) => value,
@@ -65,6 +70,25 @@ Uint8List withManifest(
         name == 'manifest.json' ? {name: utf8.encode(jsonEncode(m))} : null,
   );
 }
+
+/// Troca o conteúdo de um ficheiro JSON e acerta o manifest (hash certo,
+/// conteúdo possivelmente inválido).
+Uint8List withJson(Uint8List zip, String path, Object? json) {
+  final data = utf8.encode(jsonEncode(json));
+  final bad = rewrite(zip, (name, bytes) => name == path ? {name: data} : null);
+  return withManifest(bad, (m) {
+    for (final f in (m['files']! as List).cast<Map<String, Object?>>()) {
+      if (f['path'] == path) {
+        f['size'] = data.length;
+        f['sha256'] = sha256.convert(data).toString();
+      }
+    }
+  });
+}
+
+Map<String, Object?> jsonIn(Uint8List zip, String path) => jsonDecode(
+  utf8.decode(ZipDecoder().decodeBytes(zip).findFile(path)!.content),
+) as Map<String, Object?>;
 
 void main() {
   late PowerSyncDatabase db;
@@ -130,10 +154,19 @@ void main() {
       await add(const GarmentDraft(category: GarmentCategory.shirt), photos: 1);
       final m = manifestOf(await export());
       expect(m['format'], 'guarda-roupa-backup');
-      expect(m['version'], 1);
-      expect(m['counts'], {'garments': 1, 'photos': 2});
+      expect(m['version'], BackupFormat.version);
+      expect(m['counts'], {
+        'garments': 1,
+        'photos': 2,
+        'wear_events': 0,
+        'cleaning_events': 0,
+        'care_policies': 0,
+      });
       final files = (m['files']! as List).cast<Map<String, Object?>>();
-      expect(files.map((f) => f['path']), contains('data/garments.json'));
+      expect(
+        files.map((f) => f['path']),
+        containsAll(['data/garments.json', 'data/history.json']),
+      );
       expect(files.every((f) => (f['sha256']! as String).length == 64), true);
       final text = jsonEncode(m);
       expect(text, isNot(contains('owner_id')));
@@ -217,9 +250,10 @@ void main() {
     });
 
     test('versão mais recente', () {
-      final p = problem(withManifest(zip, (m) => m['version'] = 2));
+      final next = BackupFormat.version + 1;
+      final p = problem(withManifest(zip, (m) => m['version'] = next));
       expect(p, isA<UnsupportedBackupVersion>());
-      expect((p as UnsupportedBackupVersion).version, 2);
+      expect((p as UnsupportedBackupVersion).version, next);
     });
 
     test('foto alterada', () {
@@ -264,26 +298,152 @@ void main() {
     });
 
     test('peça inválida (hash certo, conteúdo sem categoria)', () {
-      final data = utf8.encode(
-        jsonEncode({
-          'garments': [
-            {'id': 'abc', 'availability': 'available'},
-          ],
-        }),
-      );
-      var bad = rewrite(
-        zip,
-        (name, bytes) => name == 'data/garments.json' ? {name: data} : null,
-      );
-      bad = withManifest(bad, (m) {
-        for (final f in (m['files']! as List).cast<Map<String, Object?>>()) {
-          if (f['path'] == 'data/garments.json') {
-            f['size'] = data.length;
-            f['sha256'] = sha256.convert(data).toString();
-          }
-        }
+      final bad = withJson(zip, 'data/garments.json', {
+        'garments': [
+          {'id': 'abc', 'availability': 'available'},
+        ],
       });
       expect(problem(bad), isA<CorruptBackup>());
+    });
+
+    test('v2 sem histórico', () {
+      final bad = withManifest(
+        rewrite(zip, (name, _) => name == 'data/history.json' ? {} : null),
+        (m) => (m['files']! as List).removeWhere(
+          (f) => (f as Map)['path'] == 'data/history.json',
+        ),
+      );
+      expect(problem(bad), isA<CorruptBackup>());
+    });
+
+    test('histórico que refere uma peça que não está no backup', () {
+      final history = jsonIn(zip, 'data/history.json');
+      final cases = <String, Map<String, Object?>>{
+        'utilização': {
+          ...history,
+          'wear_events': [
+            {
+              'id': 'w1',
+              'worn_on': '2026-11-01',
+              'garment_ids': ['outra'],
+              'created_at': '2026-11-01T10:00:00.000Z',
+            },
+          ],
+        },
+        'limpeza': {
+          ...history,
+          'cleaning_events': [
+            {
+              'id': 'c1',
+              'garment_id': 'outra',
+              'cleaned_on': '2026-11-01',
+              'created_at': '2026-11-01T10:00:00.000Z',
+            },
+          ],
+        },
+        'valor fora do limite': {
+          ...history,
+          'care_policies': [
+            {
+              'scope': 'category',
+              'target': 'shirt',
+              'laundry_after': 99,
+              'rotation_days': null,
+            },
+          ],
+        },
+        'categoria desconhecida': {
+          ...history,
+          'care_policies': [
+            {
+              'scope': 'category',
+              'target': 'capa',
+              'laundry_after': 1,
+              'rotation_days': null,
+            },
+          ],
+        },
+      };
+      for (final MapEntry(:key, :value) in cases.entries) {
+        expect(
+          problem(withJson(zip, 'data/history.json', value)),
+          isA<CorruptBackup>(),
+          reason: key,
+        );
+      }
+    });
+  });
+
+  group('histórico (v2)', () {
+    late PowerSyncWearRepository wear;
+    late PowerSyncCareRepository care;
+    final today = CalendarDay(2026, 11, 3);
+
+    setUp(() {
+      final clock = FixedClock(DateTime.utc(2026, 11, 3, 12));
+      wear = PowerSyncWearRepository(db: db, ownerId: 'user-a', clock: clock);
+      care = PowerSyncCareRepository(db: db, ownerId: 'user-a', clock: clock);
+    });
+
+    test('ida e volta: só o ativo e só das peças exportadas', () async {
+      final top = (await add(
+        const GarmentDraft(category: GarmentCategory.tShirt),
+      )).id;
+      final gone = (await add(
+        const GarmentDraft(category: GarmentCategory.shirt),
+      )).id;
+      final kept = ok(await wear.recordWear(today.addDays(-1), {top, gone}));
+      ok(await wear.recordWear(today.addDays(-3), {gone}));
+      final undone = ok(await wear.recordWear(today, {top}));
+      ok(await wear.voidWear(undone.id));
+      final cleaned = ok(await care.recordCleaning(top, today));
+      ok(await care.recordCleaning(gone, today));
+      ok(await care.setCategoryRotation(GarmentCategory.tShirt, 4));
+      ok(await care.setGarmentLaundry(top, 0));
+      ok(await care.setGarmentLaundry(gone, 3));
+      ok(await repo.deleteGarment(gone));
+
+      final zip = await export();
+      final h = ok(BackupCodec.decode(zip)).history;
+
+      expect(h.wears.single.id, kept.id);
+      expect(h.wears.single.wornOn, today.addDays(-1));
+      expect(h.wears.single.garmentIds, [top]);
+      expect(h.cleanings.single.id, cleaned.id);
+      expect(h.cleanings.single.garmentId, top);
+      expect(
+        [
+          for (final p in h.policies)
+            (p.scope, p.target, p.laundryAfter, p.rotationDays),
+        ],
+        unorderedEquals([
+          (PolicyScope.category, 't_shirt', null, 4),
+          (PolicyScope.garment, top.value, 0, null),
+        ]),
+      );
+      final counts = manifestOf(zip)['counts']! as Map;
+      expect(counts['wear_events'], 1);
+      expect(counts['cleaning_events'], 1);
+      expect(counts['care_policies'], 2);
+    });
+
+    test('backup v1 (sem histórico) continua a ser lido', () async {
+      await add(const GarmentDraft(category: GarmentCategory.shirt));
+      final v1 = withManifest(
+        rewrite(
+          await export(),
+          (name, _) => name == 'data/history.json' ? {} : null,
+        ),
+        (m) {
+          m['version'] = 1;
+          (m['files']! as List).removeWhere(
+            (f) => (f as Map)['path'] == 'data/history.json',
+          );
+        },
+      );
+      final contents = ok(BackupCodec.decode(v1));
+      expect(contents.garments, hasLength(1));
+      expect(contents.history.wears, isEmpty);
     });
   });
 

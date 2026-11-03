@@ -74,6 +74,13 @@ class _RestoreBackupTileState extends ConsumerState<RestoreBackupTile> {
             Text(l10n.backupPreviewDate(summary.exportedAt.toLocal())),
             const SizedBox(height: 8),
             Text(l10n.backupPreviewCounts(summary.garments, summary.photos)),
+            if (summary.wears > 0 || summary.cleanings > 0) ...[
+              const SizedBox(height: 8),
+              Text(
+                l10n.backupPreviewHistory(summary.wears, summary.cleanings),
+                key: const Key('backup-preview-history'),
+              ),
+            ],
             if (summary.pendingOperations > 0) ...[
               const SizedBox(height: 8),
               Text(l10n.backupPreviewPending(summary.pendingOperations)),

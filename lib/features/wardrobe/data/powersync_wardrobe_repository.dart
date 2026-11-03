@@ -156,15 +156,24 @@ final class PowerSyncWardrobeRepository implements WardrobeRepository {
   /// IDs novos para peças e fotos: um backup não ressuscita peças eliminadas
   /// nem colide com o que o servidor já conhece. Para a cloud são operações
   /// normais (create, estado, arquivo e fotos), enviadas pela fila.
+  ///
+  /// [then] corre na mesma transação, com o id novo de cada peça do backup
+  /// (ex.: para recuperar o histórico); se falhar, nada fica escrito.
   Future<bool> importGarments(
     List<Garment> garments,
-    Map<(String, PhotoVariant), Uint8List> photoFiles,
-  ) => _db.writeTransaction((tx) async {
+    Map<(String, PhotoVariant), Uint8List> photoFiles, {
+    Future<void> Function(
+      SqliteWriteContext tx,
+      Map<GarmentId, GarmentId> newIds,
+    )?
+    then,
+  }) => _db.writeTransaction((tx) async {
     final existing = await tx.get(
       'SELECT count(*) AS n FROM garments WHERE deleted_at IS NULL',
     );
     if (existing['n'] != 0) return false;
 
+    final newIds = <GarmentId, GarmentId>{};
     for (final source in garments) {
       final now = DateTime.now();
       var garment = Garment(
@@ -180,6 +189,7 @@ final class PowerSyncWardrobeRepository implements WardrobeRepository {
         updatedAt: now,
       );
       await _insert(tx, garment);
+      newIds[source.id] = garment.id;
 
       if (source.availability != Availability.available) {
         garment = _factory.withAvailability(garment, source.availability);
@@ -225,6 +235,7 @@ final class PowerSyncWardrobeRepository implements WardrobeRepository {
         });
       }
     }
+    await then?.call(tx, newIds);
     return true;
   });
 

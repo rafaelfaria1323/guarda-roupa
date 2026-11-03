@@ -2,11 +2,17 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:powersync/powersync.dart';
+import 'package:sqlite_async/sqlite_async.dart';
 
 import '../../../core/domain/result.dart';
+import '../../care/data/powersync_care_repository.dart';
+import '../../care/domain/care_policies.dart';
 import '../../wardrobe/data/garment_row.dart';
 import '../../wardrobe/data/photo_files.dart';
+import '../../wardrobe/domain/garment_category.dart';
 import '../../wardrobe/domain/garment_photo.dart';
+import '../../wear/data/powersync_wear_repository.dart';
+import '../../wear/domain/wear_event.dart';
 import '../domain/backup.dart';
 import 'backup_codec.dart';
 
@@ -25,14 +31,19 @@ final class BackupExporter {
   final RemotePhoto? _remote;
 
   Future<Result<Uint8List, BackupProblem>> export({DateTime? now}) async {
-    // 1. Snapshot consistente: peças, bytes locais e pendências na mesma
-    //    transação de leitura.
-    final (garments, local, pending) = await _db.readTransaction((tx) async {
+    // 1. Snapshot consistente: peças, histórico, bytes locais e pendências
+    //    na mesma transação de leitura.
+    final (garments, history, local, pending) = await _db.readTransaction((
+      tx,
+    ) async {
       final rows = await tx.getAll(
         'SELECT * FROM garments WHERE deleted_at IS NULL '
         'ORDER BY created_at, id',
       );
       final garments = [for (final row in rows) ?GarmentRow.fromRow(row)];
+      final history = await _history(tx, {
+        for (final g in garments) g.id.value,
+      });
       final local = <(String, PhotoVariant), Uint8List>{};
       for (final g in garments) {
         for (final photo in g.photos) {
@@ -48,7 +59,7 @@ final class BackupExporter {
         r"WHERE json_extract(data, '$.type') IN "
         "('garment_operations', 'wear_operations')",
       );
-      return (garments, local, pending['n']! as int);
+      return (garments, history, local, pending['n']! as int);
     });
 
     // 2–3. Reunir as fotos que faltam e confirmar que nenhuma fica de fora.
@@ -76,6 +87,7 @@ final class BackupExporter {
       photoFiles: files,
       exportedAt: now ?? DateTime.now(),
       pendingOperations: pending,
+      history: history,
     );
     return switch (BackupCodec.decode(zip)) {
       Ok(value: BackupContents(:final summary))
@@ -84,6 +96,69 @@ final class BackupExporter {
       Ok() => const Err(CorruptBackup('verificação')),
       Err(:final failure) => Err(failure),
     };
+  }
+
+  /// Só o que está ativo e refere peças que vão no backup: uma utilização
+  /// com peças entretanto eliminadas fica só com as restantes.
+  static Future<BackupHistory> _history(
+    SqliteReadContext tx,
+    Set<String> kept,
+  ) async {
+    final wears = <WearEvent>[];
+    for (final row in await tx.getAll(
+      'SELECT * FROM wear_events WHERE voided_at IS NULL '
+      'ORDER BY worn_on, created_at, id',
+    )) {
+      final w = PowerSyncWearRepository.fromRow(row);
+      if (w == null) continue;
+      final pieces = w.garmentIds.where((g) => kept.contains(g.value)).toSet();
+      if (pieces.isEmpty) continue;
+      wears.add(
+        WearEvent(
+          id: w.id,
+          wornOn: w.wornOn,
+          garmentIds: pieces.toList(),
+          createdAt: w.createdAt,
+        ),
+      );
+    }
+    final cleanings = [
+      for (final row in await tx.getAll(
+        'SELECT * FROM cleaning_events WHERE voided_at IS NULL '
+        'ORDER BY cleaned_on, created_at, id',
+      ))
+        if (PowerSyncCareRepository.cleaningFromRow(row) case final c?
+            when kept.contains(c.garmentId.value))
+          c,
+    ];
+    final policies = <String, BackupPolicy>{};
+    for (final row in await tx.getAll(
+      'SELECT * FROM care_policies ORDER BY updated_at, id',
+    )) {
+      final scope = PolicyScope.fromId(row['scope'] as String?);
+      final target = row['target'] as String?;
+      final laundry = row['laundry_after'] as int?;
+      final rotation = row['rotation_days'] as int?;
+      if (scope == null || target == null) continue;
+      if (laundry == null && rotation == null) continue;
+      final valid = switch (scope) {
+        PolicyScope.category => GarmentCategory.fromId(target) != null,
+        PolicyScope.garment => kept.contains(target),
+      };
+      if (!valid) continue;
+      // Repetidas (não deviam existir): a mais recente ganha.
+      policies['${scope.id}:$target'] = BackupPolicy(
+        scope: scope,
+        target: target,
+        laundryAfter: laundry,
+        rotationDays: rotation,
+      );
+    }
+    return BackupHistory(
+      wears: wears,
+      cleanings: cleanings,
+      policies: policies.values.toList(),
+    );
   }
 
   Future<Uint8List?> _download(GarmentPhoto photo, PhotoVariant variant) async {
