@@ -1,6 +1,24 @@
 # Feature — Utilização real e rotatividade
 
-Estado: necessária no MVP; valores iniciais para roupa a aprovar.
+Estado: registo de utilizações implementado (incremento 3); `RotationPolicy` a seguir. Valores decididos em P-06 e P-08 (2026-11-03).
+
+## Implementado
+
+- **“Vesti hoje”** no ecrã Planeador: escolhe-se as peças vestidas e guarda-se. Pode haver mais de um registo no mesmo dia (mudar de roupa). Cada registo pode ser **corrigido** (trocar as peças: desfaz e regista outro, numa transação) ou **desfeito**.
+- Só dias de hoje ou passados: planear não é usar. Peças arquivadas podem ser registadas (registo tardio); eliminadas não.
+- Na ficha da peça: número de utilizações e as datas mais recentes.
+- Dados: tabela `wear_events` (`worn_on` como data de calendário, `garment_ids`, `plan_entry_id`, `voided_at`) e operações `record_wear`/`void_wear` por `apply_wear_operation`, idempotentes por `op_id`. A mesma entrada de plano confirmada em dois dispositivos dá uma única utilização (`merged`); desfazer e voltar a confirmar é permitido.
+- Ainda sem lembretes/notificações (P-08). As utilizações ainda não entram no backup ZIP (formato v1): previsto para quando o histórico alimentar a lavandaria e a rotatividade.
+
+## Valores decididos (P-06)
+
+| Grupo | Dias mínimos entre usos |
+|---|---|
+| Tops (t-shirts, camisas, polos, tops, camisolas, sweatshirts, casacos de malha) | 3 |
+| Partes de baixo (calças, ganga, calções, saias) | 2 |
+| Casacos, calçado e acessórios | sem intervalo |
+
+Editável por categoria e por peça. Preferir as menos usadas. Sem alternativa elegível, sugerir na mesma com aviso claro (sem modo estrito por agora).
 
 ## Requisitos confirmados
 
@@ -34,7 +52,7 @@ Recomendação inicial: combinar intervalo com preferência por alternativas ain
 
 Proposta de contrato: `dias mínimos entre datas de utilização`. Exemplo de contrato, **não default**: com valor 3, uma utilização no dia 1 volta a ser elegível no dia 4.
 
-Confirmar esta interpretação em P-06. Calcular com datas de calendário no fuso do plano, não com blocos de 24 horas sujeitos a mudanças de hora.
+Interpretação confirmada em P-06. Calcular com datas de calendário no fuso do plano, não com blocos de 24 horas sujeitos a mudanças de hora.
 
 ## Planeamento
 

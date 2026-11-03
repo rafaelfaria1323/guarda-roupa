@@ -45,7 +45,8 @@ final class BackupExporter {
       }
       final pending = await tx.get(
         'SELECT count(*) AS n FROM ps_crud '
-        r"WHERE json_extract(data, '$.type') = 'garment_operations'",
+        r"WHERE json_extract(data, '$.type') IN "
+        "('garment_operations', 'wear_operations')",
       );
       return (garments, local, pending['n']! as int);
     });

@@ -8,6 +8,8 @@ import 'package:guarda_roupa/features/wardrobe/domain/availability.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_category.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_photo.dart';
+import 'package:guarda_roupa/features/wear/data/powersync_wear_repository.dart';
+import 'package:guarda_roupa/features/wear/domain/calendar_day.dart';
 import 'package:powersync/powersync.dart';
 
 import '../../../support/test_database.dart';
@@ -51,6 +53,14 @@ final class ScriptedUploader implements OperationUploader {
     log.add('apply ${operation['kind']}');
     return responses.isEmpty ? {'result': 'applied'} : responses.removeAt(0);
   }
+
+  @override
+  Future<Map<String, Object?>> applyWear(Map<String, Object?> operation) async {
+    if (failWith case final error?) throw error;
+    received.add(operation);
+    log.add('wear ${operation['kind']}');
+    return responses.isEmpty ? {'result': 'applied'} : responses.removeAt(0);
+  }
 }
 
 void main() {
@@ -72,6 +82,46 @@ void main() {
     Ok(:final value) => value,
     Err(:final failure) => fail('$failure'),
   };
+
+  test(
+    'utilizações vão para apply_wear_operation; rejeições registadas',
+    () async {
+      final g = await add();
+      final wear = PowerSyncWearRepository(db: db, ownerId: 'user-a');
+      final event = switch (await wear.recordWear(
+        CalendarDay.of(DateTime.now()),
+        {g.id},
+      )) {
+        Ok(:final value) => value,
+        Err(:final failure) => fail('$failure'),
+      };
+      await wear.voidWear(event.id);
+      server.responses.addAll([
+        {'result': 'applied'},
+        {'result': 'applied'},
+        {'result': 'rejected', 'reason': 'not_found'},
+      ]);
+
+      await queue.upload(db);
+
+      expect(server.log, [
+        'apply create',
+        'wear record_wear',
+        'wear void_wear',
+      ]);
+      final record = server.received[1];
+      expect(record['event_id'], event.id);
+      expect(record['data'], {
+        'worn_on': event.wornOn.iso,
+        'garment_ids': [g.id.value],
+      });
+      final c = await db.get('SELECT * FROM sync_conflicts');
+      expect(c['kind'], 'void_wear');
+      expect(c['garment_id'], event.id);
+      expect(c['reason'], 'not_found');
+      expect(await db.getCrudBatch(), isNull);
+    },
+  );
 
   test('envia operações pela ordem, com op_id e dados decodificados', () async {
     final g = await add();

@@ -4,7 +4,7 @@ Estado: necessária na base utilizável; recuperação sobre conta sincronizada 
 
 Implementado (2026-11-03): exportação e verificação do formato v1.
 
-- **Conteúdo:** `manifest.json` (formato, versão, `exported_at`, contagens, `pending_operations` e a lista de ficheiros com caminho, MIME, tamanho e SHA-256), `data/garments.json` com as colunas do servidor, sem `owner_id`, e `photos/{id}/main.jpg|thumb.jpg`.
+- **Conteúdo:** `manifest.json` (formato, versão, `exported_at`, contagens, `pending_operations` e a lista de ficheiros com caminho, MIME, tamanho e SHA-256), `data/garments.json` com as colunas do servidor, sem `owner_id`, e `photos/{id}/main.jpg|thumb.jpg`. As utilizações (“Vesti hoje”) ainda não entram (formato v1); entram numa versão seguinte do formato.
 - **Snapshot:** é lido numa transação de leitura. As peças eliminadas ficam de fora.
 - **Fotografias:** as que faltam neste dispositivo são descarregadas e verificadas pelo hash. Se faltar alguma, a exportação falha.
 - **Verificação antes de gravar:** o ZIP é relido pelo mesmo leitor que a recuperação vai usar.
