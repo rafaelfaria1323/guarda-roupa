@@ -11,7 +11,9 @@ import '../../wardrobe/presentation/colors_editor.dart';
 import '../application/inspiration_providers.dart';
 import '../domain/inspiration.dart';
 import '../domain/inspiration_repository.dart';
+import '../domain/style_preference.dart';
 import 'inspiration_messages.dart';
+import 'preference_messages.dart';
 
 /// Criar (`id == null`) ou editar uma inspiração. As etiquetas são só as
 /// que o utilizador escolhe; nada é deduzido do link.
@@ -38,6 +40,9 @@ class _InspirationEditorScreenState
   bool _loaded = false;
   bool _saving = false;
   Stream<Inspiration?>? _current;
+
+  /// A versão guardada (as preferências nascem dela, não do rascunho).
+  Inspiration? _saved;
 
   bool get _editing => widget.id != null;
 
@@ -106,6 +111,7 @@ class _InspirationEditorScreenState
       body: StreamBuilder<Inspiration?>(
         stream: _current,
         builder: (context, snapshot) {
+          _saved = snapshot.data;
           if (_editing && !_loaded) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
@@ -195,6 +201,20 @@ class _InspirationEditorScreenState
           title: Text(l10n.inspirationTags, style: theme.textTheme.titleMedium),
           subtitle: Text(l10n.inspirationTagsHint),
         ),
+        if (_saved case final saved?
+            when PreferenceDraft.fromInspiration(saved).isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: OutlinedButton.icon(
+                key: const Key('inspiration-make-preferences'),
+                onPressed: _saving ? null : () => _makePreferences(saved),
+                icon: const Icon(Icons.thumbs_up_down_outlined),
+                label: Text(l10n.inspirationMakePreferences),
+              ),
+            ),
+          ),
         heading(l10n.inspirationPalette),
         chips([
           for (final color in ReferenceColor.values)
@@ -264,6 +284,30 @@ class _InspirationEditorScreenState
             setState(() => on ? set.add(value) : set.remove(value)),
       );
 
+  /// Escolher que etiquetas guardadas passam a "gosto" (nada é criado sem
+  /// confirmação; as repetidas são ignoradas).
+  Future<void> _makePreferences(Inspiration saved) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final repo = ref.read(preferenceRepositoryProvider);
+    if (repo == null) return;
+    final drafts = PreferenceDraft.fromInspiration(saved);
+    final chosen = await showDialog<List<PreferenceDraft>>(
+      context: context,
+      builder: (context) => _MakePreferencesDialog(drafts: drafts),
+    );
+    if (chosen == null || chosen.isEmpty || !mounted) return;
+    final result = await repo.createPreferences(chosen);
+    if (!mounted || !reportPreference(context, result)) return;
+    if (result case Ok(:final value)) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(l10n.inspirationPreferencesCreated(value))),
+        );
+    }
+  }
+
   Future<void> _copyLink() async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
@@ -321,5 +365,72 @@ class _InspirationEditorScreenState
         ..showSnackBar(SnackBar(content: Text(l10n.inspirationDeleted)));
       context.pop();
     }
+  }
+}
+
+class _MakePreferencesDialog extends StatefulWidget {
+  const _MakePreferencesDialog({required this.drafts});
+
+  final List<PreferenceDraft> drafts;
+
+  @override
+  State<_MakePreferencesDialog> createState() => _MakePreferencesDialogState();
+}
+
+class _MakePreferencesDialogState extends State<_MakePreferencesDialog> {
+  late final _chosen = List.filled(widget.drafts.length, true);
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final drafts = widget.drafts;
+    final context0 = drafts.first.occasions.isEmpty
+        ? l10n.preferenceAlways
+        : [
+            for (final o in Occasion.values)
+              if (drafts.first.occasions.contains(o)) l10n.occasionLabel(o.id),
+          ].join(', ');
+    return AlertDialog(
+      title: Text(l10n.inspirationMakePreferences),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            Text(l10n.inspirationMakePreferencesHint(context0)),
+            for (final (i, d) in drafts.indexed)
+              CheckboxListTile(
+                key: Key('make-preference-$i'),
+                contentPadding: EdgeInsets.zero,
+                value: _chosen[i],
+                onChanged: (on) => setState(() => _chosen[i] = on ?? false),
+                title: Text(
+                  l10n.preferenceTitle(
+                    d.stance.id,
+                    preferenceValueLabel(l10n, d.subject, d.value),
+                  ),
+                ),
+                subtitle: Text(l10n.preferenceSubjectLabel(d.subject.id)),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          key: const Key('make-preferences-confirm'),
+          onPressed: _chosen.contains(true)
+              ? () => Navigator.pop(context, [
+                  for (final (i, d) in drafts.indexed)
+                    if (_chosen[i]) d,
+                ])
+              : null,
+          child: Text(l10n.inspirationMakePreferencesConfirm),
+        ),
+      ],
+    );
   }
 }

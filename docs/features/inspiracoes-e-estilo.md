@@ -2,7 +2,7 @@
 
 Estado: abordagem assistida confirmada; interpretação visual avançada adiada.
 
-## Implementado (incremento 4, primeira parte)
+## Implementado (incremento 4)
 
 - Separador **Estilo**: lista de inspirações (título ou domínio do link, etiquetas e paleta) e editor com título, link, notas e etiquetas.
 - Uma inspiração precisa de um título ou de um link. Um link sem esquema ganha `https://`. Só são aceites links `http(s)`: o servidor e a app recusam `javascript:` e outros esquemas.
@@ -13,13 +13,19 @@ Estado: abordagem assistida confirmada; interpretação visual avançada adiada.
   - ocasiões, padrões e texturas.
   Sem etiquetas, a inspiração mostra "Sem etiquetas", nada é inventado.
 - Não é posse: não cria nem referencia peças e não aparece no guarda-roupa.
+- **Preferências** (segundo segmento do separador Estilo): "Gosto" ou "Evito" de uma cor, padrão, textura, formalidade ou combinação (base neutra, um só destaque, tons próximos).
+  - O contexto são as ocasiões em que vale; sem ocasiões, vale sempre.
+  - Só pode haver uma preferência ativa para o mesmo assunto, valor e contexto. A app explica quando já existe.
+  - Ao editar, o assunto e a origem ficam; mudam o valor, a posição e o contexto.
+  - Numa inspiração guardada, **Criar preferências** propõe um "Gosto" por etiqueta (cores, formalidade, padrões e texturas), no contexto das ocasiões dela. O utilizador escolhe quais quer; as repetidas são ignoradas. A preferência guarda a inspiração de origem e fica se a inspiração for eliminada.
+  - Não é posse: não cria, não esconde nem altera peças. No motor (incremento 5) será só uma componente da pontuação de peças que existem.
 - Dados:
   - a tabela `inspirations` é escrita por `apply_style_operation` (`create_inspiration`, `edit_inspiration` campo a campo, `delete_inspiration`) e sincronizada pelo stream `user_inspirations`;
-  - a fila local é `style_operations`, que ficará também para as preferências.
+  - a tabela `style_preferences` é escrita pela mesma função (`create_preference`, `edit_preference`, `delete_preference`) e sincronizada pelo stream `user_style_preferences`;
+  - as duas partilham a fila local `style_operations`.
 - Por fazer:
   - imagem própria ou autorizada (bucket privado);
   - proporções;
-  - preferências explícitas por contexto;
   - uso no motor;
   - entrada no backup.
 

@@ -9,19 +9,94 @@ import '../../wardrobe/domain/reference_color.dart';
 import '../../wardrobe/presentation/colors_editor.dart';
 import '../application/inspiration_providers.dart';
 import '../domain/inspiration.dart';
+import '../domain/style_preference.dart';
 import 'inspiration_messages.dart';
+import 'preference_messages.dart';
 
-/// Separador Estilo: inspirações guardadas. Não são peças.
-class StyleScreen extends ConsumerWidget {
+/// Separador Estilo: inspirações guardadas e preferências explícitas.
+/// Nenhuma das duas é posse: não são peças.
+class StyleScreen extends ConsumerStatefulWidget {
   const StyleScreen({super.key});
+
+  @override
+  ConsumerState<StyleScreen> createState() => _StyleScreenState();
+}
+
+enum _StyleView { inspirations, preferences }
+
+class _StyleScreenState extends ConsumerState<StyleScreen> {
+  _StyleView _view = _StyleView.inspirations;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final inspirations = _view == _StyleView.inspirations;
+    final ready = inspirations
+        ? ref.watch(inspirationRepositoryProvider) != null
+        : ref.watch(preferenceRepositoryProvider) != null;
+
+    return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        // Os separadores ficam montados lado a lado: sem Hero partilhado.
+        heroTag: null,
+        key: Key(inspirations ? 'inspiration-add' : 'preference-add'),
+        onPressed: ready
+            ? () => context.push(
+                inspirations
+                    ? AppRoutes.newInspiration
+                    : AppRoutes.newPreference,
+              )
+            : null,
+        icon: const Icon(Icons.add),
+        label: Text(inspirations ? l10n.inspirationAdd : l10n.preferenceAdd),
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<_StyleView>(
+                showSelectedIcon: false,
+                segments: [
+                  ButtonSegment(
+                    value: _StyleView.inspirations,
+                    label: Text(
+                      l10n.styleInspirations,
+                      key: const Key('style-segment-inspirations'),
+                    ),
+                  ),
+                  ButtonSegment(
+                    value: _StyleView.preferences,
+                    label: Text(
+                      l10n.stylePreferences,
+                      key: const Key('style-segment-preferences'),
+                    ),
+                  ),
+                ],
+                selected: {_view},
+                onSelectionChanged: (s) => setState(() => _view = s.single),
+              ),
+            ),
+          ),
+          Expanded(
+            child: inspirations
+                ? const _InspirationList()
+                : const _PreferenceList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InspirationList extends ConsumerWidget {
+  const _InspirationList();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final inspirations = ref.watch(inspirationsProvider);
-    final ready = ref.watch(inspirationRepositoryProvider) != null;
-
-    final Widget body = switch (inspirations) {
+    return switch (ref.watch(inspirationsProvider)) {
       AsyncData(value: final list) when list.isEmpty => EmptyState(
         icon: Icons.auto_awesome_outlined,
         message: l10n.styleEmpty,
@@ -34,17 +109,77 @@ class StyleScreen extends ConsumerWidget {
       AsyncError() => Center(child: Text(l10n.wardrobeLoadError)),
       _ => const Center(child: CircularProgressIndicator()),
     };
+  }
+}
 
-    return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
-        // Os separadores ficam montados lado a lado: sem Hero partilhado.
-        heroTag: null,
-        key: const Key('inspiration-add'),
-        onPressed: ready ? () => context.push(AppRoutes.newInspiration) : null,
-        icon: const Icon(Icons.add),
-        label: Text(l10n.inspirationAdd),
+class _PreferenceList extends ConsumerWidget {
+  const _PreferenceList();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final origins = {
+      for (final i in ref.watch(inspirationsProvider).value ?? <Inspiration>[])
+        i.id: i,
+    };
+    return switch (ref.watch(preferencesProvider)) {
+      AsyncData(value: final list) when list.isEmpty => EmptyState(
+        icon: Icons.thumbs_up_down_outlined,
+        message: l10n.preferencesEmpty,
+        hint: l10n.preferencesEmptyHint,
       ),
-      body: body,
+      AsyncData(value: final list) => ListView(
+        padding: const EdgeInsets.only(bottom: 88),
+        children: [
+          for (final p in list)
+            _PreferenceTile(preference: p, origin: origins[p.inspirationId]),
+        ],
+      ),
+      AsyncError() => Center(child: Text(l10n.wardrobeLoadError)),
+      _ => const Center(child: CircularProgressIndicator()),
+    };
+  }
+}
+
+class _PreferenceTile extends StatelessWidget {
+  const _PreferenceTile({required this.preference, this.origin});
+
+  final StylePreference preference;
+  final Inspiration? origin;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final p = preference;
+    final like = p.stance == PreferenceStance.like;
+    final originName = origin == null
+        ? null
+        : origin!.title ?? origin!.sourceHost;
+    return ListTile(
+      key: Key('preference-${p.id}'),
+      leading: SizedBox.square(
+        dimension: 48,
+        child: Center(
+          child: p.subject == PreferenceSubject.color
+              ? ColorDot(
+                  rgb: int.parse(p.value),
+                  label: preferenceValueLabel(l10n, p.subject, p.value),
+                )
+              : Icon(
+                  like ? Icons.thumb_up_outlined : Icons.thumb_down_outlined,
+                ),
+        ),
+      ),
+      title: Text(preferenceTitle(l10n, p)),
+      subtitle: Text(
+        [
+          preferenceContext(l10n, p),
+          if (originName != null) l10n.preferenceFromInspiration(originName),
+        ].join('\n'),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+      onTap: () => context.push(AppRoutes.preference(p.id)),
     );
   }
 }

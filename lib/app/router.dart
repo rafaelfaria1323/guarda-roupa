@@ -11,6 +11,7 @@ import '../features/account_sync/presentation/sign_in_screen.dart';
 import '../features/care/presentation/care_settings_screen.dart';
 import '../features/inspirations/presentation/style_screen.dart';
 import '../features/inspirations/presentation/inspiration_editor_screen.dart';
+import '../features/inspirations/presentation/preference_editor_screen.dart';
 import '../features/outfits/presentation/outfit_editor_screen.dart';
 import '../features/outfits/presentation/outfits_screen.dart';
 import '../features/planner/presentation/planner_screen.dart';
@@ -32,6 +33,8 @@ abstract final class AppRoutes {
   static const style = '/estilo';
   static const newInspiration = '/estilo/inspiracao/nova';
   static String inspiration(String id) => '/estilo/inspiracao/$id';
+  static const newPreference = '/estilo/preferencia/nova';
+  static String preference(String id) => '/estilo/preferencia/$id';
   static const settings = '/definicoes';
   static const careSettings = '/definicoes/lavagem';
   static const wear = '/vesti';
@@ -99,6 +102,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/estilo/inspiracao/:id',
         builder: (context, state) =>
             InspirationEditorScreen(id: state.pathParameters['id']),
+      ),
+      GoRoute(
+        path: AppRoutes.newPreference,
+        builder: (context, state) => const PreferenceEditorScreen(),
+      ),
+      GoRoute(
+        path: '/estilo/preferencia/:id',
+        builder: (context, state) =>
+            PreferenceEditorScreen(id: state.pathParameters['id']),
       ),
       GoRoute(
         path: AppRoutes.careSettings,
