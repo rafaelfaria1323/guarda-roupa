@@ -26,8 +26,8 @@ Estado: abordagem assistida confirmada; interpretação visual avançada adiada.
 - Por fazer:
   - imagem própria ou autorizada (bucket privado);
   - proporções;
-  - uso no motor;
-  - entrada no backup.
+  - uso no motor.
+- Backup (formato v4): inspirações e preferências entram e são recuperadas com ids novos.
 
 ## Objetivo
 

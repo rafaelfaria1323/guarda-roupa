@@ -7,6 +7,9 @@ import 'package:crypto/crypto.dart';
 import '../../../core/domain/result.dart';
 import '../../care/domain/care_policies.dart';
 import '../../care/domain/cleaning_event.dart';
+import '../../inspirations/data/powersync_inspiration_repository.dart';
+import '../../inspirations/domain/inspiration.dart';
+import '../../inspirations/domain/style_preference.dart';
 import '../../outfits/domain/outfit.dart';
 import '../../wardrobe/data/garment_row.dart';
 import '../../wardrobe/domain/garment.dart';
@@ -281,6 +284,189 @@ abstract final class BackupCodec {
     return null;
   }
 
+  /// `data/style.json`: inspirações e preferências.
+  static Map<String, Object?> styleJson(
+    List<Inspiration> inspirations,
+    List<StylePreference> preferences,
+  ) => {
+    'inspirations': [
+      for (final i in inspirations)
+        {
+          'id': i.id,
+          ...PowerSyncInspirationRepository.columns(i.toDraft()),
+          'created_at': GarmentRow.iso(i.createdAt),
+          'updated_at': GarmentRow.iso(i.updatedAt),
+        },
+    ],
+    'preferences': [
+      for (final p in preferences)
+        {
+          'id': p.id,
+          'subject': p.subject.id,
+          'value': p.value,
+          'stance': p.stance.id,
+          'occasions': [
+            for (final o in Occasion.values)
+              if (p.occasions.contains(o)) o.id,
+          ],
+          'inspiration_id': p.inspirationId,
+          'created_at': GarmentRow.iso(p.createdAt),
+          'updated_at': GarmentRow.iso(p.updatedAt),
+        },
+    ],
+  };
+
+  /// Inverso de [styleJson]; `null` se algo for inválido (as mesmas regras
+  /// do servidor) ou se uma preferência referir uma inspiração que não está
+  /// no ficheiro.
+  static (List<Inspiration>, List<StylePreference>)? styleFromJson(
+    Object? json,
+  ) {
+    if (json case {
+      'inspirations': final List<Object?> rawInspirations,
+      'preferences': final List<Object?> rawPreferences,
+    }) {
+      final inspirations = <Inspiration>[];
+      final ids = <String>{};
+      for (final i in rawInspirations) {
+        final parsed = _inspirationFromJson(i);
+        if (parsed == null || !ids.add(parsed.id)) return null;
+        inspirations.add(parsed);
+      }
+      final preferences = <StylePreference>[];
+      final prefIds = <String>{};
+      for (final p in rawPreferences) {
+        final parsed = _preferenceFromJson(p);
+        if (parsed == null || !prefIds.add(parsed.id)) return null;
+        if (parsed.inspirationId case final origin?
+            when !ids.contains(origin)) {
+          return null;
+        }
+        preferences.add(parsed);
+      }
+      return (List.unmodifiable(inspirations), List.unmodifiable(preferences));
+    }
+    return null;
+  }
+
+  static Inspiration? _inspirationFromJson(Object? json) {
+    if (json
+        case {
+          'id': final String id,
+          'title': final String? title,
+          'source_url': final String? sourceUrl,
+          'notes': final String? notes,
+          'palette': final List<Object?> rawPalette,
+          'formality': final String? rawFormality,
+          'patterns': final List<Object?> rawPatterns,
+          'textures': final List<Object?> rawTextures,
+          'occasions': final List<Object?> rawOccasions,
+          'created_at': final String createdAt,
+          'updated_at': final String updatedAt,
+        }
+        when _safeId.hasMatch(id)) {
+      final created = DateTime.tryParse(createdAt);
+      final updated = DateTime.tryParse(updatedAt);
+      if (created == null || updated == null) return null;
+      final palette = [
+        for (final c in rawPalette)
+          if (c is int && c >= 0 && c <= 0xFFFFFF) c,
+      ];
+      final formality = Formality.fromId(rawFormality);
+      final patterns = _known(rawPatterns, GarmentPattern.fromId);
+      final textures = _known(rawTextures, SurfaceTexture.fromId);
+      final occasions = _known(rawOccasions, Occasion.fromId);
+      if (palette.length != rawPalette.length ||
+          (rawFormality != null && formality == null) ||
+          patterns == null ||
+          textures == null ||
+          occasions == null) {
+        return null;
+      }
+      final draft = InspirationDraft(
+        title: title,
+        sourceUrl: sourceUrl,
+        notes: notes,
+        palette: palette,
+        formality: formality,
+        patterns: patterns,
+        textures: textures,
+        occasions: occasions,
+      );
+      // Já guardado normalizado: o ficheiro não pode trazer outra coisa.
+      final normalized = draft.normalized();
+      if (normalized.title != title ||
+          normalized.sourceUrl != sourceUrl ||
+          normalized.notes != notes ||
+          InspirationRules.validate(normalized) != null) {
+        return null;
+      }
+      return Inspiration(
+        id: id,
+        title: title,
+        sourceUrl: sourceUrl,
+        notes: notes,
+        palette: List.unmodifiable(palette),
+        formality: formality,
+        patterns: patterns,
+        textures: textures,
+        occasions: occasions,
+        createdAt: created.toUtc(),
+        updatedAt: updated.toUtc(),
+      );
+    }
+    return null;
+  }
+
+  static StylePreference? _preferenceFromJson(Object? json) {
+    if (json
+        case {
+          'id': final String id,
+          'subject': final String rawSubject,
+          'value': final String value,
+          'stance': final String rawStance,
+          'occasions': final List<Object?> rawOccasions,
+          'inspiration_id': final String? inspirationId,
+          'created_at': final String createdAt,
+          'updated_at': final String updatedAt,
+        }
+        when _safeId.hasMatch(id)) {
+      final subject = PreferenceSubject.fromId(rawSubject);
+      final stance = PreferenceStance.fromId(rawStance);
+      final occasions = _known(rawOccasions, Occasion.fromId);
+      final created = DateTime.tryParse(createdAt);
+      final updated = DateTime.tryParse(updatedAt);
+      if (subject == null ||
+          !subject.accepts(value) ||
+          stance == null ||
+          occasions == null ||
+          created == null ||
+          updated == null) {
+        return null;
+      }
+      return StylePreference(
+        id: id,
+        subject: subject,
+        value: value,
+        stance: stance,
+        occasions: occasions,
+        inspirationId: inspirationId,
+        createdAt: created.toUtc(),
+        updatedAt: updated.toUtc(),
+      );
+    }
+    return null;
+  }
+
+  /// Ids conhecidos e sem repetidos; `null` se algum não for.
+  static Set<T>? _known<T>(List<Object?> raw, T? Function(String) fromId) {
+    final out = <T>{
+      for (final x in raw)
+        if (x is String) ?fromId(x),
+    };
+    return out.length == raw.length ? out : null;
+  }
+
   static Uint8List encode({
     required List<Garment> garments,
     required Map<(String, PhotoVariant), Uint8List> photoFiles,
@@ -300,6 +486,10 @@ abstract final class BackupCodec {
       BackupFormat.outfitsPath: utf8.encode(
         const JsonEncoder.withIndent(' ').convert(outfitsJson(history.outfits)),
       ),
+      BackupFormat.stylePath: utf8.encode(
+        const JsonEncoder.withIndent(' ')
+            .convert(styleJson(history.inspirations, history.preferences)),
+      ),
       for (final MapEntry(key: (id, variant), :value) in photoFiles.entries)
         BackupFormat.photoPath(id, variant): value,
     };
@@ -314,6 +504,8 @@ abstract final class BackupCodec {
         'cleaning_events': history.cleanings.length,
         'care_policies': history.policies.length,
         'outfits': history.outfits.length,
+        'inspirations': history.inspirations.length,
+        'style_preferences': history.preferences.length,
       },
       'pending_operations': pendingOperations,
       'files': [
@@ -508,18 +700,30 @@ abstract final class BackupCodec {
       }
       final outfits = outfitsFromJson(raw, ids);
       if (outfits == null) return const Err(CorruptBackup('conjuntos'));
-      history = BackupHistory(
-        wears: history.wears,
-        cleanings: history.cleanings,
-        policies: history.policies,
-        outfits: outfits,
-      );
+      history = history.withOutfits(outfits);
+    }
+    // Inspirações e preferências: obrigatórias a partir da v4.
+    final styleBytes = contents[BackupFormat.stylePath];
+    if (version >= 4 && styleBytes == null) {
+      return const Err(CorruptBackup('estilo em falta'));
+    }
+    if (styleBytes != null) {
+      final Object? raw;
+      try {
+        raw = jsonDecode(utf8.decode(styleBytes));
+      } on Object {
+        return const Err(CorruptBackup('estilo ilegível'));
+      }
+      final style = styleFromJson(raw);
+      if (style == null) return const Err(CorruptBackup('estilo'));
+      history = history.withStyle(style.$1, style.$2);
     }
 
     final expectedFiles =
         1 +
         (historyBytes == null ? 0 : 1) +
         (outfitsBytes == null ? 0 : 1) +
+        (styleBytes == null ? 0 : 1) +
         photoFiles.length;
     if (contents.length != expectedFiles) {
       return const Err(CorruptBackup('ficheiros sem peça'));
@@ -535,6 +739,8 @@ abstract final class BackupCodec {
           wears: history.wears.length,
           cleanings: history.cleanings.length,
           outfits: history.outfits.length,
+          inspirations: history.inspirations.length,
+          preferences: history.preferences.length,
         ),
         garments: List.unmodifiable(garments),
         photoFiles: Map.unmodifiable(photoFiles),

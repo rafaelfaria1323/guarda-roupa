@@ -9,6 +9,10 @@ import 'package:guarda_roupa/features/backup/data/backup_restorer.dart';
 import 'package:guarda_roupa/features/backup/domain/backup.dart';
 import 'package:guarda_roupa/features/care/data/powersync_care_repository.dart';
 import 'package:guarda_roupa/features/care/domain/care_policies.dart';
+import 'package:guarda_roupa/features/inspirations/data/powersync_inspiration_repository.dart';
+import 'package:guarda_roupa/features/inspirations/data/powersync_preference_repository.dart';
+import 'package:guarda_roupa/features/inspirations/domain/inspiration.dart';
+import 'package:guarda_roupa/features/inspirations/domain/style_preference.dart';
 import 'package:guarda_roupa/features/outfits/data/powersync_outfit_repository.dart';
 import 'package:guarda_roupa/features/outfits/domain/outfit.dart';
 import 'package:guarda_roupa/features/wardrobe/data/powersync_wardrobe_repository.dart';
@@ -332,4 +336,103 @@ void main() {
     expect(op['outfit_id'], o.id);
     expect((op['data']! as Map)['items'], hasLength(3));
   });
+
+  test(
+    'recupera inspirações e preferências sem repetir as que já existem',
+    () async {
+      final from = PowerSyncInspirationRepository(
+        db: source,
+        ownerId: 'user-a',
+      );
+      final fromPrefs = PowerSyncPreferenceRepository(
+        db: source,
+        ownerId: 'user-a',
+      );
+      ok(
+        await sourceRepo.addGarment(
+          const GarmentDraft(category: GarmentCategory.shirt),
+        ),
+      );
+      final neutral = ok(
+        await from.createInspiration(
+          const InspirationDraft(
+            title: 'Neutros',
+            patterns: {GarmentPattern.plain},
+          ),
+        ),
+      );
+      ok(
+        await from.createInspiration(
+          const InspirationDraft(sourceUrl: 'https://example.com/x'),
+        ),
+      );
+      ok(
+        await fromPrefs.createPreferences(
+          PreferenceDraft.fromInspiration(neutral),
+        ),
+      );
+      ok(
+        await fromPrefs.createPreference(
+          const PreferenceDraft(
+            subject: PreferenceSubject.combo,
+            value: 'tonal',
+            stance: PreferenceStance.avoid,
+          ),
+        ),
+      );
+
+      // O destino já tem uma inspiração igual e a mesma preferência, sem peças.
+      final to = PowerSyncInspirationRepository(db: target, ownerId: 'user-b');
+      final toPrefs = PowerSyncPreferenceRepository(
+        db: target,
+        ownerId: 'user-b',
+      );
+      final existing = ok(
+        await to.createInspiration(
+          const InspirationDraft(sourceUrl: 'https://example.com/x'),
+        ),
+      );
+      ok(
+        await toPrefs.createPreference(
+          const PreferenceDraft(
+            subject: PreferenceSubject.combo,
+            value: 'tonal',
+            stance: PreferenceStance.like,
+          ),
+        ),
+      );
+
+      final contents = ok(await restorer().inspect(await backupOfSource()));
+      expect(contents.summary.inspirations, 2);
+      expect(contents.summary.preferences, 2);
+      ok(await restorer().apply(contents));
+
+      final inspirations = await to.watchInspirations().first;
+      expect(inspirations, hasLength(2));
+      expect(inspirations.where((i) => i.id == existing.id), hasLength(1));
+      final restored = inspirations.firstWhere((i) => i.title == 'Neutros');
+      expect(restored.id, isNot(neutral.id));
+
+      final prefs = await toPrefs.watchPreferences().first;
+      expect(prefs, hasLength(2), reason: 'a combinação já existia');
+      final plain = prefs.firstWhere(
+        (p) => p.subject == PreferenceSubject.pattern,
+      );
+      expect(plain.inspirationId, restored.id, reason: 'origem com o id novo');
+      expect(
+        prefs.firstWhere((p) => p.subject == PreferenceSubject.combo).stance,
+        PreferenceStance.like,
+        reason: 'a do destino fica',
+      );
+
+      final server = ScriptedUploader();
+      await OperationUploadQueue(server).upload(target);
+      expect(server.log.where((l) => l.startsWith('style')), [
+        'style create_inspiration',
+        'style create_preference',
+        'style create_inspiration',
+        'style create_preference',
+      ]);
+    },
+  );
 }

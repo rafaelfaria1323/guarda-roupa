@@ -4,6 +4,9 @@ import 'package:sqlite_async/sqlite_async.dart';
 
 import '../../care/data/powersync_care_repository.dart';
 import '../../care/domain/care_policies.dart';
+import '../../inspirations/data/powersync_inspiration_repository.dart';
+import '../../inspirations/data/powersync_preference_repository.dart';
+import '../../inspirations/domain/style_preference.dart';
 import '../../outfits/data/powersync_outfit_repository.dart';
 import '../../wardrobe/data/garment_row.dart';
 import '../../outfits/domain/outfit.dart';
@@ -19,7 +22,10 @@ import '../domain/backup.dart';
 /// foram registadas: assim o servidor mantém a ordem entre uma utilização
 /// e uma limpeza do mesmo dia. Só corre num destino vazio, por isso não
 /// duplica utilizações de uma conta existente. Os conjuntos também ficam
-/// com ids novos (`create_outfit`).
+/// com ids novos (`create_outfit`), tal como as inspirações e preferências
+/// (`create_inspiration`, `create_preference`). Estas podem já existir sem
+/// peças: uma inspiração igual ou uma preferência com o mesmo alvo não se
+/// repete.
 abstract final class HistoryImport {
   static Future<void> write(
     SqliteWriteContext tx, {
@@ -184,6 +190,110 @@ abstract final class HistoryImport {
           stamp,
         ],
       );
+    }
+
+    await _style(tx, ownerId: ownerId, history: history, stamp: stamp!);
+  }
+
+  static Future<void> _style(
+    SqliteWriteContext tx, {
+    required String ownerId,
+    required BackupHistory history,
+    required String stamp,
+  }) async {
+    Future<void> operation(
+      String entityId,
+      String kind,
+      Map<String, Object?> data,
+    ) => tx.execute(
+      'INSERT INTO style_operations (id, entity_id, kind, data, created_at) '
+      'VALUES (uuid(), ?, ?, ?, ?)',
+      [entityId, kind, jsonEncode(data), stamp],
+    );
+
+    // Inspirações: as iguais às que já existem reutilizam-se.
+    final existing = <String, String>{
+      for (final row in await tx.getAll(
+        'SELECT * FROM inspirations WHERE deleted_at IS NULL',
+      ))
+        if (PowerSyncInspirationRepository.fromRow(row) case final i?)
+          jsonEncode(PowerSyncInspirationRepository.columns(i.toDraft())): i.id,
+    };
+    final inspirationIds = <String, String>{};
+    for (final i in history.inspirations) {
+      final fields = PowerSyncInspirationRepository.columns(i.toDraft());
+      final key = jsonEncode(fields);
+      if (existing[key] case final id?) {
+        inspirationIds[i.id] = id;
+        continue;
+      }
+      final id = (await tx.get('SELECT uuid() AS id'))['id']! as String;
+      await tx.execute(
+        'INSERT INTO inspirations (id, owner_id, ${fields.keys.join(', ')}, '
+        'created_at, updated_at) VALUES (?, ?, '
+        '${List.filled(fields.length, '?').join(', ')}, ?, ?)',
+        [
+          id,
+          ownerId,
+          for (final v in fields.values) v is List ? jsonEncode(v) : v,
+          GarmentRow.iso(i.createdAt),
+          stamp,
+        ],
+      );
+      await operation(id, 'create_inspiration', {
+        for (final MapEntry(:key, :value) in fields.entries)
+          if (value != null && !(value is List && value.isEmpty)) key: value,
+      });
+      existing[key] = id;
+      inspirationIds[i.id] = id;
+    }
+
+    // Preferências: uma por alvo (assunto, valor e contexto).
+    final targets = [
+      for (final row in await tx.getAll(
+        'SELECT * FROM style_preferences WHERE deleted_at IS NULL',
+      ))
+        if (PowerSyncPreferenceRepository.fromRow(row) case final p?)
+          p.toDraft(),
+    ];
+    for (final p in history.preferences) {
+      final draft = PreferenceDraft(
+        subject: p.subject,
+        value: p.value,
+        stance: p.stance,
+        occasions: p.occasions,
+        inspirationId: inspirationIds[p.inspirationId],
+      );
+      if (targets.any(draft.sameTarget)) continue;
+      final id = (await tx.get('SELECT uuid() AS id'))['id']! as String;
+      final occasions = [
+        for (final o in Occasion.values)
+          if (p.occasions.contains(o)) o.id,
+      ];
+      await tx.execute(
+        'INSERT INTO style_preferences (id, owner_id, subject, value, stance, '
+        'occasions, inspiration_id, created_at, updated_at) '
+        'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [
+          id,
+          ownerId,
+          draft.subject.id,
+          draft.value,
+          draft.stance.id,
+          jsonEncode(occasions),
+          draft.inspirationId,
+          GarmentRow.iso(p.createdAt),
+          stamp,
+        ],
+      );
+      await operation(id, 'create_preference', {
+        'subject': draft.subject.id,
+        'value': draft.value,
+        'stance': draft.stance.id,
+        if (occasions.isNotEmpty) 'occasions': occasions,
+        'inspiration_id': ?draft.inspirationId,
+      });
+      targets.add(draft);
     }
   }
 }
