@@ -1,6 +1,6 @@
 # ADR-004 — Sincronização local-first
 
-Estado: decisão de implementação em aberto; POC recomendada antes de construir o catálogo completo.
+Estado: **PowerSync + Supabase escolhido para a primeira POC** (2026-11-03). Decisão final depende do resultado da POC; protocolo próprio mantém-se como alternativa.
 
 ## Contexto e requisitos
 

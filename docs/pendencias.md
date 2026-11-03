@@ -6,9 +6,9 @@ Uma pendência não deve desaparecer por estar descrita em Markdown. Fechar apen
 
 | ID | Tema e estado | Como fechar | Bloqueia |
 |---|---|---|---|
-| P-01 | Backend — Supabase recomendado | Aprovar após comparar custos, quotas, localização e requisitos | Criação da infraestrutura |
-| P-02 | Login — método não escolhido | Escolher Google OAuth, email/password ou outro com recuperação real | Fluxo de conta |
-| P-03 | Sync — engine não escolhido | POC PowerSync/Drift versus protocolo próprio; dados e media em Android/Safari | Fundação |
+| P-01 | Backend — **Decidido 2026-11-03: Supabase Free** | Criar projeto (guia 02) e registar região/limites | Criação da infraestrutura |
+| P-02 | Login — **Decidido 2026-11-03: Google OAuth** | Configurar projeto Google e callbacks (guia 03); demonstrar entrada e recuperação | Fluxo de conta |
+| P-03 | Sync — **Em POC: PowerSync + Supabase escolhido para a primeira POC** (2026-11-03) | Executar a POC mínima abaixo em Android/Safari; aprovar ou recorrer ao protocolo próprio | Fundação |
 | P-04 | Conflitos e privacidade | Definir semântica, autorização, logout e confirmação idempotente | Uso da conta em dois dispositivos |
 | P-05 | PWA/fotografias | Demonstrar armazenamento persistente, quotas, HEIC e reabertura offline no iPhone | Onboarding real |
 | P-06 | Política de rotatividade | Definir modos e valores iniciais editáveis para tops/calças; calçado/acessórios já podem repetir | Motor com políticas reais |
@@ -21,7 +21,7 @@ Uma pendência não deve desaparecer por estar descrita em Markdown. Fechar apen
 | P-13 | Pinterest | Confirmar permissões/API; link não garante imagem | Importação automática de Pins |
 | P-14 | Modelo IA | Licença, operadores, tamanho, precisão e desempenho | Ativar análise visual automática |
 | P-15 | Assinatura/distribuição Android | Definir applicationId, guardar chave e comprovar atualização sem apagar dados | Distribuição estável |
-| P-16 | Registo pessoal/público | Definir quem pode criar conta e impor a regra no servidor | Expor login publicamente |
+| P-16 | Registo — **Decidido 2026-11-03: só o proprietário** (e uma conta de experiência) | Impor a regra no servidor (Auth + RLS), não apenas na UI | Expor login publicamente |
 
 ## O que já não está pendente como requisito
 
@@ -48,6 +48,15 @@ Idempotência de retries e da mesma entrada de plano não deduplica magicamente 
 - Browser/OS podem remover dados locais.
 - Free tiers podem alterar limites ou suspender por inatividade.
 - Lojas e plataformas podem mudar acessos.
+
+## Registo de decisões
+
+| ID | Decisão | Responsável | Data | Estado |
+|---|---|---|---|---|
+| P-01 | Supabase Free como backend (Auth, PostgreSQL com RLS, Storage privado) | Utilizador | 2026-11-03 | Decidido; projeto ainda não criado |
+| P-02 | Google OAuth como único método de login inicial | Utilizador | 2026-11-03 | Decidido; não configurado |
+| P-03 | PowerSync + Supabase como primeira POC de sincronização | Utilizador | 2026-11-03 | POC por executar; decisão final depende do resultado |
+| P-16 | Apenas o proprietário (e conta de experiência) pode usar a app | Utilizador | 2026-11-03 | Decidido; regra no servidor por implementar |
 
 ## Registo futuro de fecho
 

@@ -1,6 +1,6 @@
 # ADR-003 — Backend e autenticação
 
-Estado: Supabase recomendado; seleção de fornecedor e login não confirmada.
+Estado: **Decidido em 2026-11-03** — Supabase Free (P-01), Google OAuth (P-02) e registo restrito ao proprietário (P-16). Recursos ainda não criados.
 
 ## Contexto
 
