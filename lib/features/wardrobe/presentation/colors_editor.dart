@@ -60,7 +60,7 @@ class ColorsEditor extends StatelessWidget {
           runSpacing: 8,
           children: [
             for (final color in ReferenceColor.values)
-              _Swatch(
+              ColorDot(
                 key: Key('color-${color.id}'),
                 rgb: color.rgb,
                 label: l10n.colorLabel(color.id),
@@ -72,7 +72,7 @@ class ColorsEditor extends StatelessWidget {
         for (final (i, c) in value.indexed)
           Row(
             children: [
-              _Swatch(rgb: c.rgb, label: _name(l10n, c), size: 24),
+              ColorDot(rgb: c.rgb, label: _name(l10n, c), size: 24),
               const SizedBox(width: 8),
               SizedBox(
                 width: 112,
@@ -116,8 +116,9 @@ class ColorsEditor extends StatelessWidget {
       l10n.colorLabel(ReferenceColor.fromRgb(c.rgb)?.id ?? 'custom');
 }
 
-class _Swatch extends StatelessWidget {
-  const _Swatch({
+/// Círculo de cor tocável (com visto quando escolhida).
+class ColorDot extends StatelessWidget {
+  const ColorDot({
     required this.rgb,
     required this.label,
     this.selected = false,

@@ -83,7 +83,45 @@
     }
   },
   "styleEmpty": "Ainda não há inspirações.",
-  "styleEmptyHint": "Referências e preferências de estilo chegam no incremento 4.",
+  "styleEmptyHint": "Guarda um link ou uma ideia, com as etiquetas que te interessam. Não são peças: não aparecem no guarda-roupa.",
+  "inspirationAdd": "Inspiração",
+  "inspirationNewTitle": "Nova inspiração",
+  "inspirationEditTitle": "Inspiração",
+  "inspirationSave": "Guardar",
+  "inspirationTitle": "Título",
+  "inspirationLink": "Link",
+  "inspirationLinkHint": "Só fica guardado: a app não abre nem analisa a página.",
+  "inspirationNotes": "Notas",
+  "inspirationTags": "Etiquetas",
+  "inspirationTagsHint": "Só as que confirmas. Nada é deduzido de imagens ou do link.",
+  "inspirationPalette": "Paleta",
+  "inspirationFormality": "Formalidade",
+  "formalityLabel": "{formality, select, relaxed{Descontraído} smart_casual{Casual cuidado} dressy{Arranjado} other{Sem indicação}}",
+  "@formalityLabel": {
+    "placeholders": {
+      "formality": {
+        "type": "String"
+      }
+    }
+  },
+  "inspirationPatterns": "Padrões",
+  "inspirationTextures": "Texturas",
+  "inspirationOccasions": "Ocasiões",
+  "inspirationNotOwned": "Não é uma peça: não entra no guarda-roupa nem é sugerida como peça.",
+  "inspirationCopyLink": "Copiar link",
+  "inspirationLinkCopied": "Link copiado.",
+  "inspirationSaved": "Inspiração guardada.",
+  "inspirationDelete": "Eliminar inspiração",
+  "inspirationDeleteConfirm": "Eliminar esta inspiração? As peças não mudam.",
+  "inspirationDeleted": "Inspiração eliminada.",
+  "inspirationNotFound": "Esta inspiração já não existe.",
+  "inspirationEmptyDraft": "Indica um título ou um link.",
+  "inspirationTitleTooLong": "Título demasiado longo (máx. 120 caracteres).",
+  "inspirationInvalidUrl": "Link inválido. Usa um endereço http(s).",
+  "inspirationNotesTooLong": "Notas demasiado longas (máx. 1000 caracteres).",
+  "inspirationTooManyColors": "Escolhe até 8 cores.",
+  "inspirationSaveFailed": "Não foi possível guardar a inspiração.",
+  "inspirationNoTags": "Sem etiquetas",
   "settingsAccount": "Conta e sincronização",
   "categoryLabel": "{category, select, t_shirt{T-shirt} shirt{Camisa} polo{Polo} top{Top} sweater{Camisola} sweatshirt{Sweatshirt} cardigan{Casaco de malha} trousers{Calças} jeans{Calças de ganga} shorts{Calções} skirt{Saia} dress{Vestido} jumpsuit{Macacão} jacket{Casaco} blazer{Blazer} coat{Sobretudo} raincoat{Impermeável} sneakers{Ténis} shoes{Sapatos} boots{Botas} sandals{Sandálias} accessory{Acessório} other{Outra}}",
   "@categoryLabel": {

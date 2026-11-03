@@ -99,7 +99,7 @@ final _pendingOperationsProvider = StreamProvider<int>((ref) {
         // entram em ps_crud, mas não são enviadas (ver OperationUploadQueue).
         'SELECT count(*) AS n FROM ps_crud '
         r"WHERE json_extract(data, '$.type') IN "
-        "('garment_operations', 'wear_operations', 'outfit_operations')",
+        "('garment_operations', 'wear_operations', 'outfit_operations', 'style_operations')",
         triggerOnTables: const {'ps_crud'},
       )
       .map((rows) => rows.first['n']! as int);

@@ -32,8 +32,8 @@ void main() {
     await settle(tester);
     expect(find.text('Ainda não há conjuntos guardados.'), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.auto_awesome_outlined));
-    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.auto_awesome_outlined).first);
+    await settle(tester);
     expect(find.text('Ainda não há inspirações.'), findsOneWidget);
   });
 

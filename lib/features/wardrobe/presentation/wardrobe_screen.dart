@@ -114,6 +114,8 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
+        // Os separadores ficam montados lado a lado: sem Hero partilhado.
+        heroTag: null,
         onPressed: stream == null
             ? null
             : () => context.push(AppRoutes.newGarment),

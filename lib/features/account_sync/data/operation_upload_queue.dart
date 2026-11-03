@@ -22,6 +22,10 @@ abstract interface class OperationUploader {
   /// regras de erro que [apply].
   Future<Map<String, Object?>> applyOutfit(Map<String, Object?> operation);
 
+  /// Envia uma operação de estilo (`apply_style_operation`). Mesmas regras
+  /// de erro que [apply].
+  Future<Map<String, Object?>> applyStyle(Map<String, Object?> operation);
+
   /// Envia um ficheiro de foto. Idempotente; lança em falha de rede.
   Future<void> uploadPhotoFile(
     String photoId,
@@ -43,6 +47,8 @@ abstract interface class OperationUploader {
 ///   utilização.
 /// - `outfit_operations` (PUT): enviadas a `apply_outfit_operation`; em
 ///   `sync_conflicts`, `garment_id` guarda o id do conjunto.
+/// - `style_operations` (PUT): enviadas a `apply_style_operation`; em
+///   `sync_conflicts`, `garment_id` guarda o id da inspiração.
 /// - Escritas em `garments`: são só a visão otimista local; o servidor não
 ///   aceita escrita direta, por isso não se enviam.
 /// - `attach_photo`: os ficheiros vão primeiro; o servidor só liga a foto se
@@ -97,6 +103,16 @@ final class OperationUploadQueue {
                 'data': payload,
               }),
             ));
+          case 'style_operations':
+            outcomes.add((
+              entry,
+              await _uploader.applyStyle({
+                'op_id': entry.id,
+                'entity_id': data['entity_id'],
+                'kind': kind,
+                'data': payload,
+              }),
+            ));
         }
       }
 
@@ -130,7 +146,8 @@ final class OperationUploadQueue {
               entry.id,
               entry.opData?['garment_id'] ??
                   entry.opData?['event_id'] ??
-                  entry.opData?['outfit_id'],
+                  entry.opData?['outfit_id'] ??
+                  entry.opData?['entity_id'],
               entry.opData?['kind'],
               outcome is String ? outcome : 'rejected',
               result['reason'],
