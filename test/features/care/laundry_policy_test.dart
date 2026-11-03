@@ -25,6 +25,15 @@ WearEvent wear(int d, List<String> ids, {int hour = 12}) => WearEvent(
   createdAt: DateTime.utc(2026, 11, d, hour),
 );
 
+extension WearDay on WearEvent {
+  WearEvent copyWithDay(CalendarDay d) => WearEvent(
+    id: id,
+    wornOn: d,
+    garmentIds: garmentIds,
+    createdAt: createdAt,
+  );
+}
+
 CleaningEvent cleaning(int d, String id, {int hour = 12}) => CleaningEvent(
   id: 'c$d-$hour',
   garmentId: GarmentId(id),

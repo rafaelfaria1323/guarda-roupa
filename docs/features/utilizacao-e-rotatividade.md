@@ -1,6 +1,6 @@
 # Feature — Utilização real e rotatividade
 
-Estado: registo de utilizações implementado (incremento 3); `RotationPolicy` a seguir. Valores decididos em P-06 e P-08 (2026-11-03).
+Estado: registo de utilizações e `RotationPolicy` implementados (incremento 3); falta ligar ao motor de combinações e ao planeador. Valores decididos em P-06 e P-08 (2026-11-03).
 
 ## Implementado
 
@@ -18,7 +18,17 @@ Estado: registo de utilizações implementado (incremento 3); `RotationPolicy` a
 | Partes de baixo (calças, ganga, calções, saias) | 2 |
 | Casacos, calçado e acessórios | sem intervalo |
 
-Editável por categoria e por peça. Preferir as menos usadas. Sem alternativa elegível, sugerir na mesma com aviso claro (sem modo estrito por agora).
+Vestidos e macacões (peça única) seguem os tops: 3 dias.
+
+Editável por categoria (Definições → Lavagem e rotação por categoria) e por peça (ficha). Preferir as menos usadas. Sem alternativa elegível, sugerir na mesma com aviso claro (sem modo estrito por agora).
+
+## RotationPolicy (implementado)
+
+- Dart puro (`lib/features/care/domain/rotation_policy.dart`). Peça > categoria > predefinido; `0` = sem intervalo. Datas de calendário, sem efeito da mudança de hora.
+- `eligibleFrom` = última utilização + dias. Só utilizações confirmadas até hoje contam; datas futuras são ignoradas.
+- `rank`: elegíveis primeiro, depois menos usadas nos últimos 30 dias, depois usadas há mais tempo (nunca usadas à frente); desempate por id. Se nenhuma for elegível, todas vêm com `warning` para a sugestão o dizer.
+- Na ficha: “Volta à rotação a …” ou “Pode ser usada”. No “Vesti hoje”: nota informativa nas peças usadas recentemente (não impede o registo, que é do que aconteceu).
+- Por fazer: usar `rank` no motor de combinações e considerar reservas do planeador (incrementos seguintes).
 
 ## Requisitos confirmados
 

@@ -7,7 +7,7 @@ import '../../wear/application/wear_providers.dart';
 import '../application/care_providers.dart';
 import '../domain/laundry_policy.dart';
 import 'care_messages.dart';
-import 'laundry_after_field.dart';
+import 'policy_value_field.dart';
 
 /// Lavagem na ficha da peça: utilizações desde a última limpeza, aviso
 /// (informativo), "Lavei hoje" e o aviso escolhido para esta peça.
@@ -87,7 +87,8 @@ class GarmentLaundrySection extends ConsumerWidget {
           },
         ),
         const SizedBox(height: 12),
-        LaundryAfterField(
+        PolicyValueField.laundry(
+          context: context,
           key: ValueKey(
             'garment-laundry-after-${policies.laundryByGarment[garment.id]}',
           ),

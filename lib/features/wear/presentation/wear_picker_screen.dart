@@ -8,6 +8,8 @@ import '../../account_sync/application/providers.dart';
 import '../../wardrobe/domain/garment.dart';
 import '../../wardrobe/domain/garment_filter.dart';
 import '../../wardrobe/presentation/garment_photo_view.dart';
+import '../../care/application/care_providers.dart';
+import '../../care/domain/rotation_policy.dart';
 import '../application/wear_providers.dart';
 import '../domain/wear_event.dart';
 import '../domain/wear_repository.dart';
@@ -83,6 +85,7 @@ class _WearPickerScreenState extends ConsumerState<WearPickerScreen> {
 
   Widget _list(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final rotation = ref.watch(rotationStatesProvider);
     return StreamBuilder<List<Garment>>(
       stream: _garments,
       builder: (context, snapshot) {
@@ -130,9 +133,7 @@ class _WearPickerScreenState extends ConsumerState<WearPickerScreen> {
                       on == true ? _selected.add(g.id) : _selected.remove(g.id),
                 ),
                 title: Text(garmentLabel(l10n, g)),
-                subtitle: g.name == null
-                    ? null
-                    : Text(l10n.categoryLabel(g.category.id)),
+                subtitle: _subtitle(l10n, g, rotation?[g.id]),
                 secondary: g.photos.isEmpty
                     ? const SizedBox.square(
                         dimension: 40,
@@ -144,6 +145,20 @@ class _WearPickerScreenState extends ConsumerState<WearPickerScreen> {
         );
       },
     );
+  }
+
+  /// Só informativo: o registo é do que aconteceu, não uma sugestão.
+  static Widget? _subtitle(
+    AppLocalizations l10n,
+    Garment g,
+    RotationState? rotation,
+  ) {
+    final from = rotation?.eligibleFrom;
+    final lines = [
+      if (g.name != null) l10n.categoryLabel(g.category.id),
+      if (from != null) l10n.rotationPickHint(from.toLocalDateTime()),
+    ];
+    return lines.isEmpty ? null : Text(lines.join('\n'));
   }
 
   Future<void> _save(WearRepository repo) async {

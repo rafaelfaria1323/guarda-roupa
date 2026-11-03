@@ -395,7 +395,7 @@
       }
     }
   },
-  "careSettingsTitle": "Aviso de lavagem por categoria",
+  "careSettingsTitle": "Lavagem e rotação por categoria",
   "careSettingsHint": "Valores de partida da referência USU/ACI. A etiqueta, as nódoas e o uso real prevalecem. O aviso nunca muda a disponibilidade; cada peça pode ter o seu.",
   "careSaveFailed": "Não foi possível guardar neste dispositivo.",
   "careProblem": "{problem, select, unknownGarment{Esta peça já não existe.} futureDay{Não se regista um dia que ainda não chegou.} outOfRange{Valor fora dos limites.} notFound{Esta limpeza já não existe.} other{Não foi possível guardar.}}",
@@ -403,6 +403,36 @@
     "placeholders": {
       "problem": {
         "type": "String"
+      }
+    }
+  },
+  "rotationTitle": "Rotação",
+  "rotationEligible": "Pode ser usada: já passou o intervalo de rotação.",
+  "rotationEligibleFrom": "Volta à rotação a {date}.",
+  "@rotationEligibleFrom": {
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "yMMMMd"
+      }
+    }
+  },
+  "rotationDaysLabel": "Intervalo de rotação",
+  "rotationDaysValue": "{count, plural, =0{Sem intervalo} =1{1 dia entre utilizações} other{{count} dias entre utilizações}}",
+  "@rotationDaysValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rotationSettingsHint": "Rotação: dias mínimos entre utilizações (com 3, usada no dia 1 volta a contar no dia 4). As sugestões preferem as peças menos usadas; sem alternativa, sugerem na mesma com aviso.",
+  "rotationPickHint": "Usada recentemente: volta à rotação a {date}.",
+  "@rotationPickHint": {
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "yMMMMd"
       }
     }
   }
