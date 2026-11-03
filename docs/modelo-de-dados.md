@@ -72,6 +72,16 @@ Na opção SDK: usar os mecanismos do fornecedor e as tabelas locais suportadas;
 
 Uma confirmação da mesma entrada de plano deve ser idempotente no servidor. IDs diferentes de registos manuais independentes não provam que se trata da mesma utilização física.
 
+## Campos de sincronização e conflitos (ADR-008)
+
+Decidido em [ADR-008](decisoes/008-conflitos-e-privacidade.md):
+
+- Entidades mutáveis sincronizadas: `version` (inteiro, incrementado pelo servidor), `updated_at` (servidor) e `deleted_at` (tombstone).
+- `WearEvent`: `voided_at` e `void_reason`; anular nunca apaga.
+- Servidor: `applied_operations(op_id, owner_id, result, applied_at)` para idempotência.
+- Servidor: `allowed_users` para restringir o acesso ao proprietário (P-16).
+- Local: `sync_conflicts` com operação, valores local e remoto, motivo e data, até ser resolvido.
+
 ## Constraints e índices candidatos
 
 | Regra/query | Implementação proposta |

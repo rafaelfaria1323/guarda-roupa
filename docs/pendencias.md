@@ -9,7 +9,7 @@ Uma pendência não deve desaparecer por estar descrita em Markdown. Fechar apen
 | P-01 | Backend — **Decidido 2026-11-03: Supabase Free** | Criar projeto (guia 02) e registar região/limites | Criação da infraestrutura |
 | P-02 | Login — **Decidido 2026-11-03: Google OAuth** | Configurar projeto Google e callbacks (guia 03); demonstrar entrada e recuperação | Fluxo de conta |
 | P-03 | Sync — **Em POC: PowerSync + Supabase escolhido para a primeira POC** (2026-11-03) | Executar a POC mínima abaixo em Android/Safari; aprovar ou recorrer ao protocolo próprio | Fundação |
-| P-04 | Conflitos e privacidade — **Proposta em [ADR-008](decisoes/008-conflitos-e-privacidade.md)** (2026-11-03) | Utilizador aprova as 3 decisões do ADR-008; validar na POC | Uso da conta em dois dispositivos |
+| P-04 | Conflitos e privacidade — **Decidido 2026-11-03: [ADR-008](decisoes/008-conflitos-e-privacidade.md)** | Validar na POC (passos 4–8) e E2E-04/11/14 | Uso da conta em dois dispositivos |
 | P-05 | PWA/fotografias | Demonstrar armazenamento persistente, quotas, HEIC e reabertura offline no iPhone | Onboarding real |
 | P-06 | Política de rotatividade | Definir modos e valores iniciais editáveis para tops/calças; calçado/acessórios já podem repetir | Motor com políticas reais |
 | P-07 | Recomendações de lavagem | Aprovar defaults informativos e overrides, sem automatismo implícito | Avisos iniciais |
@@ -57,6 +57,7 @@ Idempotência de retries e da mesma entrada de plano não deduplica magicamente 
 | P-02 | Google OAuth como único método de login inicial | Utilizador | 2026-11-03 | Decidido; não configurado |
 | P-03 | PowerSync + Supabase como primeira POC de sincronização | Utilizador | 2026-11-03 | POC por executar; decisão final depende do resultado |
 | P-16 | Apenas o proprietário (e conta de experiência) pode usar a app | Utilizador | 2026-11-03 | Decidido; regra no servidor por implementar |
+| P-04 | ADR-008: ordem conservadora de disponibilidade, edições de plano concorrentes como proposta, logout com pendências bloqueado | Utilizador | 2026-11-03 | Decidido; validação na POC |
 
 ## Registo futuro de fecho
 
