@@ -81,6 +81,13 @@ class _RestoreBackupTileState extends ConsumerState<RestoreBackupTile> {
                 key: const Key('backup-preview-history'),
               ),
             ],
+            if (summary.outfits > 0) ...[
+              const SizedBox(height: 8),
+              Text(
+                l10n.backupPreviewOutfits(summary.outfits),
+                key: const Key('backup-preview-outfits'),
+              ),
+            ],
             if (summary.pendingOperations > 0) ...[
               const SizedBox(height: 8),
               Text(l10n.backupPreviewPending(summary.pendingOperations)),

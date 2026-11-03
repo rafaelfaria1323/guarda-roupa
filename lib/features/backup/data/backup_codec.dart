@@ -7,8 +7,10 @@ import 'package:crypto/crypto.dart';
 import '../../../core/domain/result.dart';
 import '../../care/domain/care_policies.dart';
 import '../../care/domain/cleaning_event.dart';
+import '../../outfits/domain/outfit.dart';
 import '../../wardrobe/data/garment_row.dart';
 import '../../wardrobe/domain/garment.dart';
+import '../../wardrobe/domain/garment_attributes.dart';
 import '../../wardrobe/domain/garment_category.dart';
 import '../../wardrobe/domain/garment_photo.dart';
 import '../../wear/domain/calendar_day.dart';
@@ -196,6 +198,89 @@ abstract final class BackupCodec {
     return null;
   }
 
+  /// `data/outfits.json`.
+  static Map<String, Object?> outfitsJson(List<Outfit> outfits) => {
+    'outfits': [
+      for (final o in outfits)
+        {
+          'id': o.id,
+          'name': o.name,
+          'occasions': [
+            for (final occasion in Occasion.values)
+              if (o.occasions.contains(occasion)) occasion.id,
+          ],
+          'items': [
+            for (final i in o.items)
+              {'garment_id': i.garmentId.value, 'role': i.role.id},
+          ],
+          'created_at': GarmentRow.iso(o.createdAt),
+          'updated_at': GarmentRow.iso(o.updatedAt),
+        },
+    ],
+  };
+
+  /// Inverso de [outfitsJson]; `null` se um conjunto for inválido (as
+  /// mesmas regras do servidor) ou referir uma peça que não está no backup.
+  static List<Outfit>? outfitsFromJson(Object? json, Set<String> garments) {
+    if (json case {'outfits': final List<Object?> raw}) {
+      final ids = <String>{};
+      final outfits = <Outfit>[];
+      for (final o in raw) {
+        if (o
+            case {
+              'id': final String id,
+              'name': final Object? name,
+              'occasions': final List<Object?> rawOccasions,
+              'items': final List<Object?> rawItems,
+              'created_at': final String createdAt,
+              'updated_at': final String updatedAt,
+            }
+            when _safeId.hasMatch(id) && ids.add(id)) {
+          final created = DateTime.tryParse(createdAt);
+          final updated = DateTime.tryParse(updatedAt);
+          if (created == null || updated == null) return null;
+          if (name != null && (name is! String || name.trim().isEmpty)) {
+            return null;
+          }
+          final occasions = <Occasion>{
+            for (final x in rawOccasions)
+              if (x is String) ?Occasion.fromId(x),
+          };
+          if (occasions.length != rawOccasions.length) return null;
+          final items = <OutfitItem>[];
+          for (final item in rawItems) {
+            if (item
+                case {
+                  'garment_id': final String garment,
+                  'role': final String roleId,
+                }
+                when item.length == 2 && garments.contains(garment)) {
+              final role = OutfitRole.fromId(roleId);
+              if (role == null) return null;
+              items.add(OutfitItem(GarmentId(garment), role));
+            } else {
+              return null;
+            }
+          }
+          final outfit = Outfit(
+            id: id,
+            name: name as String?,
+            occasions: occasions,
+            items: List.unmodifiable(items),
+            createdAt: created.toUtc(),
+            updatedAt: updated.toUtc(),
+          );
+          if (OutfitRules.validate(outfit.toDraft()) != null) return null;
+          outfits.add(outfit);
+        } else {
+          return null;
+        }
+      }
+      return List.unmodifiable(outfits);
+    }
+    return null;
+  }
+
   static Uint8List encode({
     required List<Garment> garments,
     required Map<(String, PhotoVariant), Uint8List> photoFiles,
@@ -212,6 +297,9 @@ abstract final class BackupCodec {
       BackupFormat.historyPath: utf8.encode(
         const JsonEncoder.withIndent(' ').convert(historyJson(history)),
       ),
+      BackupFormat.outfitsPath: utf8.encode(
+        const JsonEncoder.withIndent(' ').convert(outfitsJson(history.outfits)),
+      ),
       for (final MapEntry(key: (id, variant), :value) in photoFiles.entries)
         BackupFormat.photoPath(id, variant): value,
     };
@@ -225,6 +313,7 @@ abstract final class BackupCodec {
         'wear_events': history.wears.length,
         'cleaning_events': history.cleanings.length,
         'care_policies': history.policies.length,
+        'outfits': history.outfits.length,
       },
       'pending_operations': pendingOperations,
       'files': [
@@ -405,9 +494,33 @@ abstract final class BackupCodec {
       if (parsed == null) return const Err(CorruptBackup('histórico'));
       history = parsed;
     }
+    // Conjuntos: obrigatórios a partir da v3.
+    final outfitsBytes = contents[BackupFormat.outfitsPath];
+    if (version >= 3 && outfitsBytes == null) {
+      return const Err(CorruptBackup('conjuntos em falta'));
+    }
+    if (outfitsBytes != null) {
+      final Object? raw;
+      try {
+        raw = jsonDecode(utf8.decode(outfitsBytes));
+      } on Object {
+        return const Err(CorruptBackup('conjuntos ilegíveis'));
+      }
+      final outfits = outfitsFromJson(raw, ids);
+      if (outfits == null) return const Err(CorruptBackup('conjuntos'));
+      history = BackupHistory(
+        wears: history.wears,
+        cleanings: history.cleanings,
+        policies: history.policies,
+        outfits: outfits,
+      );
+    }
 
     final expectedFiles =
-        1 + (historyBytes == null ? 0 : 1) + photoFiles.length;
+        1 +
+        (historyBytes == null ? 0 : 1) +
+        (outfitsBytes == null ? 0 : 1) +
+        photoFiles.length;
     if (contents.length != expectedFiles) {
       return const Err(CorruptBackup('ficheiros sem peça'));
     }
@@ -421,6 +534,7 @@ abstract final class BackupCodec {
           pendingOperations: pending,
           wears: history.wears.length,
           cleanings: history.cleanings.length,
+          outfits: history.outfits.length,
         ),
         garments: List.unmodifiable(garments),
         photoFiles: Map.unmodifiable(photoFiles),

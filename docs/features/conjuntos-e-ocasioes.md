@@ -10,7 +10,8 @@ Estado: necessária no MVP.
 - Peças a lavar/a secar/indisponíveis, arquivadas ou eliminadas mantêm-se no conjunto com aviso; nada muda sozinho. Peças novas têm de estar ativas.
 - **Vesti hoje → Usar um conjunto** preenche a escolha com as peças disponíveis do conjunto (avisa as que ficaram de fora). A utilização fica registada à parte: editar ou eliminar o conjunto depois não a altera.
 - Dados: tabela `outfits` com `items` em JSON (`[{garment_id, role}]`), escrita por `apply_outfit_operation` (`create_outfit`, `edit_outfit` campo a campo, `delete_outfit`), sincronizada pelo stream `user_outfits`.
-- Por fazer: conjuntos no backup (próximo formato), guardar uma proposta do motor, usar no planeamento e propor substituição.
+- Backup (formato v3): os conjuntos entram e são recuperados com as peças novas.
+- Por fazer: guardar uma proposta do motor, usar no planeamento e propor substituição.
 
 ## Objetivo
 
