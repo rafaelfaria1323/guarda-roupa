@@ -56,6 +56,7 @@ As alternativas transversais têm a justificação principal nos ADRs, evitando 
 5. [ADR-005 — Motor de recomendação](decisoes/005-motor-de-recomendacao.md)
 6. [ADR-006 — Ficheiros, PWA e recuperação](decisoes/006-ficheiros-pwa-e-backups.md)
 7. [ADR-007 — Testes de comportamento](decisoes/007-testes-de-comportamento.md)
+8. [ADR-008 — Conflitos, sessões e privacidade](decisoes/008-conflitos-e-privacidade.md) (proposto)
 
 ## Guidelines e verificação do produto
 
