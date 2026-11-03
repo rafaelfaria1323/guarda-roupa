@@ -1,0 +1,14 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+.idea/
+.vscode/
+# Ambiente
+.env
+.env.*
+!.env.example
+.DS_Store
