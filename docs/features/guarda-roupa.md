@@ -2,7 +2,7 @@
 
 Estado: necessária no MVP. Implementação recomendada nos incrementos 1–2.
 
-Implementado (2026-11-03): criar/editar/duplicar/arquivar/eliminar (tombstone, com confirmação e limpeza das fotos), disponibilidade, pesquisa sem acentos, filtros por grupo de categoria e disponibilidade, cores de uma paleta de referência com proporção aproximada (passos de 10%, soma ≤ 100%, confirmadas pelo utilizador) e fotografias. Por fazer: padrão, textura, contexto (ocasiões, aquecimento, chuva) e composição/cuidados.
+Implementado (2026-11-03): criar/editar/duplicar/arquivar/eliminar (tombstone, com confirmação e limpeza das fotos), disponibilidade, pesquisa sem acentos, filtros por grupo de categoria e disponibilidade, cores de uma paleta de referência com proporção aproximada (passos de 10%, soma ≤ 100%, confirmadas pelo utilizador) e fotografias. Detalhes opcionais (secção “Detalhes”; nada escolhido = “não sei”): padrão, textura superficial, aquecimento, adequação a chuva e vento (sim/não/não sei), ocasiões iniciais (casual, trabalho informal, noite/saída; também como filtro da lista) e material/cuidados como texto da etiqueta. Por fazer: composição estruturada (percentagens por fibra) e símbolos de cuidados.
 
 ## Objetivo e dados
 

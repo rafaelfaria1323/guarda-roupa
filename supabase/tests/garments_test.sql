@@ -314,4 +314,46 @@ select pg_temp.check('a sexta fica rejeitada (too_many)',
    where op_id = 'a2000000-0000-0000-0000-000000000006'));
 commit;
 
+-- --------------------------------------------------------------- atributos
+\set G3 '10000000-0000-0000-0000-000000000003'
+begin;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a', 'eu@example.com');
+select pg_temp.op('b1000000-0000-0000-0000-000000000001', 'create',
+  '{"category":"sweater","pattern":"stripes","texture":"knit","warmth":"warm",
+    "rain_ok":false,"occasions":["casual","evening"],"material":" 100% lã ",
+    "care":"Lavar à mão"}', :'G3') as r \gset
+select pg_temp.check('cria com atributos', :'r'::jsonb ->> 'result' = 'applied');
+select pg_temp.check('atributos guardados; vento fica desconhecido',
+  (select pattern = 'stripes' and texture = 'knit' and warmth = 'warm'
+     and rain_ok = false and wind_ok is null
+     and occasions = '["casual","evening"]'::jsonb and material = '100% lã'
+   from public.garments where id = :'G3'));
+
+select pg_temp.op('b1000000-0000-0000-0000-000000000002', 'create',
+  '{"category":"shirt","pattern":"tartan"}', '10000000-0000-0000-0000-000000000004') as r \gset
+select pg_temp.check('padrão desconhecido é rejeitado', :'r'::jsonb ->> 'reason' = 'invalid');
+select pg_temp.op('b1000000-0000-0000-0000-000000000003', 'create',
+  '{"category":"shirt","occasions":["gala"]}', '10000000-0000-0000-0000-000000000004') as r \gset
+select pg_temp.check('ocasião desconhecida é rejeitada', :'r'::jsonb ->> 'reason' = 'invalid');
+
+select pg_temp.op('b1000000-0000-0000-0000-000000000004', 'edit',
+  '{"changes":{"wind_ok":{"from":null,"to":true},
+               "occasions":{"from":["casual","evening"],"to":["casual"]},
+               "warmth":{"from":"medium","to":"light"}}}', :'G3') as r \gset
+select pg_temp.check('edição com base antiga num campo: merged', :'r'::jsonb ->> 'result' = 'merged'
+  and :'r'::jsonb -> 'conflicts' -> 0 ->> 'field' = 'warmth');
+select pg_temp.check('aplica os campos certos e mantém o do servidor',
+  (select wind_ok = true and occasions = '["casual"]'::jsonb and warmth = 'warm'
+   from public.garments where id = :'G3'));
+
+select pg_temp.op('b1000000-0000-0000-0000-000000000005', 'edit',
+  '{"changes":{"rain_ok":{"from":false,"to":"talvez"}}}', :'G3') as r \gset
+select pg_temp.check('booleano inválido é rejeitado', :'r'::jsonb ->> 'reason' = 'invalid');
+select pg_temp.op('b1000000-0000-0000-0000-000000000006', 'edit',
+  '{"changes":{"material":{"from":"100% lã","to":"  "}}}', :'G3') as r \gset
+select pg_temp.check('texto vazio volta a desconhecido',
+  :'r'::jsonb ->> 'result' = 'applied'
+  and (select material is null from public.garments where id = :'G3'));
+commit;
+
 \echo 'Todos os testes SQL passaram.'

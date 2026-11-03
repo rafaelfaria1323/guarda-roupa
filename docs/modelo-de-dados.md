@@ -24,6 +24,8 @@ Estado: desenho lógico; não é uma migração SQL pronta para executar. Data: 
 | `GarmentMedia` | Peça, asset e posição |
 
 **Implementação atual das fotografias (incremento 1).** Enquanto só as peças têm imagens, `MediaAsset` + `GarmentMedia` ficam numa coluna JSON tipada `garments.photos` (até 5; a primeira é a capa): `{id, width, height, bytes, thumb_bytes, sha256}`, validada no servidor (`garment_photos_valid`). Os ficheiros JPEG (1600 px e miniatura 320 px, sem metadados) estão no bucket privado `garment-photos` em `{utilizador}/{foto}/main.jpg|thumb.jpg`, e neste dispositivo na tabela SQLite local `photo_files` (fora do schema sincronizado; apagada ao terminar sessão). As operações `attach_photo`/`detach_photo` passam por `apply_garment_operation`; `attach_photo` só aceita a foto se os dois ficheiros já existirem no Storage. Separar em tabelas quando outras entidades (conjuntos, inspirações) tiverem imagens.
+
+**Atributos da peça (incremento 2).** Colunas opcionais em `garments`, `null` = desconhecido: `pattern` (plain, stripes, checks, dots, floral, print, other), `texture` (smooth, ribbed, knit, textured, fuzzy), `warmth` (light, medium, warm), `rain_ok`/`wind_ok` (boolean), `occasions` (jsonb, lista sem repetidos de casual, work_casual, evening; vazia = desconhecido), `material` (≤ 120) e `care` (≤ 300) como texto livre da etiqueta. Os IDs são validados no servidor por `check`; o cliente ignora valores que não conhece (versões futuras). Cada atributo é um campo do `edit`, com `from`/`to` para conflitos campo a campo.
 | `Occasion` | ID estável, nome e regras/preferências |
 | `Outfit` | Conjunto guardado, nome, estado |
 | `OutfitItem` | Conjunto, peça, papel contextual, ordem de camada |

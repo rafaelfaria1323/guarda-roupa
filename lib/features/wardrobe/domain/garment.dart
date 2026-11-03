@@ -1,4 +1,5 @@
 import 'availability.dart';
+import 'garment_attributes.dart';
 import 'garment_category.dart';
 import 'garment_color.dart';
 import 'garment_photo.dart';
@@ -23,6 +24,7 @@ final class Garment {
     this.brand,
     this.notes,
     this.colors = const [],
+    this.attributes = const GarmentAttributes(),
     this.photos = const [],
     this.archivedAt,
   });
@@ -33,6 +35,7 @@ final class Garment {
   final String? brand;
   final String? notes;
   final List<GarmentColor> colors;
+  final GarmentAttributes attributes;
 
   /// A primeira é a capa. No máximo [PhotoRules.maxPerGarment].
   final List<GarmentPhoto> photos;
@@ -57,6 +60,7 @@ final class GarmentDraft {
     this.brand,
     this.notes,
     this.colors = const [],
+    this.attributes = const GarmentAttributes(),
   });
 
   /// Copia os dados descritivos de uma peça semelhante. A nova peça terá ID
@@ -67,6 +71,7 @@ final class GarmentDraft {
     brand: source.brand,
     notes: source.notes,
     colors: source.colors,
+    attributes: source.attributes,
   );
 
   final GarmentCategory category;
@@ -74,9 +79,17 @@ final class GarmentDraft {
   final String? brand;
   final String? notes;
   final List<GarmentColor> colors;
+  final GarmentAttributes attributes;
 }
 
-enum DraftProblem { nameTooLong, brandTooLong, notesTooLong, colorsExceedWhole }
+enum DraftProblem {
+  nameTooLong,
+  brandTooLong,
+  notesTooLong,
+  colorsExceedWhole,
+  materialTooLong,
+  careTooLong,
+}
 
 abstract final class GarmentRules {
   static const maxNameLength = 80;
@@ -95,6 +108,12 @@ abstract final class GarmentRules {
       if ((draft.notes?.length ?? 0) > maxNotesLength)
         DraftProblem.notesTooLong,
       if (total > 1 + _epsilon) DraftProblem.colorsExceedWhole,
+      if ((draft.attributes.material?.trim().length ?? 0) >
+          GarmentAttributes.maxMaterialLength)
+        DraftProblem.materialTooLong,
+      if ((draft.attributes.care?.trim().length ?? 0) >
+          GarmentAttributes.maxCareLength)
+        DraftProblem.careTooLong,
     ];
   }
 
