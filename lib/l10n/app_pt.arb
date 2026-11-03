@@ -11,7 +11,77 @@
   "wardrobeEmpty": "Ainda não tens peças.",
   "wardrobeEmptyHint": "Toca em «Adicionar peça» para criar a primeira. As fotografias chegam mais tarde neste incremento.",
   "outfitsEmpty": "Ainda não há conjuntos guardados.",
-  "outfitsEmptyHint": "Guardar e classificar conjuntos chega no incremento 4.",
+  "outfitsEmptyHint": "Junta peças do teu guarda-roupa num conjunto para o reutilizares, classificares por ocasião ou registares de uma vez em “Vesti hoje”.",
+  "outfitsAdd": "Novo conjunto",
+  "outfitNewTitle": "Novo conjunto",
+  "outfitEditTitle": "Editar conjunto",
+  "outfitSave": "Guardar",
+  "outfitName": "Nome (opcional)",
+  "outfitOccasions": "Ocasiões",
+  "outfitPieces": "Peças do conjunto",
+  "outfitNoPieces": "Ainda sem peças: escolhe-as abaixo.",
+  "outfitChoose": "Juntar peças",
+  "outfitChooseEmpty": "Não há mais peças ativas no guarda-roupa.",
+  "outfitRoleLabel": "{role, select, main_top{Top principal} mid_layer{Camada intermédia} outer_layer{Camada exterior} bottom{Parte de baixo} one_piece{Peça única} footwear{Calçado} accessory{Acessório} other{Outro}}",
+  "@outfitRoleLabel": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "outfitRole": "Papel",
+  "outfitRemove": "Tirar do conjunto",
+  "outfitAddPiece": "Juntar ao conjunto",
+  "outfitComplete": "Conjunto completo.",
+  "outfitMissing": "Falta: {roles}. Podes guardar na mesma.",
+  "@outfitMissing": {
+    "placeholders": {
+      "roles": {
+        "type": "String"
+      }
+    }
+  },
+  "outfitIncomplete": "Incompleto",
+  "outfitArchivedPiece": "Arquivada",
+  "outfitGonePiece": "Peça eliminada",
+  "outfitUnavailable": "{count, plural, =1{1 peça não está disponível} other{{count} peças não estão disponíveis}}",
+  "@outfitUnavailable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "outfitPiecesCount": "{count, plural, =1{1 peça} other{{count} peças}}",
+  "@outfitPiecesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "outfitSaved": "Conjunto guardado.",
+  "outfitDelete": "Eliminar conjunto",
+  "outfitDeleteConfirm": "Eliminar este conjunto? As peças e as utilizações já registadas não mudam.",
+  "outfitDeleted": "Conjunto eliminado.",
+  "outfitNotFound": "Este conjunto já não existe.",
+  "outfitNoItems": "Escolhe pelo menos uma peça.",
+  "outfitTooManyItems": "Um conjunto tem no máximo 20 peças.",
+  "outfitRoleTaken": "Top principal, parte de baixo, peça única e calçado só podem aparecer uma vez.",
+  "outfitNameTooLong": "O nome é demasiado longo (máximo 120 caracteres).",
+  "outfitUnknownGarment": "Uma das peças já não está ativa. Revê o conjunto.",
+  "outfitSaveFailed": "Não foi possível guardar o conjunto.",
+  "wearFromOutfit": "Usar um conjunto",
+  "wearFromOutfitTitle": "Escolher um conjunto",
+  "wearFromOutfitSkipped": "{count, plural, =1{1 peça do conjunto já não existe e ficou de fora.} other{{count} peças do conjunto já não existem e ficaram de fora.}}",
+  "@wearFromOutfitSkipped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "styleEmpty": "Ainda não há inspirações.",
   "styleEmptyHint": "Referências e preferências de estilo chegam no incremento 4.",
   "settingsAccount": "Conta e sincronização",

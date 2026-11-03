@@ -10,6 +10,8 @@ import '../../wardrobe/domain/garment_filter.dart';
 import '../../wardrobe/presentation/garment_photo_view.dart';
 import '../../care/application/care_providers.dart';
 import '../../care/domain/rotation_policy.dart';
+import '../../outfits/application/outfit_providers.dart';
+import '../../outfits/domain/outfit.dart';
 import '../application/wear_providers.dart';
 import '../domain/wear_event.dart';
 import '../domain/wear_repository.dart';
@@ -86,6 +88,7 @@ class _WearPickerScreenState extends ConsumerState<WearPickerScreen> {
   Widget _list(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final rotation = ref.watch(rotationStatesProvider);
+    final outfits = ref.watch(outfitsProvider).value ?? const <Outfit>[];
     return StreamBuilder<List<Garment>>(
       stream: _garments,
       builder: (context, snapshot) {
@@ -118,10 +121,23 @@ class _WearPickerScreenState extends ConsumerState<WearPickerScreen> {
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                l10n.wearSelected(_selected.length),
-                key: const Key('wear-selected'),
-                style: Theme.of(context).textTheme.labelLarge,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.wearSelected(_selected.length),
+                      key: const Key('wear-selected'),
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                  ),
+                  if (outfits.isNotEmpty)
+                    TextButton.icon(
+                      key: const Key('wear-from-outfit'),
+                      onPressed: () => _pickOutfit(outfits, garments),
+                      icon: const Icon(Icons.style_outlined),
+                      label: Text(l10n.wearFromOutfit),
+                    ),
+                ],
               ),
             ),
             for (final g in sorted)
@@ -145,6 +161,62 @@ class _WearPickerScreenState extends ConsumerState<WearPickerScreen> {
         );
       },
     );
+  }
+
+  /// Marca as peças de um conjunto guardado (substitui a seleção). Peças
+  /// que já não existem ficam de fora, com aviso; o utilizador ajusta antes
+  /// de guardar.
+  Future<void> _pickOutfit(List<Outfit> outfits, List<Garment> garments) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final byId = {for (final g in garments) g.id: g};
+    final chosen = await showModalBottomSheet<Outfit>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            ListTile(
+              title: Text(
+                l10n.wearFromOutfitTitle,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            for (final o in outfits)
+              ListTile(
+                key: Key('wear-outfit-${o.id}'),
+                title: Text(
+                  o.name ??
+                      o.items
+                          .take(3)
+                          .map((i) => garmentLabel(l10n, byId[i.garmentId]))
+                          .join(' + '),
+                ),
+                subtitle: Text(l10n.outfitPiecesCount(o.items.length)),
+                onTap: () => Navigator.pop(context, o),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (chosen == null || !mounted) return;
+    final present = [
+      for (final i in chosen.items)
+        if (byId.containsKey(i.garmentId)) i.garmentId,
+    ];
+    setState(
+      () => _selected
+        ..clear()
+        ..addAll(present),
+    );
+    final skipped = chosen.items.length - present.length;
+    if (skipped > 0) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(l10n.wearFromOutfitSkipped(skipped))),
+        );
+    }
   }
 
   /// Só informativo: o registo é do que aconteceu, não uma sugestão.

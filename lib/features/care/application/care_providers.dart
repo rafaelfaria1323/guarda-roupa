@@ -38,7 +38,7 @@ final _wearsProvider = StreamProvider<List<WearEvent>>((ref) {
   return repo?.watchAll() ?? const Stream.empty();
 });
 
-final _allGarmentsProvider = StreamProvider<List<Garment>>((ref) {
+final allGarmentsProvider = StreamProvider<List<Garment>>((ref) {
   final repo = ref.watch(wardrobeRepositoryProvider);
   return repo?.watchGarments(const GarmentFilter(includeArchived: true)) ??
       const Stream.empty();
@@ -46,7 +46,7 @@ final _allGarmentsProvider = StreamProvider<List<Garment>>((ref) {
 
 /// Estado de lavagem de cada peça; `null` enquanto carrega.
 final laundryStatesProvider = Provider<Map<GarmentId, LaundryState>?>((ref) {
-  final garments = ref.watch(_allGarmentsProvider).value;
+  final garments = ref.watch(allGarmentsProvider).value;
   final wears = ref.watch(_wearsProvider).value;
   final cleanings = ref.watch(_cleaningsProvider).value;
   final policies = ref.watch(carePoliciesProvider).value;
@@ -66,7 +66,7 @@ final laundryStatesProvider = Provider<Map<GarmentId, LaundryState>?>((ref) {
 
 /// Estado de rotação de cada peça, para hoje; `null` enquanto carrega.
 final rotationStatesProvider = Provider<Map<GarmentId, RotationState>?>((ref) {
-  final garments = ref.watch(_allGarmentsProvider).value;
+  final garments = ref.watch(allGarmentsProvider).value;
   final wears = ref.watch(_wearsProvider).value;
   final policies = ref.watch(carePoliciesProvider).value;
   if (garments == null || wears == null || policies == null) return null;

@@ -2,6 +2,16 @@
 
 Estado: necessária no MVP.
 
+## Implementado (incremento 4)
+
+- Separador **Conjuntos**: lista (nome ou as primeiras peças, nº de peças, ocasiões, “Incompleto” e aviso de peças indisponíveis) e editor com nome opcional (até 120 caracteres), ocasiões (casual, trabalho informal, noite/saída), peças e papel de cada uma.
+- O papel é sugerido pela categoria e pode ser corrigido. `main_top`, `bottom`, `one_piece` e `footwear` são únicos; `mid_layer`, `outer_layer` e `accessory` repetem-se. 1–20 peças, sem repetir a mesma.
+- “Falta: …” (calçado e top+parte de baixo, ou peça única) é só um aviso: um conjunto incompleto guarda-se na mesma. Casaco e acessórios nunca são obrigatórios.
+- Peças a lavar/a secar/indisponíveis, arquivadas ou eliminadas mantêm-se no conjunto com aviso; nada muda sozinho. Peças novas têm de estar ativas.
+- **Vesti hoje → Usar um conjunto** preenche a escolha com as peças disponíveis do conjunto (avisa as que ficaram de fora). A utilização fica registada à parte: editar ou eliminar o conjunto depois não a altera.
+- Dados: tabela `outfits` com `items` em JSON (`[{garment_id, role}]`), escrita por `apply_outfit_operation` (`create_outfit`, `edit_outfit` campo a campo, `delete_outfit`), sincronizada pelo stream `user_outfits`.
+- Por fazer: conjuntos no backup (próximo formato), guardar uma proposta do motor, usar no planeamento e propor substituição.
+
 ## Objetivo
 
 Guardar composições reutilizáveis, atribuir uma ou mais ocasiões e recuperar sugestões adequadas sem confundir composição, plano e utilização.
