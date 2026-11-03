@@ -400,6 +400,11 @@ void main() {
         BackupCodec.decode(withJson(zip, 'data/style.json', style())),
       );
       expect(base.history.inspirations.single.palette, [0x1F2A44]);
+      expect(
+        base.history.inspirations.single.proportions,
+        isEmpty,
+        reason: 'ficheiros v4 antigos não têm proporções',
+      );
       expect(base.history.preferences.single.inspirationId, 'i1');
       expect(base.summary.inspirations, 1);
       expect(base.summary.preferences, 1);
@@ -443,6 +448,18 @@ void main() {
             inspiration({
               'patterns': ['stripes', 'stripes'],
             }),
+          ],
+        ),
+        'proporção desconhecida': style(
+          inspirations: [
+            inspiration({
+              'proportions': ['oversized'],
+            }),
+          ],
+        ),
+        'proporções que não são lista': style(
+          inspirations: [
+            inspiration({'proportions': 'long_layer'}),
           ],
         ),
         'inspiração repetida': style(
@@ -767,6 +784,7 @@ void main() {
               palette: [ReferenceColor.navy.rgb],
               formality: Formality.smartCasual,
               occasions: const {Occasion.workCasual},
+              proportions: const {Proportion.longLayer},
             ),
           ),
         );
@@ -806,6 +824,7 @@ void main() {
         expect(i.id, kept.id);
         expect(i.sourceUrl, 'https://example.com/a');
         expect(i.formality, Formality.smartCasual);
+        expect(i.proportions, {Proportion.longLayer});
         final prefs = contents.history.preferences;
         expect(
           [for (final p in prefs) '${p.subject.id}:${p.value}'],

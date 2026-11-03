@@ -40,6 +40,7 @@ String inspirationTags(AppLocalizations l10n, Inspiration i) {
     for (final o in i.occasions) l10n.occasionLabel(o.id),
     for (final p in i.patterns) l10n.patternLabel(p.id),
     for (final t in i.textures) l10n.textureLabel(t.id),
+    for (final p in i.proportions) l10n.proportionLabel(p.id),
   ];
   if (parts.isEmpty && i.palette.isEmpty) return l10n.inspirationNoTags;
   return parts.join(' · ');

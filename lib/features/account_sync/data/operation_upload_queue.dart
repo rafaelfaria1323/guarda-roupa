@@ -55,6 +55,9 @@ abstract interface class OperationUploader {
 ///   existirem. Uma falha no envio deixa a operação na fila.
 /// - `detach_photo` e `delete`: depois de enviadas, apagam-se os ficheiros
 ///   das fotos (no Storage, em melhor esforço, e neste dispositivo).
+/// - Imagens das inspirações: o mesmo, com `set_inspiration_image` (envia
+///   primeiro) e `remove_inspiration_image`/`delete_inspiration` (apagam
+///   depois).
 final class OperationUploadQueue {
   const OperationUploadQueue(this._uploader);
 
@@ -73,7 +76,9 @@ final class OperationUploadQueue {
         final payload = jsonDecode(data['data'] as String? ?? '{}');
         switch (entry.table) {
           case 'garment_operations':
-            if (kind == 'attach_photo') await _uploadFiles(db, payload);
+            if (kind == 'attach_photo') {
+              await _uploadFiles(db, _photoId(payload, 'photo'));
+            }
             outcomes.add((
               entry,
               await _uploader.apply({
@@ -104,6 +109,9 @@ final class OperationUploadQueue {
               }),
             ));
           case 'style_operations':
+            if (kind == 'set_inspiration_image') {
+              await _uploadFiles(db, _photoId(payload, 'image'));
+            }
             outcomes.add((
               entry,
               await _uploader.applyStyle({
@@ -118,11 +126,11 @@ final class OperationUploadQueue {
 
       final detached = [
         for (final (entry, _) in outcomes)
-          if (entry.table == 'garment_operations')
-            ..._removedPhotos(
-              entry.opData?['kind'],
-              jsonDecode(entry.opData?['data'] as String? ?? '{}'),
-            ),
+          ..._removedPhotos(
+            entry.table,
+            entry.opData?['kind'],
+            jsonDecode(entry.opData?['data'] as String? ?? '{}'),
+          ),
       ];
       for (final photoId in detached) {
         try {
@@ -163,17 +171,36 @@ final class OperationUploadQueue {
     }
   }
 
-  static List<String> _removedPhotos(Object? kind, Object? payload) =>
-      switch ((kind, payload)) {
-        ('detach_photo', {'photo_id': final String id}) => [id],
-        ('delete', {'photo_ids': final List<Object?> ids}) => [
-          ...ids.whereType<String>(),
-        ],
-        _ => const [],
-      };
+  static List<String> _removedPhotos(
+    String table,
+    Object? kind,
+    Object? payload,
+  ) => switch ((table, kind, payload)) {
+    ('garment_operations', 'detach_photo', {'photo_id': final String id}) => [
+      id,
+    ],
+    ('garment_operations', 'delete', {'photo_ids': final List<Object?> ids}) =>
+      [...ids.whereType<String>()],
+    (
+      'style_operations',
+      'remove_inspiration_image' || 'delete_inspiration',
+      {'photo_id': final String id},
+    ) =>
+      [id],
+    _ => const [],
+  };
 
-  Future<void> _uploadFiles(PowerSyncDatabase db, Object? payload) async {
-    if (payload case {'photo': {'id': final String photoId}}) {
+  /// Id da foto em `payload[key]` (`{photo: {id…}}` ou `{image: {id…}}`).
+  static String? _photoId(Object? payload, String key) => switch (payload) {
+    final Map<String, Object?> map => switch (map[key]) {
+      {'id': final String id} => id,
+      _ => null,
+    },
+    _ => null,
+  };
+
+  Future<void> _uploadFiles(PowerSyncDatabase db, String? photoId) async {
+    if (photoId != null) {
       for (final variant in PhotoVariant.values) {
         final bytes = await PhotoFiles.get(db, photoId, variant);
         // Sem bytes locais o servidor rejeita (missing_file) e o utilizador

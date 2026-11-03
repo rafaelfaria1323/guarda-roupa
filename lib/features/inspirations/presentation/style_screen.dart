@@ -7,6 +7,7 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../wardrobe/domain/reference_color.dart';
 import '../../wardrobe/presentation/colors_editor.dart';
+import '../../wardrobe/presentation/garment_photo_view.dart';
 import '../application/inspiration_providers.dart';
 import '../domain/inspiration.dart';
 import '../domain/style_preference.dart';
@@ -198,7 +199,9 @@ class _InspirationTile extends StatelessWidget {
       key: Key('inspiration-${i.id}'),
       leading: SizedBox.square(
         dimension: 48,
-        child: i.palette.isEmpty
+        child: i.image != null
+            ? GarmentPhotoView(photo: i.image!, size: 48)
+            : i.palette.isEmpty
             ? Icon(host == null ? Icons.lightbulb_outline : Icons.link)
             : Wrap(
                 spacing: 2,

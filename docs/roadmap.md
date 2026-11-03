@@ -1,6 +1,6 @@
 # Roadmap incremental
 
-Estado: proposta de execução; não são tarefas já realizadas. Data: 2026-10-31.
+Estado: plano de 2026-10-31; o que já foi feito está em [Estado da implementação](#estado-da-implementação).
 
 Não há estimativas de calendário sem conhecer disponibilidade e resultados das POCs. Cada incremento tem uma demonstração de valor e um gate explícito.
 
@@ -16,6 +16,22 @@ Não há estimativas de calendário sem conhecer disponibilidade e resultados da
 | 7 — Entrada assistida por lojas | POC por loja e importador limitado | Infraestrutura estável e regras de acesso | Dados/variante confirmáveis, erros e alternativa manual |
 | 8 — IA local | POC de modelo e runtime | Dados de qualidade e licença | Precisão/desempenho úteis na PWA, sem tornar a app dependente do modelo |
 | 9 — Produto comercial | Multiutilizador público, pagamentos e operação | Utilidade validada e revisão de custos | Regras das lojas, autorização e obrigações operacionais |
+
+## Estado da implementação
+
+Atualizado a 2026-11-03. "Feito" quer dizer implementado, com testes automáticos (Dart e SQL) e migrações aplicadas. Não quer dizer validado em aparelho: os gates de dispositivo e os percursos do [Plano E2E](plano-e2e.md) continuam pendentes ([pendências](pendencias.md)).
+
+| Incremento | Estado | Onde está descrito |
+|---|---|---|
+| 0 — Fecho técnico | Feito: Supabase, Google OAuth, PowerSync, ADR-008, CI com migrações automáticas | [pendências](pendencias.md) P-01 a P-04 |
+| 1 — Fundação | Feito na app; falta a POC em dois dispositivos (P-03, guia 08 §7) e validar fotos no iPhone (P-05) | [sincronização](features/autenticacao-e-sincronizacao.md), [fotografias](features/fotografias-e-ficheiros.md) |
+| 2 — Catálogo e recuperação | Feito: filtros, cores, atributos, eliminar, backup ZIP e recuperação para conta vazia | [guarda-roupa](features/guarda-roupa.md), [backups](features/backups-e-recuperacao.md) |
+| 3 — Uso e lavandaria | Feito: "Vesti hoje", histórico, corrigir/desfazer, lavandaria (P-07) e rotatividade (P-06); backup v2 | [utilização](features/utilizacao-e-rotatividade.md), [lavandaria](features/lavandaria.md) |
+| 4 — Conjuntos e estilo | Quase feito: conjuntos (backup v3), inspirações com link, imagem e proporções, preferências (backup v4). Falta a imagem das inspirações no backup | [conjuntos](features/conjuntos-e-ocasioes.md), [inspirações](features/inspiracoes-e-estilo.md) |
+| 5 — Motor diário | Próximo | [motor](features/motor-de-combinacoes.md) |
+| 6 a 9 | Por começar | — |
+
+Ações do utilizador ainda abertas: voltar a fazer deploy das Sync Streams no painel do PowerSync quando um stream novo é adicionado a `powersync/sync-streams.yaml` (os de lavandaria, conjuntos, inspirações e preferências); executar a POC em dois dispositivos.
 
 ## MVP versus incremento
 

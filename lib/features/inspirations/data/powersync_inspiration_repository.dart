@@ -7,7 +7,9 @@ import 'package:sqlite_async/sqlite_async.dart';
 import '../../../core/domain/clock.dart';
 import '../../../core/domain/result.dart';
 import '../../wardrobe/data/garment_row.dart';
+import '../../wardrobe/data/photo_files.dart';
 import '../../wardrobe/domain/garment_attributes.dart';
+import '../../wardrobe/domain/garment_photo.dart';
 import '../domain/inspiration.dart';
 import '../domain/inspiration_repository.dart';
 
@@ -116,7 +118,7 @@ final class PowerSyncInspirationRepository implements InspirationRepository {
           ],
         );
         await _operation(tx, id, 'edit_inspiration', changes);
-        return Ok(_build(id, d, current.createdAt, now));
+        return Ok(_build(id, d, current.createdAt, now, image: current.image));
       }),
     );
   }
@@ -125,7 +127,7 @@ final class PowerSyncInspirationRepository implements InspirationRepository {
   Future<InspirationResult<void>> deleteInspiration(String id) => _guard(
     () => _db.writeTransaction((tx) async {
       final row = await tx.getOptional(
-        'SELECT deleted_at FROM inspirations WHERE id = ?',
+        'SELECT * FROM inspirations WHERE id = ?',
         [id],
       );
       if (row == null) return Err(InspirationNotFound(id));
@@ -136,9 +138,76 @@ final class PowerSyncInspirationRepository implements InspirationRepository {
           'WHERE id = ?',
           [now, now, id],
         );
-        await _operation(tx, id, 'delete_inspiration', const {});
+        // O servidor ignora o photo_id; serve à fila para apagar os
+        // ficheiros depois de o servidor aceitar.
+        await _operation(tx, id, 'delete_inspiration', {
+          'photo_id': ?fromRow(row)?.image?.id,
+        });
       }
       return const Ok(null);
+    }),
+  );
+
+  @override
+  Future<InspirationResult<Inspiration>> setImage(
+    String id,
+    ProcessedPhoto image,
+  ) => _mutateImage(id, (tx, current) async {
+    final photoId = (await tx.get('SELECT uuid() AS id'))['id']! as String;
+    final added = image.toPhoto(photoId);
+    for (final variant in PhotoVariant.values) {
+      await PhotoFiles.put(tx, photoId, variant, image.bytesOf(variant));
+    }
+    // Trocar é retirar a antiga e ligar a nova, pela mesma ordem no servidor.
+    if (current.image case final old?) {
+      await _operation(tx, id, 'remove_inspiration_image', {
+        'photo_id': old.id,
+      });
+    }
+    await _operation(tx, id, 'set_inspiration_image', {
+      'image': GarmentRow.photoJson(added),
+    });
+    return added;
+  });
+
+  @override
+  Future<InspirationResult<Inspiration>> removeImage(String id) =>
+      _mutateImage(id, (tx, current) async {
+        if (current.image case final old?) {
+          // Os bytes ficam até a fila enviar a operação.
+          await _operation(tx, id, 'remove_inspiration_image', {
+            'photo_id': old.id,
+          });
+        }
+        return null;
+      });
+
+  Future<InspirationResult<Inspiration>> _mutateImage(
+    String id,
+    Future<GarmentPhoto?> Function(SqliteWriteContext tx, Inspiration current)
+    change,
+  ) => _guard(
+    () => _db.writeTransaction((tx) async {
+      final row = await tx.getOptional(
+        'SELECT * FROM inspirations WHERE id = ? AND deleted_at IS NULL',
+        [id],
+      );
+      final current = row == null ? null : fromRow(row);
+      if (current == null) return Err(InspirationNotFound(id));
+      final image = await change(tx, current);
+      if (image == null && current.image == null) return Ok(current);
+      final now = _clock.nowUtc();
+      await tx.execute(
+        'UPDATE inspirations SET image = ?, updated_at = ? WHERE id = ?',
+        [
+          image == null ? null : jsonEncode(GarmentRow.photoJson(image)),
+          GarmentRow.iso(now),
+          id,
+        ],
+      );
+      return Ok(
+        _build(id, current.toDraft(), current.createdAt, now, image: image),
+      );
     }),
   );
 
@@ -161,6 +230,10 @@ final class PowerSyncInspirationRepository implements InspirationRepository {
       for (final o in Occasion.values)
         if (d.occasions.contains(o)) o.id,
     ],
+    'proportions': [
+      for (final p in Proportion.values)
+        if (d.proportions.contains(p)) p.id,
+    ],
   };
 
   static Object? _sqlValue(Object? v) => v is List ? jsonEncode(v) : v;
@@ -169,8 +242,9 @@ final class PowerSyncInspirationRepository implements InspirationRepository {
     String id,
     InspirationDraft d,
     DateTime created,
-    DateTime updated,
-  ) => Inspiration(
+    DateTime updated, {
+    GarmentPhoto? image,
+  }) => Inspiration(
     id: id,
     title: d.title,
     sourceUrl: d.sourceUrl,
@@ -180,6 +254,8 @@ final class PowerSyncInspirationRepository implements InspirationRepository {
     patterns: d.patterns,
     textures: d.textures,
     occasions: d.occasions,
+    proportions: d.proportions,
+    image: image,
     createdAt: created,
     updatedAt: updated,
   );
@@ -229,6 +305,16 @@ final class PowerSyncInspirationRepository implements InspirationRepository {
       occasions: {
         for (final o in list('occasions'))
           if (o is String) ?Occasion.fromId(o),
+      },
+      proportions: {
+        for (final p in list('proportions'))
+          if (p is String) ?Proportion.fromId(p),
+      },
+      image: switch (_decode(row['image'])) {
+        final Map<String, Object?> photo => GarmentRow.decodePhotos(
+          jsonEncode([photo]),
+        ).firstOrNull,
+        _ => null,
       },
       createdAt: created,
       updatedAt: updated,

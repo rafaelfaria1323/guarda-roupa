@@ -1,4 +1,5 @@
 import '../../wardrobe/domain/garment_attributes.dart';
+import '../../wardrobe/domain/garment_photo.dart';
 
 /// Formalidade de uma referência (docs/features/inspiracoes-e-estilo.md).
 enum Formality {
@@ -17,8 +18,29 @@ enum Formality {
   }
 }
 
+/// Silhueta do look de referência (docs/features/inspiracoes-e-estilo.md).
+enum Proportion {
+  fittedTopRelaxedBottom('fitted_top_relaxed_bottom'),
+  relaxedTopFittedBottom('relaxed_top_fitted_bottom'),
+  allFitted('all_fitted'),
+  allRelaxed('all_relaxed'),
+  longLayer('long_layer'),
+  croppedTop('cropped_top');
+
+  const Proportion(this.id);
+  final String id;
+
+  static Proportion? fromId(String? id) {
+    for (final p in values) {
+      if (p.id == id) return p;
+    }
+    return null;
+  }
+}
+
 /// Uma referência de estilo: título e/ou link, com etiquetas confirmadas
-/// pelo utilizador. Não é posse: não aparece no guarda-roupa nem é
+/// pelo utilizador e, opcionalmente, uma imagem própria ou autorizada (que
+/// a app não analisa). Não é posse: não aparece no guarda-roupa nem é
 /// sugerida como peça. A app não abre nem analisa o link.
 final class Inspiration {
   const Inspiration({
@@ -33,6 +55,8 @@ final class Inspiration {
     this.patterns = const {},
     this.textures = const {},
     this.occasions = const {},
+    this.proportions = const {},
+    this.image,
   });
 
   final String id;
@@ -46,6 +70,10 @@ final class Inspiration {
   final Set<GarmentPattern> patterns;
   final Set<SurfaceTexture> textures;
   final Set<Occasion> occasions;
+  final Set<Proportion> proportions;
+
+  /// Metadados da imagem; os bytes ficam como os das fotos das peças.
+  final GarmentPhoto? image;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -61,7 +89,8 @@ final class Inspiration {
       formality != null ||
       patterns.isNotEmpty ||
       textures.isNotEmpty ||
-      occasions.isNotEmpty;
+      occasions.isNotEmpty ||
+      proportions.isNotEmpty;
 
   InspirationDraft toDraft() => InspirationDraft(
     title: title,
@@ -72,6 +101,7 @@ final class Inspiration {
     patterns: patterns,
     textures: textures,
     occasions: occasions,
+    proportions: proportions,
   );
 }
 
@@ -85,6 +115,7 @@ final class InspirationDraft {
     this.patterns = const {},
     this.textures = const {},
     this.occasions = const {},
+    this.proportions = const {},
   });
 
   final String? title;
@@ -95,6 +126,7 @@ final class InspirationDraft {
   final Set<GarmentPattern> patterns;
   final Set<SurfaceTexture> textures;
   final Set<Occasion> occasions;
+  final Set<Proportion> proportions;
 
   /// Texto aparado; vazio passa a `null`. O link ganha `https://` se vier
   /// sem esquema (ex.: `pinterest.com/pin/1`).
@@ -107,6 +139,7 @@ final class InspirationDraft {
     patterns: patterns,
     textures: textures,
     occasions: occasions,
+    proportions: proportions,
   );
 
   static String? _clean(String? s) {
