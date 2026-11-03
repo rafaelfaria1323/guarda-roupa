@@ -1,24 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:guarda_roupa/app/app.dart';
 
-Future<void> pumpApp(WidgetTester tester, {required Size size}) async {
-  tester.view.physicalSize = size;
-  tester.view.devicePixelRatio = 1;
-  addTearDown(tester.view.reset);
-  await tester.pumpWidget(const ProviderScope(child: GuardaRoupaApp()));
-  await tester.pumpAndSettle();
-}
+import 'support/app_harness.dart';
 
 void main() {
-  const phone = Size(400, 800);
-  const desktop = Size(1200, 800);
-
   testWidgets('abre no Planeador com navegação inferior num telemóvel', (
     tester,
   ) async {
-    await pumpApp(tester, size: phone);
+    await pumpApp(tester);
 
     expect(find.byType(NavigationBar), findsOneWidget);
     expect(find.byType(NavigationRail), findsNothing);
@@ -26,10 +15,10 @@ void main() {
   });
 
   testWidgets('muda de separador e mantém o título coerente', (tester) async {
-    await pumpApp(tester, size: phone);
+    await pumpApp(tester);
 
     await tester.tap(find.byIcon(Icons.checkroom_outlined));
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(find.text('Ainda não tens peças.'), findsOneWidget);
     expect(
       find.descendant(
@@ -56,11 +45,11 @@ void main() {
   });
 
   testWidgets('abre e fecha as Definições', (tester) async {
-    await pumpApp(tester, size: phone);
+    await pumpApp(tester);
 
     await tester.tap(find.byTooltip('Definições'));
-    await tester.pumpAndSettle();
-    expect(find.text('Conta e sincronização'), findsOneWidget);
+    await settle(tester);
+    expect(find.text('Sessão iniciada como a@example.com'), findsOneWidget);
 
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();

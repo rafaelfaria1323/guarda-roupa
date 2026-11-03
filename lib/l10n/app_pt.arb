@@ -9,13 +9,110 @@
   "plannerEmpty": "Ainda não há planeamento.",
   "plannerEmptyHint": "O planeamento diário e semanal chega nos incrementos 5 e 6.",
   "wardrobeEmpty": "Ainda não tens peças.",
-  "wardrobeEmptyHint": "Adicionar peças com fotografia chega no incremento 1.",
+  "wardrobeEmptyHint": "Toca em «Adicionar peça» para criar a primeira. As fotografias chegam mais tarde neste incremento.",
   "outfitsEmpty": "Ainda não há conjuntos guardados.",
   "outfitsEmptyHint": "Guardar e classificar conjuntos chega no incremento 4.",
   "styleEmpty": "Ainda não há inspirações.",
   "styleEmptyHint": "Referências e preferências de estilo chegam no incremento 4.",
   "settingsAccount": "Conta e sincronização",
-  "settingsAccountHint": "Login com Google e sincronização entre dispositivos chegam no incremento 1.",
+  "categoryLabel": "{category, select, t_shirt{T-shirt} shirt{Camisa} polo{Polo} top{Top} sweater{Camisola} sweatshirt{Sweatshirt} cardigan{Casaco de malha} trousers{Calças} jeans{Calças de ganga} shorts{Calções} skirt{Saia} dress{Vestido} jumpsuit{Macacão} jacket{Casaco} blazer{Blazer} coat{Sobretudo} raincoat{Impermeável} sneakers{Ténis} shoes{Sapatos} boots{Botas} sandals{Sandálias} accessory{Acessório} other{Outra}}",
+  "@categoryLabel": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "availabilityLabel": "{availability, select, available{Disponível} drying{A secar} washing{A lavar} needs_cleaning{Precisa de limpeza} other{Desconhecida}}",
+  "@availabilityLabel": {
+    "placeholders": {
+      "availability": {
+        "type": "String"
+      }
+    }
+  },
+  "signInTitle": "Entra para guardar o teu guarda-roupa",
+  "signInHint": "Os dados ficam neste dispositivo e sincronizam com a tua conta.",
+  "signInGoogle": "Entrar com Google",
+  "signInFailed": "Não foi possível entrar. Confirma que esta conta tem acesso.",
+  "signInUnconfigured": "A app foi compilada sem a configuração do Supabase. Corre com --dart-define-from-file=config/public.json.",
+  "wardrobeAdd": "Adicionar peça",
+  "wardrobeSearch": "Pesquisar por nome, marca ou notas",
+  "wardrobeShowArchived": "Arquivadas",
+  "wardrobeNoResults": "Nenhuma peça corresponde à pesquisa.",
+  "wardrobeLoadError": "Não foi possível ler as peças deste dispositivo.",
+  "garmentNew": "Nova peça",
+  "garmentEdit": "Editar peça",
+  "garmentCategory": "Categoria",
+  "garmentCategoryRequired": "Escolhe uma categoria.",
+  "garmentName": "Nome",
+  "garmentBrand": "Marca",
+  "garmentNotes": "Notas",
+  "garmentAvailability": "Disponibilidade",
+  "garmentArchived": "Arquivada",
+  "garmentSave": "Guardar",
+  "garmentDuplicate": "Duplicar",
+  "garmentDuplicated": "Cópia criada.",
+  "garmentArchive": "Arquivar",
+  "garmentUnarchive": "Desarquivar",
+  "garmentNotFound": "Esta peça já não existe.",
+  "garmentTooLong": "Demasiado longo (máximo {max} caracteres).",
+  "@garmentTooLong": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "garmentSaveFailed": "Não foi possível guardar neste dispositivo.",
+  "syncLocalOnly": "Só neste dispositivo: sincronização por configurar",
+  "syncSynced": "Sincronizado",
+  "syncPending": "{count, plural, =1{1 alteração por enviar} other{{count} alterações por enviar}}",
+  "@syncPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncOffline": "Sem ligação ao servidor de sincronização",
+  "syncError": "Erro de sincronização. As alterações ficam guardadas e voltam a ser enviadas.",
+  "syncConflicts": "{count, plural, =1{1 alteração não foi aplicada no servidor} other{{count} alterações não foram aplicadas no servidor}}",
+  "@syncConflicts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsSignedInAs": "Sessão iniciada como {email}",
+  "@settingsSignedInAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsSignedIn": "Sessão iniciada",
+  "settingsSignOut": "Terminar sessão",
+  "signOutTitle": "Terminar sessão?",
+  "signOutBody": "Os dados desta conta são apagados deste dispositivo. Continuam na tua conta.",
+  "signOutPendingTitle": "Há alterações por enviar",
+  "signOutPendingBody": "{count, plural, =1{Há 1 alteração por enviar. Se saíres agora, perde-se.} other{Há {count} alterações por enviar. Se saíres agora, perdem-se.}}",
+  "@signOutPendingBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "signOutSyncFirst": "Sincronizar primeiro",
+  "signOutSyncUnavailable": "A sincronização ainda não está configurada, por isso estas alterações só existem neste dispositivo.",
+  "signOutExportSoon": "Exportar backup e sair chega no incremento 2.",
+  "signOutDiscard": "Sair e descartar",
+  "signOutDiscardConfirmTitle": "Descartar alterações?",
+  "signOutDiscardConfirmBody": "Esta ação não pode ser desfeita.",
+  "cancel": "Cancelar",
   "settingsBackup": "Dados e backup",
   "settingsBackupHint": "Exportação e recuperação chegam no incremento 2."
 }

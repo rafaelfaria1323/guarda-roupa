@@ -1,8 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app/app.dart';
+import 'app/config.dart';
+import 'features/account_sync/application/providers.dart';
+import 'features/account_sync/data/supabase_auth_service.dart';
+import 'features/account_sync/data/supabase_connector.dart';
 
-void main() {
-  runApp(const ProviderScope(child: GuardaRoupaApp()));
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final config = AppConfig.fromEnvironment();
+
+  final overrides = [appConfigProvider.overrideWithValue(config)];
+  if (config.hasSupabase) {
+    await Supabase.initialize(
+      url: config.supabaseUrl,
+      publishableKey: config.supabasePublishableKey,
+    );
+    final client = Supabase.instance.client;
+    overrides
+      ..add(authServiceProvider.overrideWithValue(SupabaseAuthService(client)))
+      ..add(
+        syncConnectorFactoryProvider.overrideWithValue(
+          config.hasPowerSync
+              ? () => SupabasePowerSyncConnector(
+                  client: client,
+                  powerSyncUrl: config.powerSyncUrl,
+                )
+              : null,
+        ),
+      );
+  }
+
+  runApp(ProviderScope(overrides: overrides, child: const GuardaRoupaApp()));
 }
