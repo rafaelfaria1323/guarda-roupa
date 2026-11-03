@@ -31,6 +31,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       app: ${{ steps.filter.outputs.app }}
+      sql: ${{ steps.filter.outputs.sql }}
       matrix: ${{ steps.shards.outputs.matrix }}
       total: ${{ steps.shards.outputs.total }}
     steps:
@@ -47,6 +48,10 @@ jobs:
               - 'l10n.yaml'
               - 'analysis_options.yaml'
               - 'tool/ci/**'
+              - '.github/workflows/**'
+            sql:
+              - 'supabase/**'
+              - 'tool/db/**'
               - '.github/workflows/**'
       - id: shards
         run: python3 tool/ci/test_shards.py
@@ -87,10 +92,33 @@ jobs:
       - run: flutter pub get --enforce-lockfile
       - run: flutter test ${{ matrix.files }}
 
+  sql:
+    name: Testes SQL (Supabase)
+    needs: changes
+    if: needs.changes.outputs.sql == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 2s
+          --health-timeout 5s --health-retries 15
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - run: tool/db/test_migrations.sh
+
   ci-ok:
     name: CI ok
     if: always()
-    needs: [docs, changes, analyze, test]
+    needs: [docs, changes, analyze, test, sql]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:

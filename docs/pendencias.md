@@ -20,7 +20,7 @@ Uma pendência não deve desaparecer por estar descrita em Markdown. Fechar apen
 | P-12 | Lojas suportadas | POC com links reais autorizados, metadados, variantes e imagens | Anunciar suporte a uma loja |
 | P-13 | Pinterest | Confirmar permissões/API; link não garante imagem | Importação automática de Pins |
 | P-14 | Modelo IA | Licença, operadores, tamanho, precisão e desempenho | Ativar análise visual automática |
-| P-15 | Assinatura/distribuição Android | Definir applicationId, guardar chave e comprovar atualização sem apagar dados | Distribuição estável |
+| P-15 | Assinatura/distribuição Android — **applicationId decidido 2026-11-03: `pt.rafaelfaria.guarda_roupa`** | Guardar chave de assinatura e comprovar atualização sem apagar dados | Distribuição estável |
 | P-16 | Registo — **Decidido 2026-11-03: só o proprietário** (e uma conta de experiência) | Impor a regra no servidor (Auth + RLS), não apenas na UI | Expor login publicamente |
 
 ## O que já não está pendente como requisito
@@ -57,6 +57,7 @@ Idempotência de retries e da mesma entrada de plano não deduplica magicamente 
 | P-02 | Google OAuth como único método de login inicial | Utilizador | 2026-11-03 | Decidido; não configurado |
 | P-03 | PowerSync + Supabase como primeira POC de sincronização | Utilizador | 2026-11-03 | POC por executar; decisão final depende do resultado |
 | P-16 | Apenas o proprietário (e conta de experiência) pode usar a app | Utilizador | 2026-11-03 | Decidido; regra no servidor por implementar |
+| P-15 | `applicationId` = `pt.rafaelfaria.guarda_roupa` (fixo a partir do OAuth/primeira instalação) | Utilizador | 2026-11-03 | Decidido; assinatura release por definir |
 | P-04 | ADR-008: ordem conservadora de disponibilidade, edições de plano concorrentes como proposta, logout com pendências bloqueado | Utilizador | 2026-11-03 | Decidido; validação na POC |
 
 ## Registo futuro de fecho
