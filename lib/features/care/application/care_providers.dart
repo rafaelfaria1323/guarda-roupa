@@ -9,6 +9,7 @@ import '../domain/care_policies.dart';
 import '../domain/care_repository.dart';
 import '../domain/cleaning_event.dart';
 import '../domain/laundry_policy.dart';
+import '../domain/rotation_policy.dart';
 import '../../wear/domain/wear_event.dart';
 
 final careRepositoryProvider = Provider<CareRepository?>((ref) {
@@ -60,6 +61,20 @@ final laundryStatesProvider = Provider<Map<GarmentId, LaundryState>?>((ref) {
     wears: wears,
     cleanings: cleanings,
     policies: policies,
+  );
+});
+
+/// Estado de rotação de cada peça, para hoje; `null` enquanto carrega.
+final rotationStatesProvider = Provider<Map<GarmentId, RotationState>?>((ref) {
+  final garments = ref.watch(_allGarmentsProvider).value;
+  final wears = ref.watch(_wearsProvider).value;
+  final policies = ref.watch(carePoliciesProvider).value;
+  if (garments == null || wears == null || policies == null) return null;
+  return RotationPolicy.evaluate(
+    garments: garments,
+    wears: wears,
+    policies: policies,
+    today: todayFrom(ref.watch(clockProvider)),
   );
 });
 
