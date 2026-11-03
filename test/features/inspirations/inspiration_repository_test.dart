@@ -5,7 +5,12 @@ import 'package:guarda_roupa/features/account_sync/data/operation_upload_queue.d
 import 'package:guarda_roupa/features/inspirations/data/powersync_inspiration_repository.dart';
 import 'package:guarda_roupa/features/inspirations/domain/inspiration.dart';
 import 'package:guarda_roupa/features/inspirations/domain/inspiration_repository.dart';
+
+import 'dart:typed_data';
+
+import 'package:guarda_roupa/features/wardrobe/data/photo_files.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_attributes.dart';
+import 'package:guarda_roupa/features/wardrobe/domain/garment_photo.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/reference_color.dart';
 import 'package:powersync/powersync.dart';
 
@@ -221,8 +226,135 @@ void main() {
       expect(conflict['garment_id'], i.id);
       expect(conflict['reason'], 'invalid');
     });
+
+    test('proporções: guardadas, editadas e enviadas', () async {
+      final i = ok(
+        await repo.createInspiration(
+          const InspirationDraft(
+            title: 'Largo em cima',
+            proportions: {Proportion.longLayer, Proportion.allFitted},
+          ),
+        ),
+      );
+      expect((await reload(repo, i.id)).proportions, {
+        Proportion.allFitted,
+        Proportion.longLayer,
+      });
+      expect(i.hasTags, isTrue);
+      ok(
+        await repo.updateInspiration(
+          i.id,
+          const InspirationDraft(title: 'Largo em cima'),
+        ),
+      );
+      final ops = await styleOperations(db);
+      expect(dataOf(ops.first)['proportions'], ['all_fitted', 'long_layer']);
+      expect(dataOf(ops.last), {'proportions': <Object?>[]});
+      expect((await reload(repo, i.id)).proportions, isEmpty);
+    });
+
+    test('imagem: ligar, trocar, retirar e eliminar', () async {
+      final i = ok(
+        await repo.createInspiration(const InspirationDraft(title: 'x')),
+      );
+      final first = ok(await repo.setImage(i.id, image(1))).image!;
+      expect((await reload(repo, i.id)).image, first);
+      expect(
+        await PhotoFiles.get(db, first.id, PhotoVariant.main),
+        image(1).main,
+      );
+      // Editar o texto não perde a imagem.
+      final edited = ok(
+        await repo.updateInspiration(i.id, const InspirationDraft(title: 'y')),
+      );
+      expect(edited.image, first);
+
+      final second = ok(await repo.setImage(i.id, image(2))).image!;
+      expect(second.id, isNot(first.id));
+      ok(await repo.removeImage(i.id));
+      expect((await reload(repo, i.id)).image, isNull);
+      // Sem imagem, retirar não faz nada.
+      ok(await repo.removeImage(i.id));
+      ok(await repo.setImage(i.id, image(3)));
+      ok(await repo.deleteInspiration(i.id));
+
+      final ops = await styleOperations(db);
+      final third = ops[ops.length - 2];
+      expect(
+        [for (final o in ops) o['kind']],
+        [
+          'create_inspiration',
+          'set_inspiration_image',
+          'edit_inspiration',
+          'remove_inspiration_image',
+          'set_inspiration_image',
+          'remove_inspiration_image',
+          'set_inspiration_image',
+          'delete_inspiration',
+        ],
+      );
+      expect(dataOf(ops[1])['image'], {
+        'id': first.id,
+        'width': 800,
+        'height': 1000,
+        'bytes': 32,
+        'thumb_bytes': 8,
+        'sha256': '01' * 32,
+      });
+      expect(dataOf(ops[3]), {'photo_id': first.id});
+      expect(dataOf(ops[5]), {'photo_id': second.id});
+      final thirdId = (dataOf(third)['image']! as Map)['id'];
+      expect(dataOf(ops.last), {'photo_id': thirdId});
+
+      // A fila envia os ficheiros antes de ligar e apaga-os depois de
+      // retirar ou eliminar.
+      final server = ScriptedUploader();
+      await OperationUploadQueue(server).upload(db);
+      expect(server.log, [
+        'style create_inspiration',
+        'upload ${first.id}/main',
+        'upload ${first.id}/thumb',
+        'style set_inspiration_image',
+        'style edit_inspiration',
+        // Trocar é uma transação: retirar e ligar, e só depois apagar.
+        'style remove_inspiration_image',
+        'upload ${second.id}/main',
+        'upload ${second.id}/thumb',
+        'style set_inspiration_image',
+        'remove ${first.id}',
+        'style remove_inspiration_image',
+        'remove ${second.id}',
+        'upload $thirdId/main',
+        'upload $thirdId/thumb',
+        'style set_inspiration_image',
+        'style delete_inspiration',
+        'remove $thirdId',
+      ]);
+      expect(server.files, isEmpty);
+      expect((await db.get('SELECT count(*) AS n FROM photo_files'))['n'], 0);
+    });
+
+    test('imagem numa inspiração eliminada: não encontrada', () async {
+      final i = ok(
+        await repo.createInspiration(const InspirationDraft(title: 'x')),
+      );
+      ok(await repo.deleteInspiration(i.id));
+      expect(
+        failureOf(await repo.setImage(i.id, image(1))),
+        isA<InspirationNotFound>(),
+      );
+      expect((await db.get('SELECT count(*) AS n FROM photo_files'))['n'], 0);
+    });
   });
 }
+
+ProcessedPhoto image(int seed) => ProcessedPhoto(
+  width: 800,
+  height: 1000,
+  main: Uint8List.fromList(List.filled(32, seed)),
+  thumb: Uint8List.fromList(List.filled(8, seed)),
+  sha256: (seed.toRadixString(16).padLeft(2, '0')) * 32,
+);
 
 Future<Inspiration> reload(InspirationRepository repo, String id) async =>
     (await repo.watchInspiration(id).first)!;

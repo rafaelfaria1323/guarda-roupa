@@ -6,11 +6,18 @@ Estado: abordagem assistida confirmada; interpretação visual avançada adiada.
 
 - Separador **Estilo**: lista de inspirações (título ou domínio do link, etiquetas e paleta) e editor com título, link, notas e etiquetas.
 - Uma inspiração precisa de um título ou de um link. Um link sem esquema ganha `https://`. Só são aceites links `http(s)`: o servidor e a app recusam `javascript:` e outros esquemas.
-- O link é só guardado e pode ser copiado. A app não abre nem analisa a página, e a interface diz isso. Também não há imagem nesta versão, por isso não existe nenhuma "análise" que possa ser mostrada.
+- O link é só guardado e pode ser copiado. A app não abre nem analisa a página, e a interface diz isso.
+- **Imagem** (opcional, uma por inspiração): câmara ou galeria, com o mesmo processamento das fotos das peças (1600 px + miniatura, sem EXIF/GPS).
+  - Antes de abrir a câmara ou a galeria, a app pede confirmação de que a imagem é do utilizador ou autorizada (uma vez por ecrã). Para referências de outras pessoas, guarda-se o link.
+  - Fica privada, no bucket `garment-photos` em `{uid}/{image_id}/main.jpg|thumb.jpg` (as mesmas políticas por pasta). A interface diz que a imagem não é analisada: as etiquetas continuam a ser só as escolhidas.
+  - Numa inspiração nova, a imagem fica pendente e é ligada ao guardar. Numa existente, ligar, trocar e retirar aplicam-se logo.
+  - A miniatura aparece na lista em vez da paleta.
+  - Os ficheiros sobem antes de o servidor ligar a imagem (`set_inspiration_image`, rejeitado com `missing_file` se faltarem). Trocar é `remove_inspiration_image` + `set_inspiration_image` na mesma transação. Depois de retirar ou eliminar, os ficheiros são apagados do Storage (melhor esforço) e do dispositivo. Um `remove_inspiration_image` atrasado só tira a imagem se ainda for a mesma.
 - Etiquetas confirmadas pelo utilizador:
   - paleta: até 8 cores de referência;
   - formalidade: descontraído, casual cuidado ou arranjado;
-  - ocasiões, padrões e texturas.
+  - ocasiões, padrões e texturas;
+  - proporções: justo em cima e largo em baixo, largo em cima e justo em baixo, tudo justo, tudo largo, camada comprida, parte de cima curta.
   Sem etiquetas, a inspiração mostra "Sem etiquetas", nada é inventado.
 - Não é posse: não cria nem referencia peças e não aparece no guarda-roupa.
 - **Preferências** (segundo segmento do separador Estilo): "Gosto" ou "Evito" de uma cor, padrão, textura, formalidade ou combinação (base neutra, um só destaque, tons próximos).
@@ -20,14 +27,13 @@ Estado: abordagem assistida confirmada; interpretação visual avançada adiada.
   - Numa inspiração guardada, **Criar preferências** propõe um "Gosto" por etiqueta (cores, formalidade, padrões e texturas), no contexto das ocasiões dela. O utilizador escolhe quais quer; as repetidas são ignoradas. A preferência guarda a inspiração de origem e fica se a inspiração for eliminada.
   - Não é posse: não cria, não esconde nem altera peças. No motor (incremento 5) será só uma componente da pontuação de peças que existem.
 - Dados:
-  - a tabela `inspirations` é escrita por `apply_style_operation` (`create_inspiration`, `edit_inspiration` campo a campo, `delete_inspiration`) e sincronizada pelo stream `user_inspirations`;
+  - a tabela `inspirations` é escrita por `apply_style_operation` (`create_inspiration`, `edit_inspiration` campo a campo, `delete_inspiration`, `set_inspiration_image`, `remove_inspiration_image`) e sincronizada pelo stream `user_inspirations`;
   - a tabela `style_preferences` é escrita pela mesma função (`create_preference`, `edit_preference`, `delete_preference`) e sincronizada pelo stream `user_style_preferences`;
   - as duas partilham a fila local `style_operations`.
 - Por fazer:
-  - imagem própria ou autorizada (bucket privado);
-  - proporções;
+  - a imagem no backup (as proporções já entram);
   - uso no motor.
-- Backup (formato v4): inspirações e preferências entram e são recuperadas com ids novos.
+- Backup (formato v4): inspirações (com proporções) e preferências entram e são recuperadas com ids novos. A imagem ainda não entra: depois de recuperar, a inspiração fica sem imagem.
 
 ## Objetivo
 

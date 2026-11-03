@@ -642,5 +642,20 @@
         "format": "yMMMMd"
       }
     }
+  },
+  "inspirationImage": "Imagem",
+  "inspirationImageHint": "Opcional: uma fotografia tua ou que tens autorização para guardar. Fica privada e a app não a analisa — as etiquetas são só as que escolheres.",
+  "inspirationImageReplace": "Trocar imagem",
+  "inspirationImageRightsTitle": "Imagem tua ou autorizada?",
+  "inspirationImageRightsBody": "Guarda só imagens que tiraste ou que tens autorização para guardar. Para referências de outras pessoas, guarda o link.",
+  "inspirationImageRightsConfirm": "É minha ou autorizada",
+  "inspirationProportions": "Proporções",
+  "proportionLabel": "{proportion, select, fitted_top_relaxed_bottom{Justo em cima, largo em baixo} relaxed_top_fitted_bottom{Largo em cima, justo em baixo} all_fitted{Tudo justo} all_relaxed{Tudo largo} long_layer{Camada comprida} cropped_top{Parte de cima curta} other{Outra}}",
+  "@proportionLabel": {
+    "placeholders": {
+      "proportion": {
+        "type": "String"
+      }
+    }
   }
 }

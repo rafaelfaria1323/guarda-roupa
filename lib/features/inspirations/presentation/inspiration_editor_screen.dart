@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,9 +6,14 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/domain/result.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../wardrobe/application/photo_providers.dart';
+import '../../wardrobe/data/photo_processor.dart';
 import '../../wardrobe/domain/garment_attributes.dart';
+import '../../wardrobe/domain/garment_photo.dart';
+import '../../wardrobe/domain/photo_picker.dart';
 import '../../wardrobe/domain/reference_color.dart';
 import '../../wardrobe/presentation/colors_editor.dart';
+import '../../wardrobe/presentation/garment_photo_view.dart';
 import '../application/inspiration_providers.dart';
 import '../domain/inspiration.dart';
 import '../domain/inspiration_repository.dart';
@@ -37,6 +43,12 @@ class _InspirationEditorScreenState
   final _patterns = <GarmentPattern>{};
   final _textures = <SurfaceTexture>{};
   final _occasions = <Occasion>{};
+  final _proportions = <Proportion>{};
+
+  /// Imagem escolhida antes de a inspiração existir; liga-se ao guardar.
+  ProcessedPhoto? _pendingImage;
+  bool _rightsConfirmed = false;
+  bool _processing = false;
   bool _loaded = false;
   bool _saving = false;
   Stream<Inspiration?>? _current;
@@ -63,6 +75,7 @@ class _InspirationEditorScreenState
     _patterns.addAll(i.patterns);
     _textures.addAll(i.textures);
     _occasions.addAll(i.occasions);
+    _proportions.addAll(i.proportions);
     _loaded = true;
   }
 
@@ -75,6 +88,7 @@ class _InspirationEditorScreenState
     patterns: {..._patterns},
     textures: {..._textures},
     occasions: {..._occasions},
+    proportions: {..._proportions},
   );
 
   @override
@@ -125,13 +139,13 @@ class _InspirationEditorScreenState
               if (mounted) setState(() {});
             });
           }
-          return _form(context);
+          return _form(context, repo);
         },
       ),
     );
   }
 
-  Widget _form(BuildContext context) {
+  Widget _form(BuildContext context, InspirationRepository repo) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     Widget heading(String text) => Padding(
@@ -196,6 +210,8 @@ class _InspirationEditorScreenState
             decoration: InputDecoration(labelText: l10n.inspirationNotes),
           ),
         ),
+        const Divider(),
+        _imageSection(repo),
         const Divider(),
         ListTile(
           title: Text(l10n.inspirationTags, style: theme.textTheme.titleMedium),
@@ -271,8 +287,191 @@ class _InspirationEditorScreenState
               t,
             ),
         ]),
+        heading(l10n.inspirationProportions),
+        chips([
+          for (final p in Proportion.values)
+            _toggle(
+              'inspiration-proportion-${p.id}',
+              l10n.proportionLabel(p.id),
+              _proportions,
+              p,
+            ),
+        ]),
       ],
     );
+  }
+
+  Widget _imageSection(InspirationRepository repo) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final saved = _editing ? _saved : null;
+    final Widget? preview = switch ((saved?.image, _pendingImage)) {
+      (final GarmentPhoto image, _) => GarmentPhotoView(
+        photo: image,
+        size: 160,
+      ),
+      (null, final ProcessedPhoto pending) => ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.memory(
+          pending.thumb,
+          width: 160,
+          height: 160,
+          fit: BoxFit.cover,
+        ),
+      ),
+      _ => null,
+    };
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.inspirationImage, style: theme.textTheme.titleSmall),
+          const SizedBox(height: 4),
+          Text(l10n.inspirationImageHint, style: theme.textTheme.bodySmall),
+          const SizedBox(height: 8),
+          if (preview != null)
+            Stack(
+              children: [
+                Semantics(
+                  key: const Key('inspiration-image'),
+                  label: l10n.inspirationImage,
+                  child: preview,
+                ),
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: IconButton.filledTonal(
+                    key: const Key('inspiration-image-remove'),
+                    visualDensity: VisualDensity.compact,
+                    iconSize: 18,
+                    tooltip: l10n.photoRemove,
+                    onPressed: _saving || _processing
+                        ? null
+                        : () => _removeImage(repo),
+                    icon: const Icon(Icons.close),
+                  ),
+                ),
+              ],
+            ),
+          if (preview != null) const SizedBox(height: 8),
+          if (_processing)
+            const Padding(
+              padding: EdgeInsets.all(8),
+              child: SizedBox.square(
+                dimension: 24,
+                child: CircularProgressIndicator(strokeWidth: 3),
+              ),
+            )
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  key: const Key('inspiration-image-camera'),
+                  onPressed: _saving
+                      ? null
+                      : () => _pickImage(repo, PhotoSource.camera),
+                  icon: const Icon(Icons.photo_camera_outlined),
+                  label: Text(l10n.photoTake),
+                ),
+                OutlinedButton.icon(
+                  key: const Key('inspiration-image-gallery'),
+                  onPressed: _saving
+                      ? null
+                      : () => _pickImage(repo, PhotoSource.gallery),
+                  icon: const Icon(Icons.photo_library_outlined),
+                  label: Text(
+                    preview == null
+                        ? l10n.photoPick
+                        : l10n.inspirationImageReplace,
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// A imagem tem de ser do utilizador ou autorizada; pergunta-se uma vez
+  /// por ecrã, antes de abrir a câmara ou a galeria.
+  Future<bool> _confirmRights() async {
+    if (_rightsConfirmed) return true;
+    final l10n = AppLocalizations.of(context);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.inspirationImageRightsTitle),
+        content: Text(l10n.inspirationImageRightsBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            key: const Key('inspiration-image-rights-confirm'),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.inspirationImageRightsConfirm),
+          ),
+        ],
+      ),
+    );
+    _rightsConfirmed = ok ?? false;
+    return _rightsConfirmed;
+  }
+
+  Future<void> _pickImage(
+    InspirationRepository repo,
+    PhotoSource source,
+  ) async {
+    if (!await _confirmRights() || !mounted) return;
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final process = ref.read(photoProcessorProvider);
+    setState(() => _processing = true);
+    try {
+      final Uint8List? input;
+      try {
+        input = await ref.read(photoPickerProvider).pick(source);
+      } on Object {
+        messenger.showSnackBar(SnackBar(content: Text(l10n.photoPickFailed)));
+        return;
+      }
+      // Cancelar não é erro: não acontece nada.
+      if (input == null || !mounted) return;
+      switch (await process(input)) {
+        case Err(failure: final problem):
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(switch (problem) {
+                PhotoProblem.heic => l10n.photoHeic,
+                PhotoProblem.unsupportedFormat => l10n.photoUnsupported,
+                PhotoProblem.tooLarge => l10n.photoTooLarge,
+              }),
+            ),
+          );
+        case Ok(value: final image):
+          if (widget.id case final id?) {
+            final result = await repo.setImage(id, image);
+            if (mounted) reportInspiration(context, result);
+          } else if (mounted) {
+            setState(() => _pendingImage = image);
+          }
+      }
+    } finally {
+      if (mounted) setState(() => _processing = false);
+    }
+  }
+
+  Future<void> _removeImage(InspirationRepository repo) async {
+    if (widget.id case final id?) {
+      final result = await repo.removeImage(id);
+      if (mounted) reportInspiration(context, result);
+    } else {
+      setState(() => _pendingImage = null);
+    }
   }
 
   Widget _toggle<T>(String key, String label, Set<T> set, T value) =>
@@ -323,10 +522,15 @@ class _InspirationEditorScreenState
     setState(() => _saving = true);
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    final result = switch (widget.id) {
+    var result = switch (widget.id) {
       final id? => await repo.updateInspiration(id, _draft),
       null => await repo.createInspiration(_draft),
     };
+    if (_pendingImage case final image? when widget.id == null) {
+      if (result case Ok(value: final created)) {
+        result = await repo.setImage(created.id, image);
+      }
+    }
     if (!mounted) return;
     setState(() => _saving = false);
     if (!reportInspiration(context, result)) return;

@@ -1,4 +1,5 @@
 import '../../../core/domain/result.dart';
+import '../../wardrobe/domain/garment_photo.dart';
 import 'inspiration.dart';
 import 'style_preference.dart';
 
@@ -35,6 +36,15 @@ abstract interface class InspirationRepository {
     InspirationDraft draft,
   );
   Future<InspirationResult<void>> deleteInspiration(String id);
+
+  /// Liga (ou troca) a imagem. Os bytes ficam neste dispositivo até a fila
+  /// os enviar; o servidor só liga a imagem quando os ficheiros existem.
+  Future<InspirationResult<Inspiration>> setImage(
+    String id,
+    ProcessedPhoto image,
+  );
+
+  Future<InspirationResult<Inspiration>> removeImage(String id);
 }
 
 sealed class PreferenceFailure {

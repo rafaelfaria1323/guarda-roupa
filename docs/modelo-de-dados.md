@@ -34,6 +34,8 @@ Estado: desenho lógico; não é uma migração SQL pronta para executar. Data: 
   - `palette`: JSON de RGB distintos, até 8;
   - `formality`: `relaxed`, `smart_casual` ou `dressy`;
   - `patterns`, `textures` e `occasions`: JSON de ids conhecidos;
+  - `proportions`: JSON de ids conhecidos (`fitted_top_relaxed_bottom`, `relaxed_top_fitted_bottom`, `all_fitted`, `all_relaxed`, `long_layer`, `cropped_top`);
+  - `image`: `null` ou um objeto com a forma de uma foto de peça (`id`, `width`, `height`, `bytes`, `thumb_bytes`, `sha256`), validado por `garment_photos_valid`; os ficheiros vivem no bucket `garment-photos`;
   - `deleted_at`.
 - `StylePreference` é a tabela `style_preferences`, com estes campos:
   - `subject` (`color`, `pattern`, `texture`, `formality`, `combo`) e `value`, validado por `style_preference_value_valid` (cor: RGB em decimal; os outros: ids conhecidos);
@@ -41,7 +43,6 @@ Estado: desenho lógico; não é uma migração SQL pronta para executar. Data: 
   - `occasions`: o contexto (vazio = sempre);
   - `inspiration_id`: a origem opcional (só do próprio; fica `null` se a inspiração for apagada de vez);
   - `deleted_at`.
-- Ainda não há imagem.
 
 **Atributos da peça (incremento 2).** Colunas opcionais em `garments`, `null` = desconhecido: `pattern` (plain, stripes, checks, dots, floral, print, other), `texture` (smooth, ribbed, knit, textured, fuzzy), `warmth` (light, medium, warm), `rain_ok`/`wind_ok` (boolean), `occasions` (jsonb, lista sem repetidos de casual, work_casual, evening; vazia = desconhecido), `material` (≤ 120) e `care` (≤ 300) como texto livre da etiqueta. Os IDs são validados no servidor por `check`; o cliente ignora valores que não conhece (versões futuras). Cada atributo é um campo do `edit`, com `from`/`to` para conflitos campo a campo.
 | `Occasion` | ID estável, nome e regras/preferências |

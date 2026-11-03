@@ -9,9 +9,10 @@ Estado: implementada (2026-11-03) sem recorte; compatibilidade iPhone/HEIC é ga
 - Processamento no cliente (`photo_processor.dart`): orientação EXIF aplicada, 1600 px + miniatura 320 px, JPEG sem EXIF/GPS/ICC, transparência sobre branco. Testado com imagens geradas, não com fotos reais de aparelho.
 - Bytes guardados primeiro neste dispositivo (SQLite `photo_files`), depois enviados para o bucket privado antes de a foto ser ligada no servidor. Uma falha no envio deixa a operação na fila; a cópia local nunca é apagada por isso.
 - No outro dispositivo, a foto é descarregada quando é mostrada, verificada (SHA-256) e guardada para uso offline. Sem rede nem cópia, aparece um marcador.
-- Remover desliga a foto; os ficheiros são apagados depois de o servidor aceitar.
+- Remover desliga a foto; os ficheiros são apagados depois de o servidor aceitar. Eliminar a peça faz o mesmo com todas as fotos dela.
+- O mesmo bucket e o mesmo pipeline servem a imagem opcional das inspirações ([inspirações](inspiracoes-e-estilo.md)), na mesma estrutura `{uid}/{id}/main.jpg|thumb.jpg`.
 
-Limitações conhecidas: sem recorte (`crop_your_image` adiado); sem recuperação da foto se o Android matar a atividade durante a câmara (`retrieveLostData`); fotos descarregadas e depois removidas noutro dispositivo ficam em cache local até terminar sessão; ficheiros de peças eliminadas não são apagados do Storage.
+Limitações conhecidas: sem recorte (`crop_your_image` adiado); sem recuperação da foto se o Android matar a atividade durante a câmara (`retrieveLostData`); fotos descarregadas e depois removidas noutro dispositivo ficam em cache local até terminar sessão.
 
 ## Objetivo
 

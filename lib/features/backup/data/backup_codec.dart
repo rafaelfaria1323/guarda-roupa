@@ -376,11 +376,18 @@ abstract final class BackupCodec {
       final patterns = _known(rawPatterns, GarmentPattern.fromId);
       final textures = _known(rawTextures, SurfaceTexture.fromId);
       final occasions = _known(rawOccasions, Occasion.fromId);
+      // Proporções vieram depois do v4: ausentes = nenhuma.
+      final proportions = switch (json['proportions']) {
+        null => const <Proportion>{},
+        final List<Object?> raw => _known(raw, Proportion.fromId),
+        _ => null,
+      };
       if (palette.length != rawPalette.length ||
           (rawFormality != null && formality == null) ||
           patterns == null ||
           textures == null ||
-          occasions == null) {
+          occasions == null ||
+          proportions == null) {
         return null;
       }
       final draft = InspirationDraft(
@@ -392,6 +399,7 @@ abstract final class BackupCodec {
         patterns: patterns,
         textures: textures,
         occasions: occasions,
+        proportions: proportions,
       );
       // Já guardado normalizado: o ficheiro não pode trazer outra coisa.
       final normalized = draft.normalized();
@@ -411,6 +419,7 @@ abstract final class BackupCodec {
         patterns: patterns,
         textures: textures,
         occasions: occasions,
+        proportions: proportions,
         createdAt: created.toUtc(),
         updatedAt: updated.toUtc(),
       );
