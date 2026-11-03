@@ -6,10 +6,11 @@ name: Supabase
 # - Depois de a CI passar na main: aplica (`supabase db push`). Sem migrações
 #   novas não faz nada.
 #
-# Credenciais em Settings > Secrets and variables > Actions (nunca no repo):
-#   SUPABASE_ACCESS_TOKEN  token pessoal do Supabase (Account > Access Tokens)
-#   SUPABASE_DB_PASSWORD   password da base do projeto
-# Sem elas, os jobs avisam e não falham.
+# Credencial em Settings > Secrets and variables > Actions (nunca no repo):
+#   SUPABASE_DB_URL  URI do Session pooler, com a password da base
+#                    (Dashboard > Connect > Session pooler).
+# Liga diretamente à base: não precisa de access token nem de `supabase link`.
+# Sem o secret, os jobs avisam e não falham.
 
 on:
   pull_request:
@@ -33,9 +34,7 @@ concurrency:
 
 env:
   SUPABASE_CLI_VERSION: 2.122.1
-  SUPABASE_PROJECT_REF: zeibzbepuexeudzyrqzq
-  SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-  SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+  SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
 
 jobs:
   plan:
@@ -47,8 +46,8 @@ jobs:
       - uses: actions/checkout@v4
       - id: secrets
         run: |
-          if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_DB_PASSWORD" ]; then
-            echo "::warning::Secrets do Supabase em falta: dry-run ignorado."
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::warning::Secret SUPABASE_DB_URL em falta: dry-run ignorado."
             echo "ok=false" >> "$GITHUB_OUTPUT"
           else
             echo "ok=true" >> "$GITHUB_OUTPUT"
@@ -58,9 +57,7 @@ jobs:
         with:
           version: ${{ env.SUPABASE_CLI_VERSION }}
       - if: steps.secrets.outputs.ok == 'true'
-        run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
-      - if: steps.secrets.outputs.ok == 'true'
-        run: supabase db push --dry-run
+        run: supabase db push --db-url "$SUPABASE_DB_URL" --dry-run
 
   deploy:
     name: Aplicar migrações
@@ -79,8 +76,8 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - id: secrets
         run: |
-          if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_DB_PASSWORD" ]; then
-            echo "::warning::Secrets do Supabase em falta: migrações não aplicadas."
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::warning::Secret SUPABASE_DB_URL em falta: migrações não aplicadas."
             echo "ok=false" >> "$GITHUB_OUTPUT"
           else
             echo "ok=true" >> "$GITHUB_OUTPUT"
@@ -90,9 +87,7 @@ jobs:
         with:
           version: ${{ env.SUPABASE_CLI_VERSION }}
       - if: steps.secrets.outputs.ok == 'true'
-        run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
-      - if: steps.secrets.outputs.ok == 'true'
         name: Migrações pendentes
-        run: supabase db push --dry-run
+        run: supabase db push --db-url "$SUPABASE_DB_URL" --dry-run
       - if: steps.secrets.outputs.ok == 'true'
-        run: supabase db push
+        run: supabase db push --db-url "$SUPABASE_DB_URL"
