@@ -108,13 +108,13 @@
   },
   "signOutSyncFirst": "Sincronizar primeiro",
   "signOutSyncUnavailable": "A sincronização ainda não está configurada, por isso estas alterações só existem neste dispositivo.",
-  "signOutExportSoon": "Exportar backup e sair chega no incremento 2.",
+  "signOutExportSoon": "Antes de sair podes exportar um backup em Definições (inclui as alterações por enviar).",
   "signOutDiscard": "Sair e descartar",
   "signOutDiscardConfirmTitle": "Descartar alterações?",
   "signOutDiscardConfirmBody": "Esta ação não pode ser desfeita.",
   "cancel": "Cancelar",
   "settingsBackup": "Dados e backup",
-  "settingsBackupHint": "Exportação e recuperação chegam no incremento 2.",
+  "settingsBackupHint": "ZIP com as peças e as fotografias, para guardares fora da app. Não é encriptado: guarda-o num local privado.",
   "garmentPhotos": "Fotografias",
   "photoTake": "Tirar fotografia",
   "photoPick": "Escolher da galeria",
@@ -224,5 +224,18 @@
   "garmentCare": "Cuidados (etiqueta)",
   "answerYes": "Sim",
   "answerNo": "Não",
-  "answerUnknown": "Não sei"
+  "answerUnknown": "Não sei",
+  "backupExport": "Exportar backup",
+  "backupExporting": "A preparar o backup…",
+  "backupSaved": "Backup guardado.",
+  "backupDownloadStarted": "Transferência iniciada. Confirma que o ficheiro ficou guardado num local seguro.",
+  "backupMissingPhotos": "{count, plural, =1{Falta 1 ficheiro de fotografia} other{Faltam {count} ficheiros de fotografias}}. Liga-te à internet e tenta de novo.",
+  "@backupMissingPhotos": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupFailed": "Não foi possível criar o backup."
 }

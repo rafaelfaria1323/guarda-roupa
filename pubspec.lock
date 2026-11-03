@@ -34,7 +34,7 @@ packages:
     source: hosted
     version: "1.0.5"
   archive:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: archive
       sha256: de5ac590b8155e4e676088d714bd41ea620449a6adc0f7950c5073874b287ddb
@@ -169,6 +169,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.1"
+  file_saver:
+    dependency: "direct main"
+    description:
+      name: file_saver
+      sha256: fdb82a10b134b6bd03c48599268eb4ca04d5424029d73b30733327f4957c4037
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.7.0"
   file_selector_linux:
     dependency: transitive
     description:

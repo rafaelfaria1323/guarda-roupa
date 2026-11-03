@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../backup/presentation/export_backup_tile.dart';
 import '../application/providers.dart';
 import 'sync_status.dart';
 
@@ -42,11 +43,13 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const Divider(height: 1),
           ListTile(
-            leading: const Icon(Icons.backup_outlined),
-            title: Text(l10n.settingsBackup),
-            subtitle: Text(l10n.settingsBackupHint),
-            enabled: false,
+            title: Text(
+              l10n.settingsBackup,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            dense: true,
           ),
+          const ExportBackupTile(),
         ],
       ),
     );
