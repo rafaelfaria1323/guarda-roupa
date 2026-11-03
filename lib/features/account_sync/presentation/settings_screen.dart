@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../backup/presentation/export_backup_tile.dart';
 import '../../backup/presentation/restore_backup_tile.dart';
@@ -49,6 +51,12 @@ class SettingsScreen extends ConsumerWidget {
               style: Theme.of(context).textTheme.titleSmall,
             ),
             dense: true,
+          ),
+          ListTile(
+            key: const Key('care-settings'),
+            leading: const Icon(Icons.local_laundry_service_outlined),
+            title: Text(l10n.careSettingsTitle),
+            onTap: () => context.push(AppRoutes.careSettings),
           ),
           const ExportBackupTile(),
           const RestoreBackupTile(),

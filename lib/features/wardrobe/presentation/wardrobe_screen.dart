@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../care/application/care_providers.dart';
 import '../../account_sync/application/providers.dart';
 import '../domain/availability.dart';
 import '../domain/garment.dart';
@@ -192,19 +193,22 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
   }
 }
 
-class _GarmentTile extends StatelessWidget {
+class _GarmentTile extends ConsumerWidget {
   const _GarmentTile({required this.garment});
 
   final Garment garment;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final washRecommended =
+        ref.watch(laundryStatesProvider)?[garment.id]?.washRecommended ?? false;
     final category = l10n.categoryLabel(garment.category.id);
     final subtitle = [
       if (garment.name != null) category,
       ?garment.brand,
       if (garment.isArchived) l10n.garmentArchived,
+      if (washRecommended) l10n.laundryRecommendedShort,
     ].join(' · ');
     return ListTile(
       leading: garment.photos.isEmpty

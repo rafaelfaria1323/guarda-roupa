@@ -9,6 +9,8 @@ import 'package:powersync/powersync.dart';
 ///   (ADR-008) enviada para `apply_garment_operation`. O `id` é o `op_id`.
 /// - `wear_events` / `wear_operations`: o mesmo par para as utilizações
 ///   reais (`apply_wear_operation`); o `event_id` identifica a utilização.
+/// - `cleaning_events` / `care_policies`: limpezas e valores escolhidos
+///   (lavagem, rotatividade); as operações vão também em `wear_operations`.
 /// - `sync_conflicts`: local-only. Resultados `merged`/`conflict`/`rejected`
 ///   que o utilizador tem de ver.
 const localSchema = Schema([
@@ -49,6 +51,22 @@ const localSchema = Schema([
     Column.text('created_at'),
     Column.text('updated_at'),
     Column.text('voided_at'),
+  ]),
+  Table('cleaning_events', [
+    Column.text('owner_id'),
+    Column.text('garment_id'),
+    Column.text('cleaned_on'),
+    Column.text('created_at'),
+    Column.text('updated_at'),
+    Column.text('voided_at'),
+  ]),
+  Table('care_policies', [
+    Column.text('owner_id'),
+    Column.text('scope'),
+    Column.text('target'),
+    Column.integer('laundry_after'),
+    Column.integer('rotation_days'),
+    Column.text('updated_at'),
   ]),
   Table.insertOnly('wear_operations', [
     Column.text('event_id'),
