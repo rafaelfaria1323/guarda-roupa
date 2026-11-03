@@ -14,6 +14,8 @@ Uma pendência não deve desaparecer por estar descrita em Markdown. Fechar apen
 | P-06 | Rotatividade — **Decidido 2026-11-03:** mínimo de 3 dias entre usos para tops, 2 para partes de baixo (calças, saias, calções), sem intervalo para casacos, calçado e acessórios; preferir as menos usadas; editável por categoria e por peça; sem alternativa, sugerir na mesma com aviso claro (não é modo estrito) | **Implementado** (`RotationPolicy`, valores por categoria/peça); falta ligar ao motor de combinações | Motor com políticas reais |
 | P-07 | Lavagem — **Decidido 2026-11-03:** referência USU/ACI, só informativa e editável: t-shirts, tops e roupa desportiva após cada uso; camisas e polos 2 usos; camisolas, calças, ganga, saias e vestidos 4 usos; casacos e calçado sem aviso. Nunca muda a disponibilidade sozinha | **Implementado** (`LaundryPolicy`, limpezas, avisos e valores por categoria/peça) | Avisos iniciais |
 | P-08 | Rotina — **Decidido 2026-11-03 (confirmação):** botão “Vesti hoje” no ecrã de hoje, escolher as peças (ou confirmar o plano) e guardar; corrigir e desfazer depois; sem notificações por agora; planear nunca conta como uso. **Implementado** (registo, histórico, corrigir, desfazer). Dias/ocasiões por defeito do planeamento semanal por decidir | Decidir a rotina semanal com o planeador (incrementos 5–6) | MVP de utilização |
+| P-17 | Conforto — **Decidido 2026-11-03 (proposta):** sensação térmica ≥ 22 °C peças leves; 14–22 °C peças médias (ou leves) com camada opcional; < 14 °C peças quentes, ou leve/média mais casaco; chuva ou vento ≥ 30 km/h preferem casaco e calçado marcados para chuva/vento. Editável mais tarde | **Implementado no motor** (`ComfortThresholds`, `ComfortRules`); falta o ecrã para editar e o que conta como "chuva" na previsão | Calibração pessoal |
+| P-18 | Localização — **Decidido 2026-11-03:** Torres Vedras, coordenadas aproximadas da cidade, fuso Europe/Lisbon, editável nas Definições; Open-Meteo sem GPS | Implementar com a meteorologia | Previsão real |
 | P-09 | Perfis e desempenho | Escolher dispositivos de referência e orçamento mensurável | Gate de desempenho |
 | P-10 | Automação E2E | POC Patrol Android/Chromium; guião iPhone real, sem equivalência fictícia | Evidência por plataforma |
 | P-11 | Recuperação com cloud | Definir substituição/recuperação sem replay de eventos nem ressurreição silenciosa | Recuperação sobre conta existente |
@@ -58,6 +60,8 @@ Idempotência de retries e da mesma entrada de plano não deduplica magicamente 
 | P-03 | PowerSync + Supabase como motor de sincronização | Utilizador | 2026-11-03 | Aprovado provisoriamente: ligado e sincronizado; testes com dois dispositivos adiados pelo utilizador (problemas tratados quando aparecerem) |
 | P-16 | Apenas o proprietário (e conta de experiência) pode usar a app | Utilizador | 2026-11-03 | Decidido; regra no servidor por implementar |
 | P-15 | `applicationId` = `pt.rafaelfaria.guarda_roupa` (fixo a partir do OAuth/primeira instalação) | Utilizador | 2026-11-03 | Decidido; assinatura release por definir |
+| P-17 | Limites de conforto (proposta: 22/14 °C, vento 30 km/h) | Utilizador | 2026-11-03 | Decidido; editável mais tarde |
+| P-18 | Localização Torres Vedras, Europe/Lisbon, sem GPS | Utilizador | 2026-11-03 | Decidido |
 | P-04 | ADR-008: ordem conservadora de disponibilidade, edições de plano concorrentes como proposta, logout com pendências bloqueado | Utilizador | 2026-11-03 | Decidido; validação na POC |
 
 ## Registo futuro de fecho
