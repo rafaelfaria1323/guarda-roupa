@@ -1,0 +1,95 @@
+# Modelo de dados proposto
+
+Estado: desenho lógico; não é uma migração SQL pronta para executar. Data: 2026-10-31.
+
+## Convenções
+
+- IDs estáveis UUID para entidades e operações; não depender de IDs locais autoincrementais para identidade entre dispositivos.
+- Timestamps de eventos guardados em UTC, com contexto de fuso quando relevante.
+- Datas planeadas guardadas como datas locais e fuso do plano, não como “meia-noite UTC” reinterpretada no telefone.
+- Categorias e estados usam identificadores estáveis, com tradução na apresentação.
+- Metadados desconhecidos são desconhecidos, não falsos nem valores neutros inventados.
+- As colunas de versão/sync dependem da escolha do [ADR-004](decisoes/004-sincronizacao.md).
+
+## Entidades principais
+
+| Entidade | Campos/conteúdo principal |
+|---|---|
+| `Profile` | Utilizador autenticado, preferências, cidade e fuso |
+| `Wardrobe` | ID, proprietário, nome; um inicialmente |
+| `Garment` | Guarda-roupa, categoria, nome, atributos, disponibilidade, arquivo |
+| `GarmentColor` | Peça, RGB de referência, proporção e origem/confirmado |
+| `GarmentOccasion` | Peça e ocasião adequada |
+| `MediaAsset` | Proprietário, ID/hash, MIME, dimensões, variante, estado local/cloud |
+| `GarmentMedia` | Peça, asset e posição |
+| `Occasion` | ID estável, nome e regras/preferências |
+| `Outfit` | Conjunto guardado, nome, estado |
+| `OutfitItem` | Conjunto, peça, papel contextual, ordem de camada |
+| `OutfitOccasion` | Classificações do conjunto |
+| `WeekPlan` | Intervalo de datas, fuso, versão aceite |
+| `PlanEntry` | Data local, ocasião, estado, bloqueio manual, contexto utilizado |
+| `PlanEntryItem` | Snapshot da composição planeada: peça e papel |
+| `WearEvent` | Utilização confirmada, instante, data local e entrada de plano opcional |
+| `WearEventItem` | Peças efetivamente usadas e respetivos papéis |
+| `LaundryEvent` | Peça, transição real, instante e dados necessários de cuidado |
+| `RotationPolicy` | Categoria/override, intervalo, modo e exceções autorizadas |
+| `LaundryPolicy` | Categoria/override, limiar recomendado e automatismo opcional |
+| `Inspiration` | Referência visual, link de origem, etiquetas confirmadas e ocasiões |
+| `StylePreference` | Preferência explícita, origem e contexto; não posse |
+| `WeatherCache` | Localização aproximada, previsão, fornecedor e atualização |
+
+Não criar uma tabela genérica de atributos sem estrutura apenas para evitar pensar nas queries. Os detalhes opcionais podem usar formatos tipados, sem perder integridade dos campos centrais.
+
+## Categoria versus papel
+
+`Garment.category = t_shirt` não implica `base_layer`.
+
+O papel é atribuído em `OutfitItem`, `PlanEntryItem` e `WearEventItem`. Uma peça pode suportar vários papéis, mas só aparecer uma vez na mesma composição.
+
+Um conjunto simples com t-shirt, calças e ténis não precisa de uma camada adicional.
+
+## Disponibilidade versus recomendação
+
+Disponibilidade proposta: `available`, `needs_cleaning`, `washing`, `drying`, `archived`.
+
+O aviso `cleaning_recommended` é derivado da política/histórico e não é mais um estado de indisponibilidade. Um aviso não altera por si só `available`.
+
+Se existir conflito de disponibilidade entre dispositivos, a política de segurança/UX deve ser decidida no gate de sync. A recomendação é não tratar um estado incerto como “limpo confirmado”.
+
+## Histórico e snapshots
+
+Editar um conjunto guardado não altera um plano aceite nem uma utilização passada. As composições planeada e realmente usada são registadas separadamente.
+
+Arquivar uma peça preserva referências históricas. A eliminação definitiva e os seus efeitos em histórico/backups exigem confirmação e política explícita.
+
+Corrigir uma utilização deve ser uma operação rastreável, não apagar silenciosamente contadores. Contadores, se materializados por desempenho, são projeções reconstruíveis e atualizadas na mesma transação.
+
+## Sync: campos condicionais
+
+Na opção própria: outbox durável com ID de operação, entidade, versão base, payload e estado; receção com cursor de servidor comprovado e tombstones.
+
+Na opção SDK: usar os mecanismos do fornecedor e as tabelas locais suportadas; não construir outra fila duplicada sem necessidade.
+
+Uma confirmação da mesma entrada de plano deve ser idempotente no servidor. IDs diferentes de registos manuais independentes não provam que se trata da mesma utilização física.
+
+## Constraints e índices candidatos
+
+| Regra/query | Implementação proposta |
+|---|---|
+| Peça única numa composição | Unique por composição e `garment_id` |
+| Um conjunto diário no MVP | Restrição por plano/data; migração explícita para vários slots depois |
+| Uma confirmação ativa da mesma entrada | Constraint/operador idempotente no servidor, com caminho definido para correções |
+| Histórico por peça/data | Índice nas referências a peça e instante/data |
+| Lista de inventário | Índices por guarda-roupa, arquivo, categoria e disponibilidade segundo as queries |
+| Propriedade | FKs e autorização para impedir referências cruzadas entre utilizadores |
+| Operação repetida | Identificador de operação único dentro do âmbito autorizado |
+
+Não criar índices para todas as colunas. Confirmar com queries e perfis reais.
+
+## Imagens, eliminação e recuperação
+
+Assets imutáveis podem ser deduplicados por conteúdo, sem fundir peças físicas. Apagar uma referência não apaga imediatamente um asset ainda usado por outra entidade.
+
+O backup contém IDs e ficheiros, não URLs temporárias nem tokens. A recuperação tem de preservar identidade e não reenviar eventos históricos como novas utilizações.
+
+Ver [Backups](features/backups-e-recuperacao.md) e [Plano E2E](plano-e2e.md).
