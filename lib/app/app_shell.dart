@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/account_sync/application/providers.dart';
+import '../features/account_sync/presentation/sync_status.dart';
 import '../l10n/app_localizations.dart';
 import 'router.dart';
 
 /// Largura a partir da qual a navegação inferior passa a lateral.
 const wideLayoutBreakpoint = 840.0;
 
-class AppShell extends StatelessWidget {
+class AppShell extends ConsumerWidget {
   const AppShell({required this.navigationShell, super.key});
 
   final StatefulNavigationShell navigationShell;
@@ -18,7 +21,7 @@ class AppShell extends StatelessWidget {
   );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final destinations = [
       (Icons.calendar_today_outlined, Icons.calendar_today, l10n.navPlanner),
@@ -30,6 +33,10 @@ class AppShell extends StatelessWidget {
     final appBar = AppBar(
       title: Text(title),
       actions: [
+        SyncStatusIcon(
+          sync: ref.watch(syncSummaryProvider),
+          onPressed: () => context.push(AppRoutes.settings),
+        ),
         IconButton(
           tooltip: l10n.settings,
           icon: const Icon(Icons.settings_outlined),

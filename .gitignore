@@ -15,3 +15,7 @@ build/
 
 # Gerado por flutter gen-l10n
 lib/l10n/app_localizations*.dart
+
+# PowerSync Web (dart run powersync:setup_web)
+web/sqlite3.wasm
+web/powersync_*.worker.js

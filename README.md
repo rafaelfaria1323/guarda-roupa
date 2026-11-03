@@ -2,7 +2,7 @@
 
 Aplicação pessoal de gestão de guarda-roupa: peças, conjuntos, utilização, lavandaria, meteorologia, motor de combinações e planeamento semanal.
 
-**Estado:** esqueleto da aplicação (navegação, tema, PT-PT, CI). Funcionalidades ainda por implementar — ver [roadmap](docs/roadmap.md).
+**Estado:** POC de sincronização (incremento 1): login Google, base local por conta (PowerSync/SQLite) e catálogo de peças (criar, editar, disponibilidade, duplicar, arquivar, pesquisar). Fotografias e restantes funcionalidades por implementar — ver [roadmap](docs/roadmap.md).
 
 - Plataformas: Android + PWA (iPhone), com Flutter
 - Dados: local-first, com sincronização entre dispositivos via Supabase
@@ -25,6 +25,14 @@ flutter test
 flutter analyze
 tool/db/test_migrations.sh   # requer PostgreSQL local
 ```
+
+Na Web, o PowerSync precisa dos ficheiros WASM/worker em `web/` (não versionados). Antes do primeiro `flutter run -d chrome`:
+
+```bash
+dart run powersync:setup_web
+```
+
+Sem `POWERSYNC_URL` em `config/public.json`, a app funciona só localmente e mostra "sincronização por configurar". Ver o [guia 08](docs/guias/08-poc-sincronizacao.md).
 
 ## CI
 

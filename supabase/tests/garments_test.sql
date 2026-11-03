@@ -188,6 +188,17 @@ select pg_temp.op('70000000-0000-0000-0000-000000000004', 'unarchive',
 select pg_temp.check('desarquivar com a base certa aplica', :'r'::jsonb ->> 'result' = 'applied');
 select pg_temp.check('fica desarquivada', (select archived_at is null from public.garments));
 
+-- Arquivar e desarquivar offline: o desarquivar leva o archived_at local,
+-- que o servidor guardou ao aplicar o arquivar.
+select pg_temp.op('70000000-0000-0000-0000-000000000016', 'archive',
+  '{"archived_at":"2026-11-03T10:00:00.123456Z"}') as r \gset
+select pg_temp.check('arquivar guarda o momento local',
+  (select archived_at = '2026-11-03T10:00:00.123456Z'::timestamptz from public.garments));
+select pg_temp.op('70000000-0000-0000-0000-000000000017', 'unarchive',
+  '{"archived_at":"2026-11-03T10:00:00.123456Z"}') as r \gset
+select pg_temp.check('desarquivar offline logo a seguir aplica', :'r'::jsonb ->> 'result' = 'applied');
+select pg_temp.check('e fica desarquivada', (select archived_at is null from public.garments));
+
 select pg_temp.op('70000000-0000-0000-0000-000000000005', 'delete', '{}') as r \gset
 select pg_temp.check('eliminar', :'r'::jsonb ->> 'result' = 'applied');
 select pg_temp.check('fica tombstone, não desaparece do servidor',

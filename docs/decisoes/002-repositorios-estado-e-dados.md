@@ -32,6 +32,8 @@ Não se presume que Riverpod é automaticamente mais rápido do que BLoC. Desemp
 
 Se PowerSync for escolhido, usar a integração Drift suportada sobre a conexão gerida pelo SDK. Não manter duas bases locais concorrentes.
 
+**Atualização (2026-11-03):** com PowerSync escolhido, o primeiro incremento usa SQL direto (`sqlite_async`) dentro de `PowerSyncWardrobeRepository`; Drift fica adiado até o schema justificar queries tipadas. O contrato `WardrobeRepository` não muda com essa troca.
+
 ## Navegação
 
 `go_router` permite URLs, redirects de sessão e layout responsivo. Navigator manual continua apropriado para fluxos locais simples, mas manter toda a navegação declarativa à mão acrescenta trabalho.

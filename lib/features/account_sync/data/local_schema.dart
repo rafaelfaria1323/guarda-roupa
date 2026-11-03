@@ -1,0 +1,42 @@
+import 'package:powersync/powersync.dart';
+
+/// Schema local (SQLite gerido pelo PowerSync).
+///
+/// - `garments`: sincronizada a partir do servidor (só leitura no servidor).
+///   As escritas locais são otimistas e substituídas pelo estado do servidor
+///   depois de as operações serem aceites.
+/// - `garment_operations`: insert-only. Cada linha é uma operação de domínio
+///   (ADR-008) enviada para `apply_garment_operation`. O `id` é o `op_id`.
+/// - `sync_conflicts`: local-only. Resultados `merged`/`conflict`/`rejected`
+///   que o utilizador tem de ver.
+const localSchema = Schema([
+  Table('garments', [
+    Column.text('owner_id'),
+    Column.text('category'),
+    Column.text('name'),
+    Column.text('brand'),
+    Column.text('notes'),
+    Column.text('colors'),
+    Column.text('availability'),
+    Column.text('archived_at'),
+    Column.text('created_at'),
+    Column.text('updated_at'),
+    Column.integer('version'),
+    Column.text('deleted_at'),
+  ]),
+  Table.insertOnly('garment_operations', [
+    Column.text('garment_id'),
+    Column.text('kind'),
+    Column.text('data'),
+    Column.text('created_at'),
+  ]),
+  Table.localOnly('sync_conflicts', [
+    Column.text('op_id'),
+    Column.text('garment_id'),
+    Column.text('kind'),
+    Column.text('result'),
+    Column.text('reason'),
+    Column.text('details'),
+    Column.text('created_at'),
+  ]),
+]);

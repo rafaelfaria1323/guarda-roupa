@@ -8,6 +8,7 @@ Tu executas os passos no dashboard e guardas as passwords no teu gestor. Não en
 
 1. Supabase > projeto `zeibzbepuexeudzyrqzq` > **SQL Editor** > **New query**.
 2. Colar todo o conteúdo de [`supabase/migrations/20261103000001_garments.sql`](../../supabase/migrations/20261103000001_garments.sql) e executar (**Run**).
+   Depois, numa query nova, fazer o mesmo com [`supabase/migrations/20261104000001_archive_local_timestamp.sql`](../../supabase/migrations/20261104000001_archive_local_timestamp.sql). Os ficheiros de `supabase/migrations/` aplicam-se sempre por ordem do nome, e cada um só uma vez.
 3. Confirmar em **Table Editor** que existem `garments`, `allowed_users` e `applied_operations`, todas com **RLS enabled**.
 
 Se der erro, não alteres o SQL à mão: copia a mensagem de erro (sem dados pessoais) e envia-a.

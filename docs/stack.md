@@ -10,7 +10,7 @@ Estado: proposta técnica consolidada, com decisões de fornecedor e compatibili
 | Interface | Material 3 personalizado | Recomendado: acessibilidade e adaptação sem framework visual pesado |
 | Estado e DI | `flutter_riverpod` | Recomendado: estado assíncrono e dependências substituíveis |
 | Rotas | `go_router` | Recomendado: navegação e URLs no browser |
-| Dados locais | `drift`, SQLite | Recomendado: relações, histórico, transações e queries tipadas |
+| Dados locais | SQLite gerido pelo PowerSync (`powersync`, `sqlite_async`) | Em uso desde a POC: SQL direto dentro dos repositórios. `drift` adiado (ver abaixo) |
 | Abertura da base | `drift_flutter` na opção Drift direta | Condicional à escolha do motor de sincronização |
 | Cloud | Supabase Free | Recomendado, não aprovado: Auth, PostgreSQL, Storage privado |
 | Cliente cloud | `supabase_flutter` | Condicional à aprovação do Supabase |
@@ -33,7 +33,7 @@ Não adicionar todos os packages no primeiro commit. Introduzir cada dependênci
 
 ## Decisão que pode alterar a abertura de SQLite
 
-Se a POC escolher PowerSync, usar a base gerida pelo respetivo SDK através da integração Drift suportada. Não abrir `drift_flutter` e PowerSync como dois donos independentes da mesma base.
+A POC escolheu PowerSync (P-03). Por agora os repositórios usam SQL direto sobre a base gerida pelo SDK (`sqlite_async`), sem Drift: menos geração de código e um só dono da base. Drift (integração `drift_sqlite_async`) volta a ser avaliado quando o schema crescer (conjuntos, histórico) e queries tipadas compensarem o custo. A troca fica contida nos repositórios. Não abrir `drift_flutter` e PowerSync como dois donos independentes da mesma base.
 
 Se for escolhido um protocolo próprio, Drift mantém a base local e uma outbox transacional. O [ADR de sincronização](decisoes/004-sincronizacao.md) compara as duas opções.
 
