@@ -97,6 +97,11 @@ class _RestoreBackupTileState extends ConsumerState<RestoreBackupTile> {
                 ),
                 key: const Key('backup-preview-style'),
               ),
+              if (summary.inspirationImages > 0)
+                Text(
+                  l10n.backupPreviewStyleImages(summary.inspirationImages),
+                  key: const Key('backup-preview-style-images'),
+                ),
             ],
             if (summary.pendingOperations > 0) ...[
               const SizedBox(height: 8),

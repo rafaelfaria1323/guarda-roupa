@@ -16,7 +16,8 @@ import '../../wear/domain/wear_event.dart';
 /// `data/history.json` (desde a v2: utilizações, limpezas e valores de
 /// lavagem/rotatividade), `data/outfits.json` (desde a v3: conjuntos
 /// guardados), `data/style.json` (desde a v4: inspirações e preferências)
-/// e as fotografias em `photos/{id}/main.jpg|thumb.jpg`.
+/// e as fotografias em `photos/{id}/main.jpg|thumb.jpg` (das peças e,
+/// desde a v5, as imagens das inspirações).
 /// Sem tokens, chaves ou URLs.
 abstract final class BackupFormat {
   static const name = 'guarda-roupa-backup';
@@ -24,7 +25,8 @@ abstract final class BackupFormat {
   /// Sobe quando o leitor antigo deixar de perceber o conteúdo.
   /// v1: peças e fotografias. v2: + `data/history.json`.
   /// v3: + `data/outfits.json`. v4: + `data/style.json`.
-  static const version = 4;
+  /// v5: + imagens das inspirações (um leitor v4 recusaria os ficheiros).
+  static const version = 5;
 
   static const manifestPath = 'manifest.json';
   static const garmentsPath = 'data/garments.json';
@@ -53,6 +55,7 @@ final class BackupSummary {
     this.outfits = 0,
     this.inspirations = 0,
     this.preferences = 0,
+    this.inspirationImages = 0,
   });
 
   final DateTime exportedAt;
@@ -63,6 +66,9 @@ final class BackupSummary {
   final int outfits;
   final int inspirations;
   final int preferences;
+
+  /// Inspirações com imagem (as imagens não contam em [photos]).
+  final int inspirationImages;
 
   /// Alterações ainda por sincronizar no momento da exportação (estão
   /// incluídas no backup, mas não tinham chegado à cloud).

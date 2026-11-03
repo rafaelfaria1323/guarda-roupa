@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:sqlite_async/sqlite_async.dart';
 
@@ -9,6 +10,8 @@ import '../../inspirations/data/powersync_preference_repository.dart';
 import '../../inspirations/domain/style_preference.dart';
 import '../../outfits/data/powersync_outfit_repository.dart';
 import '../../wardrobe/data/garment_row.dart';
+import '../../wardrobe/data/photo_files.dart';
+import '../../wardrobe/domain/garment_photo.dart';
 import '../../outfits/domain/outfit.dart';
 import '../../wardrobe/domain/garment.dart';
 import '../../wardrobe/domain/garment_attributes.dart';
@@ -25,7 +28,9 @@ import '../domain/backup.dart';
 /// com ids novos (`create_outfit`), tal como as inspirações e preferências
 /// (`create_inspiration`, `create_preference`). Estas podem já existir sem
 /// peças: uma inspiração igual ou uma preferência com o mesmo alvo não se
-/// repete.
+/// repete. A imagem de uma inspiração nova ganha id novo, fica neste
+/// dispositivo e segue como `set_inspiration_image` (os ficheiros sobem
+/// primeiro); uma inspiração reutilizada fica com a imagem que já tinha.
 abstract final class HistoryImport {
   static Future<void> write(
     SqliteWriteContext tx, {
@@ -33,6 +38,7 @@ abstract final class HistoryImport {
     required BackupHistory history,
     required Map<GarmentId, GarmentId> newIds,
     required DateTime now,
+    Map<(String, PhotoVariant), Uint8List> photoFiles = const {},
   }) async {
     final stamp = GarmentRow.iso(now.toUtc());
 
@@ -192,7 +198,13 @@ abstract final class HistoryImport {
       );
     }
 
-    await _style(tx, ownerId: ownerId, history: history, stamp: stamp!);
+    await _style(
+      tx,
+      ownerId: ownerId,
+      history: history,
+      stamp: stamp!,
+      photoFiles: photoFiles,
+    );
   }
 
   static Future<void> _style(
@@ -200,6 +212,7 @@ abstract final class HistoryImport {
     required String ownerId,
     required BackupHistory history,
     required String stamp,
+    required Map<(String, PhotoVariant), Uint8List> photoFiles,
   }) async {
     Future<void> operation(
       String entityId,
@@ -244,6 +257,27 @@ abstract final class HistoryImport {
         for (final MapEntry(:key, :value) in fields.entries)
           if (value != null && !(value is List && value.isEmpty)) key: value,
       });
+      if (i.image case final image?) {
+        final added = GarmentPhoto(
+          id: (await tx.get('SELECT uuid() AS id'))['id']! as String,
+          width: image.width,
+          height: image.height,
+          bytes: image.bytes,
+          thumbBytes: image.thumbBytes,
+          sha256: image.sha256,
+        );
+        for (final variant in PhotoVariant.values) {
+          final bytes = photoFiles[(image.id, variant)];
+          if (bytes == null) throw StateError('Imagem em falta: ${image.id}');
+          await PhotoFiles.put(tx, added.id, variant, bytes);
+        }
+        final json = GarmentRow.photoJson(added);
+        await tx.execute('UPDATE inspirations SET image = ? WHERE id = ?', [
+          jsonEncode(json),
+          id,
+        ]);
+        await operation(id, 'set_inspiration_image', {'image': json});
+      }
       existing[key] = id;
       inspirationIds[i.id] = id;
     }

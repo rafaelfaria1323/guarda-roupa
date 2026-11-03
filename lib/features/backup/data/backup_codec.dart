@@ -294,6 +294,7 @@ abstract final class BackupCodec {
         {
           'id': i.id,
           ...PowerSyncInspirationRepository.columns(i.toDraft()),
+          'image': i.image == null ? null : GarmentRow.photoJson(i.image!),
           'created_at': GarmentRow.iso(i.createdAt),
           'updated_at': GarmentRow.iso(i.updatedAt),
         },
@@ -376,6 +377,17 @@ abstract final class BackupCodec {
       final patterns = _known(rawPatterns, GarmentPattern.fromId);
       final textures = _known(rawTextures, SurfaceTexture.fromId);
       final occasions = _known(rawOccasions, Occasion.fromId);
+      // Imagem: desde a v5; ausente = sem imagem.
+      final GarmentPhoto? image;
+      switch (json['image']) {
+        case null:
+          image = null;
+        case final Map<String, Object?> raw:
+          image = GarmentRow.decodePhotos(jsonEncode([raw])).firstOrNull;
+          if (image == null || !_safeId.hasMatch(image.id)) return null;
+        default:
+          return null;
+      }
       // Proporções vieram depois do v4: ausentes = nenhuma.
       final proportions = switch (json['proportions']) {
         null => const <Proportion>{},
@@ -420,6 +432,7 @@ abstract final class BackupCodec {
         textures: textures,
         occasions: occasions,
         proportions: proportions,
+        image: image,
         createdAt: created.toUtc(),
         updatedAt: updated.toUtc(),
       );
@@ -655,25 +668,8 @@ abstract final class BackupCodec {
         return const Err(CorruptBackup('fotografias a mais'));
       }
       for (final photo in garment.photos) {
-        if (!_safeId.hasMatch(photo.id)) {
-          return const Err(CorruptBackup('fotografia inválida'));
-        }
-        for (final variant in PhotoVariant.values) {
-          final bytes = contents[BackupFormat.photoPath(photo.id, variant)];
-          final expected = variant == PhotoVariant.main
-              ? photo.bytes
-              : photo.thumbBytes;
-          if (bytes == null || bytes.length != expected) {
-            return Err(CorruptBackup('fotografia em falta: ${photo.id}'));
-          }
-          if (variant == PhotoVariant.main &&
-              sha256.convert(bytes).toString() != photo.sha256) {
-            return Err(CorruptBackup('fotografia alterada: ${photo.id}'));
-          }
-          if (photoFiles.containsKey((photo.id, variant))) {
-            return Err(CorruptBackup('fotografia repetida: ${photo.id}'));
-          }
-          photoFiles[(photo.id, variant)] = bytes;
+        if (_takeFiles(photo, contents, photoFiles) case final problem?) {
+          return Err(CorruptBackup(problem));
         }
       }
       garments.add(garment);
@@ -725,8 +721,16 @@ abstract final class BackupCodec {
       }
       final style = styleFromJson(raw);
       if (style == null) return const Err(CorruptBackup('estilo'));
+      for (final i in style.$1) {
+        if (i.image case final image?) {
+          if (_takeFiles(image, contents, photoFiles) case final problem?) {
+            return Err(CorruptBackup(problem));
+          }
+        }
+      }
       history = history.withStyle(style.$1, style.$2);
     }
+    final images = history.inspirations.where((i) => i.image != null).length;
 
     final expectedFiles =
         1 +
@@ -743,7 +747,8 @@ abstract final class BackupCodec {
         summary: BackupSummary(
           exportedAt: exportedAt.toUtc(),
           garments: garments.length,
-          photos: photoFiles.length ~/ PhotoVariant.values.length,
+          photos: photoFiles.length ~/ PhotoVariant.values.length - images,
+          inspirationImages: images,
           pendingOperations: pending,
           wears: history.wears.length,
           cleanings: history.cleanings.length,
@@ -756,6 +761,34 @@ abstract final class BackupCodec {
         history: history,
       ),
     );
+  }
+
+  /// Junta os ficheiros de uma foto a [photoFiles], verificando tamanho e
+  /// hash; devolve o problema, se houver.
+  static String? _takeFiles(
+    GarmentPhoto photo,
+    Map<String, Uint8List> contents,
+    Map<(String, PhotoVariant), Uint8List> photoFiles,
+  ) {
+    if (!_safeId.hasMatch(photo.id)) return 'fotografia inválida';
+    for (final variant in PhotoVariant.values) {
+      final bytes = contents[BackupFormat.photoPath(photo.id, variant)];
+      final expected = variant == PhotoVariant.main
+          ? photo.bytes
+          : photo.thumbBytes;
+      if (bytes == null || bytes.length != expected) {
+        return 'fotografia em falta: ${photo.id}';
+      }
+      if (variant == PhotoVariant.main &&
+          sha256.convert(bytes).toString() != photo.sha256) {
+        return 'fotografia alterada: ${photo.id}';
+      }
+      if (photoFiles.containsKey((photo.id, variant))) {
+        return 'fotografia repetida: ${photo.id}';
+      }
+      photoFiles[(photo.id, variant)] = bytes;
+    }
+    return null;
   }
 
   static final _safeId = RegExp(r'^[A-Za-z0-9-]{1,64}$');

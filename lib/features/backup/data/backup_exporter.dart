@@ -14,6 +14,7 @@ import '../../outfits/data/powersync_outfit_repository.dart';
 import '../../outfits/domain/outfit.dart';
 import '../../wardrobe/data/garment_row.dart';
 import '../../wardrobe/data/photo_files.dart';
+import '../../wardrobe/domain/garment.dart';
 import '../../wardrobe/domain/garment_category.dart';
 import '../../wardrobe/domain/garment_photo.dart';
 import '../../wear/data/powersync_wear_repository.dart';
@@ -50,12 +51,10 @@ final class BackupExporter {
         for (final g in garments) g.id.value,
       });
       final local = <(String, PhotoVariant), Uint8List>{};
-      for (final g in garments) {
-        for (final photo in g.photos) {
-          for (final variant in PhotoVariant.values) {
-            if (await PhotoFiles.get(tx, photo.id, variant) case final b?) {
-              local[(photo.id, variant)] = b;
-            }
+      for (final photo in _photos(garments, history)) {
+        for (final variant in PhotoVariant.values) {
+          if (await PhotoFiles.get(tx, photo.id, variant) case final b?) {
+            local[(photo.id, variant)] = b;
           }
         }
       }
@@ -70,16 +69,14 @@ final class BackupExporter {
     // 2–3. Reunir as fotos que faltam e confirmar que nenhuma fica de fora.
     final files = <(String, PhotoVariant), Uint8List>{...local};
     var missing = 0;
-    for (final g in garments) {
-      for (final photo in g.photos) {
-        for (final variant in PhotoVariant.values) {
-          if (files.containsKey((photo.id, variant))) continue;
-          final bytes = await _download(photo, variant);
-          if (bytes == null) {
-            missing++;
-          } else {
-            files[(photo.id, variant)] = bytes;
-          }
+    for (final photo in _photos(garments, history)) {
+      for (final variant in PhotoVariant.values) {
+        if (files.containsKey((photo.id, variant))) continue;
+        final bytes = await _download(photo, variant);
+        if (bytes == null) {
+          missing++;
+        } else {
+          files[(photo.id, variant)] = bytes;
         }
       }
     }
@@ -102,6 +99,15 @@ final class BackupExporter {
       Err(:final failure) => Err(failure),
     };
   }
+
+  /// Fotografias das peças e imagens das inspirações (desde a v5).
+  static Iterable<GarmentPhoto> _photos(
+    List<Garment> garments,
+    BackupHistory history,
+  ) => [
+    for (final g in garments) ...g.photos,
+    for (final i in history.inspirations) ?i.image,
+  ];
 
   /// Só o que está ativo e refere peças que vão no backup: uma utilização
   /// com peças entretanto eliminadas fica só com as restantes.

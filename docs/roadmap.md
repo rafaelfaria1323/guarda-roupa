@@ -27,7 +27,7 @@ Atualizado a 2026-11-03. "Feito" quer dizer implementado, com testes automático
 | 1 — Fundação | Feito na app; falta a POC em dois dispositivos (P-03, guia 08 §7) e validar fotos no iPhone (P-05) | [sincronização](features/autenticacao-e-sincronizacao.md), [fotografias](features/fotografias-e-ficheiros.md) |
 | 2 — Catálogo e recuperação | Feito: filtros, cores, atributos, eliminar, backup ZIP e recuperação para conta vazia | [guarda-roupa](features/guarda-roupa.md), [backups](features/backups-e-recuperacao.md) |
 | 3 — Uso e lavandaria | Feito: "Vesti hoje", histórico, corrigir/desfazer, lavandaria (P-07) e rotatividade (P-06); backup v2 | [utilização](features/utilizacao-e-rotatividade.md), [lavandaria](features/lavandaria.md) |
-| 4 — Conjuntos e estilo | Quase feito: conjuntos (backup v3), inspirações com link, imagem e proporções, preferências (backup v4). Falta a imagem das inspirações no backup | [conjuntos](features/conjuntos-e-ocasioes.md), [inspirações](features/inspiracoes-e-estilo.md) |
+| 4 — Conjuntos e estilo | Feito: conjuntos (backup v3), inspirações com link, imagem e proporções, preferências (backup v4/v5) | [conjuntos](features/conjuntos-e-ocasioes.md), [inspirações](features/inspiracoes-e-estilo.md) |
 | 5 — Motor diário | Próximo | [motor](features/motor-de-combinacoes.md) |
 | 6 a 9 | Por começar | — |
 
