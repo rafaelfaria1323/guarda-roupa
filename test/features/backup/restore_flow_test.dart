@@ -4,10 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guarda_roupa/features/backup/application/backup_providers.dart';
 import 'package:guarda_roupa/features/backup/data/backup_codec.dart';
+import 'package:guarda_roupa/features/backup/domain/backup.dart';
 import 'package:guarda_roupa/features/backup/domain/backup_picker.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/availability.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_category.dart';
+import 'package:guarda_roupa/features/wear/domain/calendar_day.dart';
+import 'package:guarda_roupa/features/wear/domain/wear_event.dart';
 
 import '../../support/app_harness.dart';
 import '../wardrobe/presentation/wardrobe_flow_test.dart'
@@ -36,6 +39,17 @@ Uint8List backupWith(List<String> names) => BackupCodec.encode(
   photoFiles: const {},
   exportedAt: DateTime.utc(2026, 11, 1, 12),
   pendingOperations: 2,
+  history: BackupHistory(
+    wears: [
+      if (names.isNotEmpty)
+        WearEvent(
+          id: 'w1',
+          wornOn: CalendarDay(2026, 10, 30),
+          garmentIds: [GarmentId('00000000-0000-4000-8000-000000000000')],
+          createdAt: DateTime.utc(2026, 10, 30, 9),
+        ),
+    ],
+  ),
 );
 
 void main() {
@@ -63,6 +77,10 @@ void main() {
     expect(find.text('Feito a 1 de novembro de 2026.'), findsOneWidget);
     expect(find.text('2 peças e nenhuma fotografia.'), findsOneWidget);
     expect(find.textContaining('Inclui 2 alterações'), findsOneWidget);
+    expect(
+      find.text('1 utilização e nenhuma limpeza registadas.'),
+      findsOneWidget,
+    );
 
     await tester.tap(find.byKey(const Key('backup-restore-confirm')));
     await settleUntil(tester, find.text('Recuperadas 2 peças.'));

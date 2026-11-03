@@ -221,6 +221,10 @@ final class PowerSyncCareRepository implements CareRepository {
     [eventId, kind, jsonEncode(data), GarmentRow.iso(_clock.nowUtc())],
   );
 
+  /// Para quem lê `cleaning_events` diretamente (ex.: backup).
+  static CleaningEvent? cleaningFromRow(Map<String, Object?> row) =>
+      _cleaning(row);
+
   static CleaningEvent? _cleaning(Map<String, Object?> row) {
     final day = CalendarDay.tryParse(row['cleaned_on'] as String?);
     final created = DateTime.tryParse(row['created_at'] as String? ?? '');

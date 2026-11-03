@@ -7,6 +7,8 @@ import 'package:guarda_roupa/features/account_sync/data/operation_upload_queue.d
 import 'package:guarda_roupa/features/backup/data/backup_exporter.dart';
 import 'package:guarda_roupa/features/backup/data/backup_restorer.dart';
 import 'package:guarda_roupa/features/backup/domain/backup.dart';
+import 'package:guarda_roupa/features/care/data/powersync_care_repository.dart';
+import 'package:guarda_roupa/features/care/domain/care_policies.dart';
 import 'package:guarda_roupa/features/wardrobe/data/powersync_wardrobe_repository.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/availability.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment.dart';
@@ -14,11 +16,14 @@ import 'package:guarda_roupa/features/wardrobe/domain/garment_attributes.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_category.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_filter.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_photo.dart';
+import 'package:guarda_roupa/features/wear/data/powersync_wear_repository.dart';
+import 'package:guarda_roupa/features/wear/domain/calendar_day.dart';
 import 'package:powersync/powersync.dart';
 
 import '../../support/test_database.dart';
 import '../account_sync/data/operation_upload_queue_test.dart'
     show ScriptedUploader;
+import '../wardrobe/domain/fakes.dart';
 import 'backup_test.dart' show ok, photo;
 
 F failureOf<T, F>(Result<T, F> r) => switch (r) {
@@ -184,5 +189,89 @@ void main() {
     expect(contents.garments, isEmpty);
     expect(ok(await restorer().apply(contents)), 0);
     expect(await all(targetRepo), isEmpty);
+  });
+
+  test('recupera utilizações, limpezas e valores com os ids novos', () async {
+    final clock = FixedClock(DateTime.utc(2026, 11, 3, 12));
+    final wear = PowerSyncWearRepository(
+      db: source,
+      ownerId: 'user-a',
+      clock: clock,
+    );
+    final care = PowerSyncCareRepository(
+      db: source,
+      ownerId: 'user-a',
+      clock: clock,
+    );
+    final today = CalendarDay(2026, 11, 3);
+    Future<GarmentId> add(GarmentCategory c, String name) async =>
+        ok(await sourceRepo.addGarment(GarmentDraft(category: c, name: name)))
+            .id;
+    final top = await add(GarmentCategory.tShirt, 'Top');
+    final jeans = await add(GarmentCategory.jeans, 'Ganga');
+    final gone = await add(GarmentCategory.shirt, 'Ida');
+
+    ok(await wear.recordWear(today.addDays(-2), {top, jeans}));
+    ok(await wear.recordWear(today.addDays(-1), {top, gone}));
+    final undone = ok(await wear.recordWear(today, {jeans}));
+    ok(await wear.voidWear(undone.id));
+    ok(await care.recordCleaning(top, today.addDays(-1)));
+    ok(await care.setCategoryLaundry(GarmentCategory.tShirt, 2));
+    ok(await care.setGarmentRotation(top, 5));
+    ok(await care.setGarmentLaundry(gone, 1));
+    ok(await sourceRepo.deleteGarment(gone));
+
+    final contents = ok(await restorer().inspect(await backupOfSource()));
+    expect(contents.summary.wears, 2, reason: 'desfeitas ficam de fora');
+    expect(contents.summary.cleanings, 1);
+    expect(contents.history.policies, hasLength(2));
+    ok(await restorer().apply(contents));
+
+    final ids = {for (final g in await all(targetRepo)) g.name: g.id.value};
+    final wears = await target.getAll(
+      'SELECT * FROM wear_events ORDER BY worn_on',
+    );
+    expect([for (final w in wears) w['worn_on']], ['2026-11-01', '2026-11-02']);
+    expect(jsonDecode(wears[0]['garment_ids']! as String), [
+      ids['Top'],
+      ids['Ganga'],
+    ]);
+    expect(jsonDecode(wears[1]['garment_ids']! as String), [
+      ids['Top'],
+    ], reason: 'peça eliminada sai da utilização');
+    final cleaning = await target.get('SELECT * FROM cleaning_events');
+    expect(cleaning['garment_id'], ids['Top']);
+    expect(cleaning['cleaned_on'], '2026-11-02');
+    final policies = await target.getAll(
+      'SELECT * FROM care_policies ORDER BY scope',
+    );
+    expect(
+      [for (final p in policies) (p['scope'], p['target'])],
+      [('category', 't_shirt'), ('garment', ids['Top'])],
+    );
+    expect(
+      policies[1]['id'],
+      PowerSyncCareRepository.policyId(
+        'user-b',
+        PolicyScope.garment,
+        ids['Top']!,
+      ),
+    );
+
+    final server = ScriptedUploader();
+    await OperationUploadQueue(server).upload(target);
+    expect(server.log.where((l) => l.startsWith('wear')), [
+      'wear record_wear',
+      'wear record_wear',
+      'wear record_cleaning',
+      'wear set_policy',
+      'wear set_policy',
+    ]);
+    expect(
+      server.log.indexOf('wear record_wear'),
+      greaterThan(server.log.lastIndexOf('apply create')),
+      reason: 'as peças chegam primeiro ao servidor',
+    );
+    expect(await target.getAll('SELECT * FROM sync_conflicts'), isEmpty);
   });
 }

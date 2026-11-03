@@ -7,6 +7,7 @@ import '../../../core/domain/result.dart';
 import '../../wardrobe/data/powersync_wardrobe_repository.dart';
 import '../domain/backup.dart';
 import 'backup_codec.dart';
+import 'history_import.dart';
 
 sealed class RestoreProblem {
   const RestoreProblem();
@@ -66,6 +67,13 @@ final class BackupRestorer {
       final done = await repo.importGarments(
         contents.garments,
         contents.photoFiles,
+        then: (tx, newIds) => HistoryImport.write(
+          tx,
+          ownerId: _ownerId,
+          history: contents.history,
+          newIds: newIds,
+          now: DateTime.now(),
+        ),
       );
       return done ? Ok(contents.garments.length) : const Err(AccountNotEmpty());
     } on SqliteException catch (e) {

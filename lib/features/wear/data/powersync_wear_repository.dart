@@ -207,6 +207,9 @@ final class PowerSyncWearRepository implements WearRepository {
     for (final row in rows) ?_event(row),
   ];
 
+  /// Para quem lê `wear_events` diretamente (ex.: backup).
+  static WearEvent? fromRow(Map<String, Object?> row) => _event(row);
+
   /// Linhas inválidas (ex.: de uma versão futura) ficam de fora.
   static WearEvent? _event(Map<String, Object?> row) {
     final day = CalendarDay.tryParse(row['worn_on'] as String?);

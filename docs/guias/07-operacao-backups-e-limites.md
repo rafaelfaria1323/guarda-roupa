@@ -76,7 +76,7 @@ Implementado (2026-11-03): **Definições > Dados e backup > Recuperar backup**,
 
 Uma conta nova não autoriza automaticamente importar um backup de outra identidade; esse caminho tem de estar explicitamente suportado pelo importador.
 
-No importador atual o backup não leva identidade (sem `owner_id` nem tokens). Recuperar cria peças e fotografias novas na conta com sessão iniciada, pelas mesmas operações autorizadas de quem as cria à mão; o servidor nunca copia dados entre contas. Importar o ficheiro de outra pessoa equivale a ela ter-te dado esse ficheiro.
+No importador atual o backup não leva identidade (sem `owner_id` nem tokens). Recuperar cria peças, fotografias e histórico (utilizações, limpezas e valores de lavagem/rotação) novos na conta com sessão iniciada, pelas mesmas operações autorizadas de quem as cria à mão; o servidor nunca copia dados entre contas. Importar o ficheiro de outra pessoa equivale a ela ter-te dado esse ficheiro.
 
 Se falhar, preservar ZIP, dados originais e diagnóstico redigido. Não testar apagando a base pessoal e “vendo se volta”.
 

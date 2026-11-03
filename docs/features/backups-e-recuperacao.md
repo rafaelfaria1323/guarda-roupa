@@ -2,9 +2,10 @@
 
 Estado: necessária na base utilizável; recuperação sobre conta sincronizada existente exige protocolo aprovado.
 
-Implementado (2026-11-03): exportação e verificação do formato v1.
+Implementado (2026-11-03): exportação e verificação do formato v2 (lê também v1).
 
-- **Conteúdo:** `manifest.json` (formato, versão, `exported_at`, contagens, `pending_operations` e a lista de ficheiros com caminho, MIME, tamanho e SHA-256), `data/garments.json` com as colunas do servidor, sem `owner_id`, e `photos/{id}/main.jpg|thumb.jpg`. As utilizações (“Vesti hoje”), limpezas e valores de lavagem/rotatividade ainda não entram (formato v1); entram numa versão seguinte do formato.
+- **Conteúdo:** `manifest.json` (formato, versão, `exported_at`, contagens, `pending_operations` e a lista de ficheiros com caminho, MIME, tamanho e SHA-256), `data/garments.json` com as colunas do servidor, sem `owner_id`, `data/history.json` (desde a v2) e `photos/{id}/main.jpg|thumb.jpg`.
+- **Histórico (v2):** utilizações (“Vesti hoje”) e limpezas ativas — as desfeitas ficam de fora — e os valores de lavagem/rotatividade escolhidos por categoria e por peça. Só entra o que refere peças exportadas: uma utilização com uma peça entretanto eliminada fica só com as restantes. O plano (`plan_entry_id`) não entra. Um backup v1 continua a ser lido (sem histórico); um v2 sem `data/history.json`, ou com histórico que refira peças que não estão no ficheiro, datas inválidas ou valores fora dos limites, é rejeitado por inteiro.
 - **Snapshot:** é lido numa transação de leitura. As peças eliminadas ficam de fora.
 - **Fotografias:** as que faltam neste dispositivo são descarregadas e verificadas pelo hash. Se faltar alguma, a exportação falha.
 - **Verificação antes de gravar:** o ZIP é relido pelo mesmo leitor que a recuperação vai usar.
@@ -28,6 +29,7 @@ Recuperação (primeiro modo, só para destino vazio):
 - **Aplicação:**
   - acontece só depois de confirmar e corre numa única transação;
   - o destino é verificado de novo dentro da transação; se entretanto deixou de estar vazio, nada é escrito.
+  - o histórico é recriado na mesma transação com os ids novos das peças, pela ordem original de registo (o servidor mantém a ordem entre uma utilização e uma limpeza do mesmo dia), e segue pela fila normal depois das peças. Como só há recuperação para destino vazio, não duplica utilizações de uma conta existente.
 - **IDs novos para peças e fotografias:** nada ressuscita uma peça eliminada nem colide com IDs que o servidor já conhece, mesmo quando o backup é desta mesma conta.
   - Mantém a data de criação original.
   - O estado (disponibilidade, arquivo) e as fotografias entram como operações normais: `create`, `set_availability`, `attach_photo`, `archive`. A fila envia os ficheiros antes de ligar as fotos.
