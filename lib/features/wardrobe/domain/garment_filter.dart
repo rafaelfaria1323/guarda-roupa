@@ -1,5 +1,6 @@
 import 'availability.dart';
 import 'garment.dart';
+import 'garment_attributes.dart';
 import 'garment_category.dart';
 
 /// Critérios de pesquisa do catálogo. Conjuntos vazios significam "todos".
@@ -8,6 +9,7 @@ final class GarmentFilter {
     this.categories = const {},
     this.groups = const {},
     this.availability = const {},
+    this.occasions = const {},
     this.includeArchived = false,
     this.text,
   });
@@ -15,6 +17,10 @@ final class GarmentFilter {
   final Set<GarmentCategory> categories;
   final Set<CategoryGroup> groups;
   final Set<Availability> availability;
+
+  /// Peças marcadas com alguma destas ocasiões (sem marcação = não sei, não
+  /// aparece).
+  final Set<Occasion> occasions;
   final bool includeArchived;
 
   /// Pesquisa em nome, marca e notas, sem distinguir maiúsculas nem acentos.
@@ -23,12 +29,14 @@ final class GarmentFilter {
   GarmentFilter copyWith({
     Set<CategoryGroup>? groups,
     Set<Availability>? availability,
+    Set<Occasion>? occasions,
     bool? includeArchived,
     String? text,
   }) => GarmentFilter(
     categories: categories,
     groups: groups ?? this.groups,
     availability: availability ?? this.availability,
+    occasions: occasions ?? this.occasions,
     includeArchived: includeArchived ?? this.includeArchived,
     text: text ?? this.text,
   );
@@ -38,6 +46,7 @@ final class GarmentFilter {
       categories.isNotEmpty ||
       groups.isNotEmpty ||
       availability.isNotEmpty ||
+      occasions.isNotEmpty ||
       includeArchived ||
       (text?.trim().isNotEmpty ?? false);
 
@@ -47,6 +56,7 @@ final class GarmentFilter {
       _sameSet(other.categories, categories) &&
       _sameSet(other.groups, groups) &&
       _sameSet(other.availability, availability) &&
+      _sameSet(other.occasions, occasions) &&
       other.includeArchived == includeArchived &&
       (other.text ?? '') == (text ?? '');
 
@@ -55,6 +65,7 @@ final class GarmentFilter {
     Object.hashAllUnordered(categories),
     Object.hashAllUnordered(groups),
     Object.hashAllUnordered(availability),
+    Object.hashAllUnordered(occasions),
     includeArchived,
     text ?? '',
   );
@@ -72,6 +83,10 @@ final class GarmentFilter {
     }
     if (availability.isNotEmpty &&
         !availability.contains(garment.availability)) {
+      return false;
+    }
+    if (occasions.isNotEmpty &&
+        !garment.attributes.occasions.any(occasions.contains)) {
       return false;
     }
     final query = _fold(text?.trim() ?? '');

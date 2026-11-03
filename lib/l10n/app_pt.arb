@@ -179,5 +179,50 @@
   "garmentDeleteConfirmTitle": "Eliminar esta peça?",
   "garmentDeleteConfirmBody": "A peça e as fotografias são apagadas em todos os dispositivos. Para guardar o histórico, arquiva em vez de eliminar.",
   "garmentDeleted": "Peça eliminada.",
-  "wardrobeClearFilters": "Limpar filtros"
+  "wardrobeClearFilters": "Limpar filtros",
+  "patternLabel": "{pattern, select, plain{Liso} stripes{Riscas} checks{Xadrez} dots{Bolinhas} floral{Floral} print{Estampado} other{Outro}}",
+  "@patternLabel": {
+    "placeholders": {
+      "pattern": {
+        "type": "String"
+      }
+    }
+  },
+  "textureLabel": "{texture, select, smooth{Lisa} ribbed{Canelada} knit{Malha} textured{Com relevo} fuzzy{Felpuda} other{Desconhecido}}",
+  "@textureLabel": {
+    "placeholders": {
+      "texture": {
+        "type": "String"
+      }
+    }
+  },
+  "warmthLabel": "{warmth, select, light{Leve} medium{Média} warm{Quente} other{Desconhecida}}",
+  "@warmthLabel": {
+    "placeholders": {
+      "warmth": {
+        "type": "String"
+      }
+    }
+  },
+  "occasionLabel": "{occasion, select, casual{Casual} work_casual{Trabalho informal} evening{Noite / saída} other{Desconhecida}}",
+  "@occasionLabel": {
+    "placeholders": {
+      "occasion": {
+        "type": "String"
+      }
+    }
+  },
+  "garmentDetails": "Detalhes",
+  "garmentDetailsHint": "Tudo opcional. Sem escolha fica “não sei”.",
+  "garmentPattern": "Padrão",
+  "garmentTexture": "Textura",
+  "garmentWarmth": "Aquecimento",
+  "garmentRain": "Serve para chuva?",
+  "garmentWind": "Serve para vento?",
+  "garmentOccasions": "Ocasiões",
+  "garmentMaterial": "Material (etiqueta)",
+  "garmentCare": "Cuidados (etiqueta)",
+  "answerYes": "Sim",
+  "answerNo": "Não",
+  "answerUnknown": "Não sei"
 }

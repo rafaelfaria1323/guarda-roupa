@@ -11,11 +11,13 @@ import '../application/photo_providers.dart';
 import '../data/photo_processor.dart';
 import '../domain/availability.dart';
 import '../domain/garment.dart';
+import '../domain/garment_attributes.dart';
 import '../domain/garment_category.dart';
 import '../domain/garment_photo.dart';
 import '../domain/photo_picker.dart';
 import '../domain/wardrobe_repository.dart';
 import '../domain/garment_color.dart';
+import 'attributes_editor.dart';
 import 'colors_editor.dart';
 import 'garment_photo_view.dart';
 import 'labels.dart';
@@ -35,8 +37,11 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
   final _name = TextEditingController();
   final _brand = TextEditingController();
   final _notes = TextEditingController();
+  final _material = TextEditingController();
+  final _care = TextEditingController();
   GarmentCategory? _category;
   List<GarmentColor> _colors = const [];
+  GarmentAttributes _attributes = const GarmentAttributes();
   bool _loaded = false;
   bool _saving = false;
   bool _processing = false;
@@ -54,6 +59,8 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
     _name.dispose();
     _brand.dispose();
     _notes.dispose();
+    _material.dispose();
+    _care.dispose();
     super.dispose();
   }
 
@@ -77,6 +84,9 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
     _brand.text = garment.brand ?? '';
     _notes.text = garment.notes ?? '';
     _colors = garment.colors;
+    _attributes = garment.attributes;
+    _material.text = garment.attributes.material ?? '';
+    _care.text = garment.attributes.care ?? '';
   }
 
   GarmentDraft _draft() => GarmentDraft(
@@ -85,6 +95,10 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
     brand: _brand.text,
     notes: _notes.text,
     colors: _colors,
+    attributes: _attributes.copyWith(
+      material: () => _material.text,
+      care: () => _care.text,
+    ),
   );
 
   Future<void> _save(WardrobeRepository repo, Garment? current) async {
@@ -484,6 +498,14 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
             ColorsEditor(
               value: _colors,
               onChanged: (colors) => setState(() => _colors = colors),
+            ),
+            const SizedBox(height: 16),
+            AttributesEditor(
+              value: _attributes,
+              onChanged: (value) => setState(() => _attributes = value),
+              material: _material,
+              care: _care,
+              maxLength: _maxLength,
             ),
             const SizedBox(height: 32),
           ],

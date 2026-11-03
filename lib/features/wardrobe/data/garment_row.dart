@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../domain/availability.dart';
 import '../domain/garment.dart';
+import '../domain/garment_attributes.dart';
 import '../domain/garment_category.dart';
 import '../domain/garment_color.dart';
 import '../domain/garment_photo.dart';
@@ -28,6 +29,7 @@ abstract final class GarmentRow {
       notes: row['notes'] as String?,
       colors: decodeColors(row['colors'] as String?),
       photos: decodePhotos(row['photos'] as String?),
+      attributes: attributesFrom(row),
       availability: availability,
       archivedAt: _date(row['archived_at']),
       createdAt: createdAt,
@@ -61,6 +63,52 @@ abstract final class GarmentRow {
           ),
     ]);
   }
+
+  /// Valores desconhecidos (ex.: de uma versão mais recente) ficam
+  /// desconhecidos, em vez de a peça desaparecer.
+  static GarmentAttributes attributesFrom(Map<String, Object?> row) {
+    final occasions = <Occasion>{};
+    final raw = row['occasions'];
+    if (raw is String && raw.isNotEmpty) {
+      final decoded = jsonDecode(raw);
+      if (decoded is List) {
+        for (final id in decoded) {
+          if (Occasion.fromId(id is String ? id : null) case final o?) {
+            occasions.add(o);
+          }
+        }
+      }
+    }
+    return GarmentAttributes(
+      pattern: GarmentPattern.fromId(row['pattern'] as String?),
+      texture: SurfaceTexture.fromId(row['texture'] as String?),
+      warmth: Warmth.fromId(row['warmth'] as String?),
+      rainOk: _bool(row['rain_ok']),
+      windOk: _bool(row['wind_ok']),
+      occasions: Set.unmodifiable(occasions),
+      material: row['material'] as String?,
+      care: row['care'] as String?,
+    );
+  }
+
+  /// Colunas SQLite: booleanos como 0/1, ocasiões como JSON.
+  static Map<String, Object?> attributeColumns(GarmentAttributes a) => {
+    for (final MapEntry(:key, :value) in a.toColumns().entries)
+      key: switch (value) {
+        final bool b => b ? 1 : 0,
+        final List<Object?> list => jsonEncode(list),
+        _ => value,
+      },
+  };
+
+  static bool? _bool(Object? value) => switch (value) {
+    final int i => i != 0,
+    final bool b => b,
+    // O PowerSync guarda booleanos do Postgres como texto/inteiro.
+    'true' || '1' => true,
+    'false' || '0' => false,
+    _ => null,
+  };
 
   static List<Object?> photosJson(List<GarmentPhoto> photos) => [
     for (final p in photos) photoJson(p),

@@ -9,6 +9,7 @@ import '../../account_sync/application/providers.dart';
 import '../domain/availability.dart';
 import '../domain/garment.dart';
 import '../domain/garment_category.dart';
+import '../domain/garment_attributes.dart';
 import '../domain/garment_filter.dart';
 import '../domain/wardrobe_repository.dart';
 import 'garment_photo_view.dart';
@@ -76,6 +77,18 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
             onSelected: (on) => setState(
               () => _filter = _filter.copyWith(
                 availability: _toggled(_filter.availability, value, on),
+              ),
+            ),
+          ),
+        const SizedBox(height: 32, child: VerticalDivider()),
+        for (final value in Occasion.values)
+          FilterChip(
+            key: Key('filter-occasion-${value.id}'),
+            label: Text(l10n.occasionLabel(value.id)),
+            selected: _filter.occasions.contains(value),
+            onSelected: (on) => setState(
+              () => _filter = _filter.copyWith(
+                occasions: _toggled(_filter.occasions, value, on),
               ),
             ),
           ),

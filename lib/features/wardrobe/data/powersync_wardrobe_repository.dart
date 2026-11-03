@@ -8,6 +8,7 @@ import 'package:sqlite_async/sqlite_async.dart';
 import '../../../core/domain/result.dart';
 import '../domain/availability.dart';
 import '../domain/garment.dart';
+import '../domain/garment_attributes.dart';
 import '../domain/garment_factory.dart';
 import '../domain/garment_filter.dart';
 import '../domain/garment_photo.dart';
@@ -62,10 +63,13 @@ final class PowerSyncWardrobeRepository implements WardrobeRepository {
 
     return _guard(() async {
       await _db.writeTransaction((tx) async {
+        final attributes = GarmentRow.attributeColumns(garment.attributes);
         await tx.execute(
           'INSERT INTO garments (id, owner_id, category, name, brand, notes, '
-          'colors, availability, archived_at, created_at, updated_at, version) '
-          'VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, 0)',
+          'colors, availability, archived_at, created_at, updated_at, version, '
+          '${attributes.keys.join(', ')}) '
+          'VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, 0'
+          '${', ?' * attributes.length})',
           [
             garment.id.value,
             _ownerId,
@@ -77,6 +81,7 @@ final class PowerSyncWardrobeRepository implements WardrobeRepository {
             garment.availability.id,
             GarmentRow.iso(garment.createdAt),
             GarmentRow.iso(garment.updatedAt),
+            ...attributes.values,
           ],
         );
         await _recordOperation(tx, garment.id, 'create', {
@@ -85,6 +90,7 @@ final class PowerSyncWardrobeRepository implements WardrobeRepository {
           'brand': garment.brand,
           'notes': garment.notes,
           'colors': GarmentRow.colorsJson(garment.colors),
+          ...garment.attributes.toColumns(),
           'created_at': GarmentRow.iso(garment.createdAt),
         });
       });
@@ -115,18 +121,23 @@ final class PowerSyncWardrobeRepository implements WardrobeRepository {
           'from': GarmentRow.colorsJson(current.colors),
           'to': GarmentRow.colorsJson(next.colors),
         },
+      ..._attributeChanges(current.attributes, next.attributes),
     };
     if (changes.isEmpty) return Ok(current);
 
+    final attributes = GarmentRow.attributeColumns(next.attributes);
     await tx.execute(
       'UPDATE garments SET category = ?, name = ?, brand = ?, notes = ?, '
-      'colors = ?, updated_at = ? WHERE id = ?',
+      'colors = ?, '
+      '${attributes.keys.map((c) => '$c = ?').join(', ')}, '
+      'updated_at = ? WHERE id = ?',
       [
         next.category.id,
         next.name,
         next.brand,
         next.notes,
         GarmentRow.encodeColors(next.colors),
+        ...attributes.values,
         GarmentRow.iso(next.updatedAt),
         id.value,
       ],
@@ -134,6 +145,21 @@ final class PowerSyncWardrobeRepository implements WardrobeRepository {
     await _recordOperation(tx, id, 'edit', {'changes': changes});
     return Ok(next);
   });
+
+  /// Uma alteração por atributo diferente, com o valor de base para o
+  /// servidor detetar conflitos campo a campo.
+  static Map<String, Object?> _attributeChanges(
+    GarmentAttributes from,
+    GarmentAttributes to,
+  ) {
+    final before = from.toColumns();
+    final after = to.toColumns();
+    return {
+      for (final field in after.keys)
+        if (jsonEncode(before[field]) != jsonEncode(after[field]))
+          field: {'from': before[field], 'to': after[field]},
+    };
+  }
 
   @override
   Future<WardrobeResult<Garment>> duplicateGarment(GarmentId source) async {

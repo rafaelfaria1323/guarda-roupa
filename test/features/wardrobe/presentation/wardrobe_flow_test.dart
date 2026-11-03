@@ -315,4 +315,72 @@ void main() {
     ];
     expect(kinds, ['create', 'delete']);
   });
+
+  testWidgets('detalhes opcionais: escolhe, desfaz e filtra por ocasião', (
+    tester,
+  ) async {
+    final app = await pumpApp(tester);
+    await openWardrobe(tester);
+    await addGarment(tester, category: 'T-shirt', name: 'Branca');
+    await tester.tap(find.text('Adicionar peça'));
+    await settle(tester);
+    await tester.tap(find.byKey(const Key('garment-category')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Camisola').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('garment-name')), 'Grossa');
+
+    Future<void> tapKey(String key) async {
+      await tester.ensureVisible(find.byKey(Key(key)));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(Key(key)));
+      await tester.pumpAndSettle();
+    }
+
+    await tapKey('garment-details');
+    await tapKey('pattern-stripes');
+    await tapKey('pattern-checks');
+    await tapKey('pattern-checks'); // desfaz: fica por saber
+    await tapKey('warmth-warm');
+    await tapKey('rain-no');
+    await tapKey('occasion-evening');
+    await tester.ensureVisible(find.byKey(const Key('garment-material')));
+    await tester.enterText(find.byKey(const Key('garment-material')), 'Lã');
+    await tester.tap(find.byKey(const Key('garment-save')));
+    await settleUntil(
+      tester,
+      find.byKey(const Key('garment-save')),
+      gone: true,
+    );
+
+    final op = (await tester.runAsync(() => pendingOperations(app.db)))!.last;
+    final data = jsonDecode(op['data']! as String) as Map<String, Object?>;
+    expect(data['pattern'], isNull);
+    expect(data['warmth'], 'warm');
+    expect(data['rain_ok'], false);
+    expect(data['wind_ok'], isNull);
+    expect(data['occasions'], ['evening']);
+    expect(data['material'], 'Lã');
+
+    await tester.ensureVisible(
+      find.byKey(const Key('filter-occasion-evening')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('filter-occasion-evening')));
+    await settle(tester);
+    expect(inList('Grossa'), findsOneWidget);
+    expect(inList('Branca'), findsNothing);
+
+    // Ao reabrir, os detalhes vêm abertos e preenchidos.
+    await tester.tap(inList('Grossa'));
+    await settle(tester);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('garment-material')),
+      300,
+      scrollable: find
+          .descendant(of: find.byType(Form), matching: find.byType(Scrollable))
+          .first,
+    );
+    expect(find.widgetWithText(TextFormField, 'Lã'), findsOneWidget);
+  });
 }

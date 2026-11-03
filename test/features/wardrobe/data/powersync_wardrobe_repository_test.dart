@@ -6,6 +6,7 @@ import 'package:guarda_roupa/core/domain/result.dart';
 import 'package:guarda_roupa/features/wardrobe/data/powersync_wardrobe_repository.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/availability.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment.dart';
+import 'package:guarda_roupa/features/wardrobe/domain/garment_attributes.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_category.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_color.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_filter.dart';
@@ -331,6 +332,133 @@ void main() {
       expect(ok(await repo.archiveGarment(g.id)).photos, hasLength(1));
       // A cópia é outra peça física: não partilha as fotografias.
       expect(ok(await repo.duplicateGarment(g.id)).photos, isEmpty);
+    });
+  });
+
+  group('atributos', () {
+    const full = GarmentAttributes(
+      pattern: GarmentPattern.stripes,
+      texture: SurfaceTexture.knit,
+      warmth: Warmth.warm,
+      rainOk: false,
+      windOk: true,
+      occasions: {Occasion.evening, Occasion.casual},
+      material: ' 100% lã ',
+      care: 'Lavar à mão',
+    );
+
+    test('guarda e lê todos os atributos, e envia-os no create', () async {
+      final g = ok(
+        await repo.addGarment(
+          const GarmentDraft(
+            category: GarmentCategory.sweater,
+            attributes: full,
+          ),
+        ),
+      );
+      final stored = (await repo.watchGarment(g.id).first)!;
+      expect(stored.attributes, full.copyWith(material: () => '100% lã'));
+
+      final data = dataOf((await pendingOperations(db)).single);
+      expect(data, containsPair('pattern', 'stripes'));
+      expect(data, containsPair('rain_ok', false));
+      expect(data, containsPair('wind_ok', true));
+      expect(data, containsPair('occasions', ['casual', 'evening']));
+      expect(data, containsPair('material', '100% lã'));
+    });
+
+    test('sem atributos fica tudo desconhecido', () async {
+      final g = ok(
+        await repo.addGarment(
+          const GarmentDraft(category: GarmentCategory.sweater),
+        ),
+      );
+      expect((await repo.watchGarment(g.id).first)!.attributes.isEmpty, isTrue);
+      final data = dataOf((await pendingOperations(db)).single);
+      expect(data, containsPair('rain_ok', null));
+      expect(data, containsPair('occasions', <Object?>[]));
+    });
+
+    test('editar envia uma alteração por atributo', () async {
+      final g = ok(
+        await repo.addGarment(
+          const GarmentDraft(
+            category: GarmentCategory.sweater,
+            attributes: full,
+          ),
+        ),
+      );
+      ok(
+        await repo.updateGarment(
+          g.id,
+          GarmentDraft(
+            category: GarmentCategory.sweater,
+            attributes: g.attributes.copyWith(
+              pattern: () => null,
+              rainOk: () => true,
+              occasions: {Occasion.casual},
+            ),
+          ),
+        ),
+      );
+      final edit = (await pendingOperations(db)).last;
+      expect(dataOf(edit)['changes'], {
+        'pattern': {'from': 'stripes', 'to': null},
+        'rain_ok': {'from': false, 'to': true},
+        'occasions': {
+          'from': ['casual', 'evening'],
+          'to': ['casual'],
+        },
+      });
+      final stored = (await repo.watchGarment(g.id).first)!;
+      expect(stored.attributes.pattern, isNull);
+      expect(stored.attributes.rainOk, isTrue);
+      expect(stored.attributes.occasions, {Occasion.casual});
+    });
+
+    test('valores desconhecidos (versão futura) ficam por saber', () async {
+      await db.execute(
+        'INSERT INTO garments (id, category, availability, created_at, '
+        'pattern, warmth, rain_ok, occasions) VALUES '
+        "('x', 'sweater', 'available', '2026-11-03T00:00:00Z', "
+        "'padrao_futuro', 'warm', 1, '[\"futura\", \"evening\"]')",
+      );
+      final g = (await repo.watchGarments(const GarmentFilter()).first).single;
+      expect(g.attributes.pattern, isNull);
+      expect(g.attributes.warmth, Warmth.warm);
+      expect(g.attributes.rainOk, isTrue);
+      expect(g.attributes.occasions, {Occasion.evening});
+    });
+
+    test('material demasiado longo não guarda', () async {
+      final r = await repo.addGarment(
+        GarmentDraft(
+          category: GarmentCategory.sweater,
+          attributes: GarmentAttributes(material: 'x' * 121),
+        ),
+      );
+      expect(r, isA<Err<Garment, WardrobeFailure>>());
+    });
+
+    test('filtro por ocasião', () async {
+      ok(
+        await repo.addGarment(
+          const GarmentDraft(
+            category: GarmentCategory.shirt,
+            name: 'Noite',
+            attributes: GarmentAttributes(occasions: {Occasion.evening}),
+          ),
+        ),
+      );
+      ok(
+        await repo.addGarment(
+          const GarmentDraft(category: GarmentCategory.shirt, name: 'Sem'),
+        ),
+      );
+      final found = await repo
+          .watchGarments(const GarmentFilter(occasions: {Occasion.evening}))
+          .first;
+      expect(found.map((g) => g.name), ['Noite']);
     });
   });
 }
