@@ -19,15 +19,16 @@ Requer Flutter **3.47.9** (stable). Instalação no Mac: [guia 01](docs/guias/01
 
 ```bash
 flutter pub get
-flutter run -d chrome      # PWA
-flutter run -d android     # Android
+flutter run -d chrome --web-port 7357 --dart-define-from-file=config/public.json
+flutter run -d android --dart-define-from-file=config/public.json
 flutter test
 flutter analyze
+tool/db/test_migrations.sh   # requer PostgreSQL local
 ```
 
 ## CI
 
-Cada PR corre em paralelo: links da documentação, formatação/análise e testes.
+Cada PR corre em paralelo: links da documentação, formatação/análise, testes Flutter e testes SQL (migrações Supabase num PostgreSQL 17 com stub de `auth`).
 Os builds Android e Web ficam fora da CI por agora, para entregar mais depressa. Voltam quando houver distribuição.
 
 Os testes são divididos em shards por `tool/ci/test_shards.py`. O script estima o custo de cada ficheiro e

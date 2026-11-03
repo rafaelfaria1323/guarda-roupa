@@ -75,6 +75,7 @@ Não é necessário executar estes guias todos agora. Cada um identifica o incre
 5. [Instalar Android e PWA no iPhone](guias/05-instalar-android-e-pwa.md)
 6. [Executar cenários de validação](guias/06-executar-validacoes.md)
 7. [Operação, backups e limites](guias/07-operacao-backups-e-limites.md)
+8. [Preparar o servidor para a POC de sincronização](guias/08-poc-sincronizacao.md)
 
 ## Alterações importantes relativamente às primeiras propostas
 
