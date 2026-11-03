@@ -665,5 +665,19 @@
         "type": "String"
       }
     }
-  }
+  },
+  "weatherLocationTitle": "Localização da meteorologia",
+  "weatherLocationHint": "A previsão usa coordenadas aproximadas desta localidade. Não é usado GPS: só sai do dispositivo o nome que pesquisar e as coordenadas arredondadas.",
+  "weatherLocationSearch": "Pesquisar localidade",
+  "weatherLocationNoResults": "Nenhuma localidade encontrada.",
+  "weatherLocationSearchFailed": "Não foi possível pesquisar. Verifique a ligação e tente de novo.",
+  "weatherLocationChosen": "Localização: {name}",
+  "@weatherLocationChosen": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherAttribution": "Dados meteorológicos: Open-Meteo.com"
 }

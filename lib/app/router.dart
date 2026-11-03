@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/weather/presentation/weather_location_screen.dart';
 import '../features/account_sync/application/providers.dart';
 import '../features/account_sync/domain/auth_service.dart';
 import '../features/account_sync/presentation/settings_screen.dart';
@@ -37,6 +38,7 @@ abstract final class AppRoutes {
   static String preference(String id) => '/estilo/preferencia/$id';
   static const settings = '/definicoes';
   static const careSettings = '/definicoes/lavagem';
+  static const weatherLocation = '/definicoes/localizacao';
   static const wear = '/vesti';
   static String correctWear(String eventId) => '/vesti/$eventId';
 }
@@ -115,6 +117,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.careSettings,
         builder: (context, state) => const CareSettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.weatherLocation,
+        builder: (context, state) => const WeatherLocationScreen(),
       ),
       GoRoute(
         path: AppRoutes.wear,
