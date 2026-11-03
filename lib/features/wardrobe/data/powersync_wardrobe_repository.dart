@@ -197,6 +197,24 @@ final class PowerSyncWardrobeRepository implements WardrobeRepository {
       });
 
   @override
+  Future<WardrobeResult<Garment>> deleteGarment(GarmentId id) =>
+      _mutate(id, (tx, current) async {
+        await tx.execute(
+          'UPDATE garments SET deleted_at = ?, updated_at = ? WHERE id = ?',
+          [
+            GarmentRow.iso(DateTime.now()),
+            GarmentRow.iso(DateTime.now()),
+            id.value,
+          ],
+        );
+        await _recordOperation(tx, id, 'delete', {
+          // Para a fila apagar os ficheiros depois de o servidor aceitar.
+          'photo_ids': [for (final p in current.photos) p.id],
+        });
+        return Ok(current);
+      });
+
+  @override
   Future<WardrobeResult<Garment>> addPhoto(
     GarmentId id,
     ProcessedPhoto photo,

@@ -231,6 +231,20 @@ void main() {
       expect(await db.getAll('SELECT * FROM sync_conflicts'), isEmpty);
     });
 
+    test('eliminar a peça apaga os ficheiros das fotos', () async {
+      final g = await add();
+      final id = await addPhoto(g);
+      await queue.upload(db);
+      await repo.deleteGarment(g.id);
+      await queue.upload(db);
+      expect(server.log.sublist(server.log.length - 2), [
+        'apply delete',
+        'remove $id',
+      ]);
+      expect(server.files, isEmpty);
+      expect(await repo.photoBytes(id, PhotoVariant.thumb), isNull);
+    });
+
     test('falha a apagar no Storage não bloqueia a fila', () async {
       final g = await add();
       final id = await addPhoto(g);

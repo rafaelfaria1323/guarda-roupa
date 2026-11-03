@@ -1,8 +1,14 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../support/app_harness.dart';
 import '../../../support/test_database.dart';
+
+/// Texto dentro de um item da lista (os filtros repetem as etiquetas).
+Finder inList(String text) =>
+    find.descendant(of: find.byType(ListTile), matching: find.text(text));
 
 Future<void> openWardrobe(WidgetTester tester) async {
   await tester.tap(find.byIcon(Icons.checkroom_outlined));
@@ -47,7 +53,7 @@ void main() {
 
     expect(find.text('Ganga azul'), findsOneWidget);
     expect(find.text('Calças de ganga · Levi’s'), findsOneWidget);
-    expect(find.text('Disponível'), findsOneWidget);
+    expect(inList('Disponível'), findsOneWidget);
     // Guardado localmente, com a operação na fila de envio.
     final pending = (await tester.runAsync(() => pendingOperations(app.db)))!;
     expect(pending.map((op) => op['kind']), ['create']);
@@ -103,7 +109,7 @@ void main() {
     );
 
     expect(find.text('Branca básica'), findsOneWidget);
-    expect(find.text('A lavar'), findsOneWidget);
+    expect(inList('A lavar'), findsOneWidget);
 
     // Pesquisa sem acentos.
     await tester.enterText(find.byType(TextField), 'BASICA');
@@ -184,4 +190,129 @@ void main() {
       expect(find.text('Entrar com Google'), findsOneWidget);
     },
   );
+
+  testWidgets('filtra por grupo e disponibilidade e limpa filtros', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await openWardrobe(tester);
+    await addGarment(tester, category: 'T-shirt', name: 'Branca');
+    await addGarment(tester, category: 'Calções', name: 'Brancos');
+
+    await tester.tap(find.byKey(const Key('filter-group-bottom')));
+    await settle(tester);
+    expect(inList('Brancos'), findsOneWidget);
+    expect(inList('Branca'), findsNothing);
+
+    await tester.ensureVisible(
+      find.byKey(const Key('filter-availability-washing')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('filter-availability-washing')));
+    await settle(tester);
+    expect(find.text('Nenhuma peça corresponde à pesquisa.'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Limpar filtros'));
+    await tester.tap(find.text('Limpar filtros'));
+    await settle(tester);
+    expect(inList('Branca'), findsOneWidget);
+    expect(inList('Brancos'), findsOneWidget);
+    expect(find.text('Limpar filtros'), findsNothing);
+  });
+
+  testWidgets('escolhe cores e proporções; acima de 100% não guarda', (
+    tester,
+  ) async {
+    final app = await pumpApp(tester);
+    await openWardrobe(tester);
+    await tester.tap(find.text('Adicionar peça'));
+    await settle(tester);
+    await tester.tap(find.byKey(const Key('garment-category')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Camisa').last);
+    await tester.pumpAndSettle();
+
+    Future<void> tapKey(String key) async {
+      await tester.ensureVisible(find.byKey(Key(key)));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(Key(key)));
+      await tester.pumpAndSettle();
+    }
+
+    await tapKey('color-white'); // fica com 100%
+    expect(find.text('Por atribuir: 0%'), findsOneWidget);
+    await tapKey('color-navy'); // não cabe: 10%, acima do total
+    expect(find.text('As proporções somam mais de 100%.'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('garment-save')));
+    await settle(tester);
+    expect(
+      find.byKey(const Key('garment-save')),
+      findsOneWidget,
+      reason: 'fica',
+    );
+
+    // Branco para 70%: o slider vai de 10 a 100 em 9 passos.
+    final slider = find.byKey(const Key('color-percent-0'));
+    await tester.ensureVisible(slider);
+    await tester.pumpAndSettle();
+    final box = tester.getRect(slider);
+    // Área útil do Slider tem margens; arrasta para a esquerda até ~70%.
+    await tester.drag(slider, Offset(-box.width * 0.36, 0));
+    await tester.pumpAndSettle();
+    expect(find.text('As proporções somam mais de 100%.'), findsNothing);
+
+    await tester.tap(find.byKey(const Key('garment-save')));
+    await settleUntil(
+      tester,
+      find.byKey(const Key('garment-save')),
+      gone: true,
+    );
+    final op = (await tester.runAsync(() => pendingOperations(app.db)))!.single;
+    final colors = [
+      for (final c
+          in (jsonDecode(op['data']! as String) as Map)['colors'] as List)
+        c as Map<String, Object?>,
+    ];
+    expect(colors.map((c) => c['rgb']), [0xFFFFFF, 0x1F2A44]);
+    expect(colors.every((c) => c['confirmed'] == true), isTrue);
+    final sum = colors.fold<num>(0, (s, c) => s + (c['proportion']! as num));
+    expect(sum, lessThanOrEqualTo(1.0 + 1e-9));
+  });
+
+  testWidgets('eliminar pede confirmação e tira a peça', (tester) async {
+    final app = await pumpApp(tester);
+    await openWardrobe(tester);
+    await addGarment(tester, category: 'Saia', name: 'Plissada');
+    await tester.tap(find.text('Plissada'));
+    await settle(tester);
+
+    await tester.tap(find.byType(PopupMenuButton<void Function()>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Eliminar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Eliminar esta peça?'), findsOneWidget);
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('garment-save')), findsOneWidget);
+
+    await tester.tap(find.byType(PopupMenuButton<void Function()>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Eliminar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('garment-delete-confirm')));
+    await settleUntil(
+      tester,
+      find.byKey(const Key('garment-save')),
+      gone: true,
+    );
+
+    expect(inList('Plissada'), findsNothing);
+    final kinds = [
+      for (final op in (await tester.runAsync(
+        () => pendingOperations(app.db),
+      ))!)
+        op['kind'],
+    ];
+    expect(kinds, ['create', 'delete']);
+  });
 }

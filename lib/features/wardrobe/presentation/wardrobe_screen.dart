@@ -6,7 +6,9 @@ import '../../../app/router.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../account_sync/application/providers.dart';
+import '../domain/availability.dart';
 import '../domain/garment.dart';
+import '../domain/garment_category.dart';
 import '../domain/garment_filter.dart';
 import '../domain/wardrobe_repository.dart';
 import 'garment_photo_view.dart';
@@ -20,32 +22,81 @@ class WardrobeScreen extends ConsumerStatefulWidget {
 }
 
 class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
-  String _text = '';
-  bool _showArchived = false;
+  final _search = TextEditingController();
+  var _filter = const GarmentFilter();
 
   WardrobeRepository? _repo;
-  GarmentFilter? _filter;
+  GarmentFilter? _streamFilter;
   Stream<List<Garment>>? _garments;
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
 
   /// Recria o stream só quando o repositório ou o filtro mudam, para não
   /// reiniciar a subscrição a cada rebuild.
   Stream<List<Garment>>? _streamFor(WardrobeRepository? repo) {
-    final filter = GarmentFilter(text: _text, includeArchived: _showArchived);
-    if (repo != _repo ||
-        _filter?.text != filter.text ||
-        _filter?.includeArchived != filter.includeArchived) {
+    if (repo != _repo || _streamFilter != _filter) {
       _repo = repo;
-      _filter = filter;
-      _garments = repo?.watchGarments(filter);
+      _streamFilter = _filter;
+      _garments = repo?.watchGarments(_filter);
     }
     return _garments;
   }
+
+  static Set<T> _toggled<T>(Set<T> set, T value, bool on) =>
+      on ? {...set, value} : ({...set}..remove(value));
+
+  Widget _filters(AppLocalizations l10n) => SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+    child: Row(
+      spacing: 8,
+      children: [
+        for (final group in CategoryGroup.values)
+          FilterChip(
+            key: Key('filter-group-${group.name}'),
+            label: Text(l10n.categoryGroupLabel(group.name)),
+            selected: _filter.groups.contains(group),
+            onSelected: (on) => setState(
+              () => _filter = _filter.copyWith(
+                groups: _toggled(_filter.groups, group, on),
+              ),
+            ),
+          ),
+        const SizedBox(height: 32, child: VerticalDivider()),
+        for (final value in Availability.values)
+          FilterChip(
+            key: Key('filter-availability-${value.id}'),
+            avatar: Icon(availabilityIcon(value), size: 18),
+            label: Text(l10n.availabilityLabel(value.id)),
+            selected: _filter.availability.contains(value),
+            onSelected: (on) => setState(
+              () => _filter = _filter.copyWith(
+                availability: _toggled(_filter.availability, value, on),
+              ),
+            ),
+          ),
+        if (_filter.isActive)
+          TextButton.icon(
+            onPressed: () => setState(() {
+              _search.clear();
+              _filter = const GarmentFilter();
+            }),
+            icon: const Icon(Icons.filter_alt_off_outlined),
+            label: Text(l10n.wardrobeClearFilters),
+          ),
+      ],
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final stream = _streamFor(ref.watch(wardrobeRepositoryProvider));
-    final searching = _text.trim().isNotEmpty || _showArchived;
+    final searching = _filter.isActive;
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
@@ -63,24 +114,29 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
               children: [
                 Expanded(
                   child: TextField(
+                    controller: _search,
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.search),
                       hintText: l10n.wardrobeSearch,
                       isDense: true,
                       border: const OutlineInputBorder(),
                     ),
-                    onChanged: (value) => setState(() => _text = value),
+                    onChanged: (value) =>
+                        setState(() => _filter = _filter.copyWith(text: value)),
                   ),
                 ),
                 const SizedBox(width: 8),
                 FilterChip(
                   label: Text(l10n.wardrobeShowArchived),
-                  selected: _showArchived,
-                  onSelected: (value) => setState(() => _showArchived = value),
+                  selected: _filter.includeArchived,
+                  onSelected: (value) => setState(
+                    () => _filter = _filter.copyWith(includeArchived: value),
+                  ),
                 ),
               ],
             ),
           ),
+          _filters(l10n),
           Expanded(
             child: stream == null
                 ? const Center(child: CircularProgressIndicator())

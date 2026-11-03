@@ -20,6 +20,48 @@ final class GarmentFilter {
   /// Pesquisa em nome, marca e notas, sem distinguir maiúsculas nem acentos.
   final String? text;
 
+  GarmentFilter copyWith({
+    Set<CategoryGroup>? groups,
+    Set<Availability>? availability,
+    bool? includeArchived,
+    String? text,
+  }) => GarmentFilter(
+    categories: categories,
+    groups: groups ?? this.groups,
+    availability: availability ?? this.availability,
+    includeArchived: includeArchived ?? this.includeArchived,
+    text: text ?? this.text,
+  );
+
+  /// Há algum critério além de "não arquivadas"?
+  bool get isActive =>
+      categories.isNotEmpty ||
+      groups.isNotEmpty ||
+      availability.isNotEmpty ||
+      includeArchived ||
+      (text?.trim().isNotEmpty ?? false);
+
+  @override
+  bool operator ==(Object other) =>
+      other is GarmentFilter &&
+      _sameSet(other.categories, categories) &&
+      _sameSet(other.groups, groups) &&
+      _sameSet(other.availability, availability) &&
+      other.includeArchived == includeArchived &&
+      (other.text ?? '') == (text ?? '');
+
+  @override
+  int get hashCode => Object.hash(
+    Object.hashAllUnordered(categories),
+    Object.hashAllUnordered(groups),
+    Object.hashAllUnordered(availability),
+    includeArchived,
+    text ?? '',
+  );
+
+  static bool _sameSet<T>(Set<T> a, Set<T> b) =>
+      a.length == b.length && a.containsAll(b);
+
   bool matches(Garment garment) {
     if (!includeArchived && garment.isArchived) return false;
     if (categories.isNotEmpty && !categories.contains(garment.category)) {

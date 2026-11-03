@@ -2,6 +2,8 @@
 
 Estado: necessária no MVP. Implementação recomendada nos incrementos 1–2.
 
+Implementado (2026-11-03): criar/editar/duplicar/arquivar/eliminar (tombstone, com confirmação e limpeza das fotos), disponibilidade, pesquisa sem acentos, filtros por grupo de categoria e disponibilidade, cores de uma paleta de referência com proporção aproximada (passos de 10%, soma ≤ 100%, confirmadas pelo utilizador) e fotografias. Por fazer: padrão, textura, contexto (ocasiões, aquecimento, chuva) e composição/cuidados.
+
 ## Objetivo e dados
 
 Representar peças físicas, não apenas produtos comerciais. Cada unidade tem ID, categoria, disponibilidade, histórico e fotografias próprios.
