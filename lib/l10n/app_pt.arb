@@ -347,5 +347,63 @@
         "type": "int"
       }
     }
+  },
+  "laundryTitle": "Lavagem",
+  "laundryUses": "{count, plural, =0{Sem utilizações desde a última limpeza.} =1{1 utilização desde a última limpeza.} other{{count} utilizações desde a última limpeza.}}",
+  "@laundryUses": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "laundryUsesNoCleaning": "{count, plural, =0{Ainda sem utilizações nem limpezas registadas.} =1{1 utilização registada; nenhuma limpeza registada.} other{{count} utilizações registadas; nenhuma limpeza registada.}}",
+  "@laundryUsesNoCleaning": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "laundryLastCleaned": "Última limpeza: {date}.",
+  "@laundryLastCleaned": {
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "yMMMMd"
+      }
+    }
+  },
+  "laundryRecommended": "Recomendado lavar. É só um aviso: a disponibilidade não muda.",
+  "laundryRecommendedShort": "Lavar recomendado",
+  "laundryCleanedToday": "Lavei hoje",
+  "laundryCleaned": "Limpeza registada.",
+  "laundryAfterLabel": "Aviso de lavagem",
+  "laundryAfterValue": "{count, plural, =0{Sem aviso} =1{Após cada utilização} other{Após {count} utilizações}}",
+  "@laundryAfterValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "laundryDefault": "Predefinido ({value})",
+  "@laundryDefault": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "careSettingsTitle": "Aviso de lavagem por categoria",
+  "careSettingsHint": "Valores de partida da referência USU/ACI. A etiqueta, as nódoas e o uso real prevalecem. O aviso nunca muda a disponibilidade; cada peça pode ter o seu.",
+  "careSaveFailed": "Não foi possível guardar neste dispositivo.",
+  "careProblem": "{problem, select, unknownGarment{Esta peça já não existe.} futureDay{Não se regista um dia que ainda não chegou.} outOfRange{Valor fora dos limites.} notFound{Esta limpeza já não existe.} other{Não foi possível guardar.}}",
+  "@careProblem": {
+    "placeholders": {
+      "problem": {
+        "type": "String"
+      }
+    }
   }
 }

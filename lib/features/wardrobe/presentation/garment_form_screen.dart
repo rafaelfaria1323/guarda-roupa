@@ -17,6 +17,7 @@ import '../domain/garment_photo.dart';
 import '../domain/photo_picker.dart';
 import '../domain/wardrobe_repository.dart';
 import '../domain/garment_color.dart';
+import '../../care/presentation/garment_laundry_section.dart';
 import '../../wear/presentation/garment_wear_summary.dart';
 import 'attributes_editor.dart';
 import 'colors_editor.dart';
@@ -511,6 +512,8 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
             if (garment != null) ...[
               const SizedBox(height: 24),
               GarmentWearSummary(garmentId: garment.id),
+              const SizedBox(height: 24),
+              GarmentLaundrySection(garment: garment),
             ],
             const SizedBox(height: 32),
           ],

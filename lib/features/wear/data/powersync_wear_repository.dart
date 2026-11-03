@@ -28,6 +28,15 @@ final class PowerSyncWearRepository implements WearRepository {
   static const _tables = {'wear_events'};
 
   @override
+  Stream<List<WearEvent>> watchAll() => _db
+      .watch(
+        'SELECT * FROM wear_events WHERE voided_at IS NULL '
+        'ORDER BY worn_on, created_at, id',
+        triggerOnTables: _tables,
+      )
+      .map(_events);
+
+  @override
   Stream<List<WearEvent>> watchDay(CalendarDay day) => _db
       .watch(
         'SELECT * FROM wear_events WHERE worn_on = ? AND voided_at IS NULL '
@@ -174,6 +183,7 @@ final class PowerSyncWearRepository implements WearRepository {
     await _operation(tx, eventId, 'void_wear', const {});
   }
 
+  /// Fila partilhada com limpezas e políticas (`apply_wear_operation`).
   Future<void> _operation(
     SqliteWriteContext tx,
     String eventId,

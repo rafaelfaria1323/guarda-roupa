@@ -38,6 +38,9 @@ typedef WearResult<T> = Result<T, WearFailure>;
 /// Utilizações reais. Como no guarda-roupa, cada escrita fica guardada
 /// neste dispositivo e a operação segue para o servidor na mesma transação.
 abstract interface class WearRepository {
+  /// Todas as utilizações não desfeitas (para lavagem e rotatividade).
+  Stream<List<WearEvent>> watchAll();
+
   /// Utilizações (não desfeitas) de um dia, pela ordem de registo.
   Stream<List<WearEvent>> watchDay(CalendarDay day);
 

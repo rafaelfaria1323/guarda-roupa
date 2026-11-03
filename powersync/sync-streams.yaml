@@ -4,7 +4,8 @@
 # deleted_at preenchido) saem do stream e são removidas dos dispositivos.
 # O PowerSync replica sem RLS; o filtro por auth.user_id() é a autorização
 # do lado da sincronização. As escritas passam por apply_garment_operation
-# e apply_wear_operation. Utilizações desfeitas (voided_at) saem do stream.
+# e apply_wear_operation. Utilizações e limpezas desfeitas (voided_at) saem
+# do stream.
 config:
   edition: 3
 
@@ -15,3 +16,9 @@ streams:
   user_wear_events:
     auto_subscribe: true
     query: SELECT * FROM wear_events WHERE owner_id = auth.user_id() AND voided_at IS NULL
+  user_cleaning_events:
+    auto_subscribe: true
+    query: SELECT * FROM cleaning_events WHERE owner_id = auth.user_id() AND voided_at IS NULL
+  user_care_policies:
+    auto_subscribe: true
+    query: SELECT * FROM care_policies WHERE owner_id = auth.user_id()
