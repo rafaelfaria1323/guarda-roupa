@@ -2,6 +2,21 @@
 
 Estado: recomendado para o MVP; regras finas, pesos e limites de pesquisa a calibrar.
 
+## Implementado (2026-11-03): núcleo do motor diário
+
+Dart puro em `lib/features/engine/domain/` (`DailyEngine.suggest`), sem UI nem previsão ainda.
+
+- **Entradas:** `WardrobeSnapshot` (peças, utilizações, limpezas, valores de lavagem/rotatividade, preferências) e `SuggestionRequest` (dia, ocasião opcional, condições opcionais, limites de conforto, seed, número de resultados — 3 por omissão).
+- **Modelos:** top principal + parte de baixo + calçado, ou peça única + calçado. A t-shirt chega como top único. Casaco só quando o conforto o pede (frio com top leve/médio) ou como camada opcional à parte (ameno, ou chuva/vento com um casaco adequado).
+- **Obrigatório:** só peças não arquivadas e disponíveis; nenhuma peça em dois papéis; uma peça com ocasiões indicadas que não incluem a pedida fica de fora. Sem ocasiões indicadas é desconhecido: entra com nota.
+- **Ordem de cada papel, sem pesos:** conforto (serve › serve com casaco › desconhecido › não serve), chuva/vento (casaco e calçado), rotatividade (elegíveis primeiro, P-06), preferências (gosto − evito), menos usadas em 30 dias, usadas há mais tempo, seed. Uma peça confortável mas dentro do intervalo de rotatividade fica à frente de uma elegível que não serve.
+- **Preferências:** cor (RGB de referência), padrão e textura, nas ocasiões da preferência (vazio = sempre). Formalidade e combinações de cor são do conjunto e ainda não entram.
+- **Lavagem (P-07):** só aviso.
+- **Conjuntos:** o i-ésimo conjunto junta a i-ésima peça de cada papel; repetidos saem. Ordem: completos, menos avisos, mais preferências, peças mais bem ordenadas, seed (FNV-1a, igual em todas as plataformas).
+- **Resultado:** peças/papéis com notas (ocasião, conforto, chuva/vento, rotatividade, uso recente, preferências, lavagem), camada opcional, papéis em falta e estado: válido, parcial (falta calçado ou casaco), nada encontrado (há peças mas nenhuma serve, com o motivo por papel: indisponível ou outra ocasião) e dados insuficientes (não há peças para nenhum modelo). Sem condições, diz que não aplicou regras de conforto.
+
+Ainda não: harmonia de cores, equilíbrio de padrões/texturas, acessórios, camada intermédia, conjuntos guardados como preferência, diversidade na semana.
+
 ## Objetivo
 
 Gerar conjuntos completos e justificáveis apenas com o inventário do utilizador. Não prometer “harmonia perfeita” nem delegar regras obrigatórias a um modelo probabilístico.

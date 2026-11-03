@@ -2,6 +2,19 @@
 
 Estado: necessária no MVP do motor.
 
+## Decisões
+
+- **Localização (P-18, 2026-11-03):** Torres Vedras com coordenadas aproximadas da cidade, fuso Europe/Lisbon, editável nas Definições. Sem GPS.
+- **Conforto (P-17, 2026-11-03), aplicado a top, parte de baixo e peça única pelo aquecimento indicado:**
+  - sensação ≥ 22 °C: peças leves; sem camadas;
+  - 14–22 °C: peças médias ou leves; casaco como camada opcional;
+  - < 14 °C: uma peça quente chega; uma leve ou média leva casaco (sem casaco, o conjunto fica parcial);
+  - partes de baixo: o casaco não as cobre, por isso só os extremos não servem (quente no calor, leve no frio);
+  - chuva ou vento ≥ 30 km/h: casaco e calçado marcados para chuva/vento à frente, marcados como não adequados atrás; no calor com chuva, um impermeável aparece como camada opcional;
+  - aquecimento desconhecido nunca exclui: a peça entra com nota.
+
+Implementado no motor (`lib/features/engine/domain/comfort.dart`); falta a previsão (Open-Meteo, cache e frescura) e o ecrã para editar os limites. O que conta como "chuva" a partir da previsão decide-se com a previsão.
+
 ## Contexto inicial
 
 Torres Vedras/região de Lisboa, com localização escolhida manualmente. Não exigir GPS nem localização contínua.
