@@ -83,6 +83,29 @@ Seguir o [guia 03](03-login-e-configuracao.md), secção 2, com estes valores:
 
 O Client Secret fica **só** no Supabase.
 
+## 7. Testar a sincronização (dois "dispositivos")
+
+Sem Android, dá para testar no Mac com duas janelas do Chrome que não partilham dados: uma normal e outra num **perfil diferente** do Chrome (uma janela anónima também serve, mas perde os dados ao fechar). Cada janela tem a sua base local, como dois dispositivos.
+
+Na pasta do repo, depois do `git pull`:
+
+```bash
+flutter run -d chrome --web-port 7357 --dart-define-from-file=config/public.json
+```
+
+Abrir `http://localhost:7357` no segundo perfil e entrar com a mesma conta Google nos dois. Depois:
+
+| # | Ação | Resultado esperado |
+|---|---|---|
+| 1 | Em A, adicionar uma peça | Em A, o ícone da nuvem passa de "1 alteração por enviar" a "Sincronizado". Em B, a peça aparece em poucos segundos |
+| 2 | Em B, editar o nome | O nome novo aparece em A |
+| 3 | Em A, mudar a disponibilidade para "A lavar"; ao mesmo tempo, em B, para "A secar", com B offline (DevTools > Network > Offline) | Ao voltar online, as duas ficam em "A lavar" (o estado menos disponível ganha, ADR-008) |
+| 4 | Em A, arquivar; em B, ver a lista | A peça desaparece de B (aparece com o filtro "Arquivadas") |
+| 5 | Com B offline, adicionar duas peças; fechar e reabrir B; voltar online | Nada se perde: as duas peças chegam a A |
+| 6 | Entrar com outra conta Google (fora da allowlist) | O login é recusado |
+
+Envia o número dos testes que falharem e o que viste. Os testes com fotografias e com Android ficam para quando existirem.
+
 ## Resultado esperado
 
 - Schema aplicado, com RLS em todas as tabelas.
