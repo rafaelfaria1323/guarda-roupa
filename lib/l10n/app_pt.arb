@@ -237,5 +237,56 @@
       }
     }
   },
-  "backupFailed": "Não foi possível criar o backup."
+  "backupFailed": "Não foi possível criar o backup.",
+  "backupRestore": "Recuperar backup",
+  "backupRestoreHint": "Só para uma conta sem peças. Nada é alterado antes de confirmares.",
+  "backupChecking": "A verificar o backup…",
+  "backupPickFailed": "Não foi possível abrir o ficheiro.",
+  "backupRestoreBlockedTitle": "Não é possível recuperar",
+  "backupNotABackup": "Este ficheiro não é um backup do Guarda-roupa.",
+  "backupNewerVersion": "Este backup foi feito por uma versão mais recente da app. Atualiza a app e tenta de novo.",
+  "backupCorrupt": "O backup está danificado ou incompleto. Nada foi alterado.",
+  "backupAccountNotEmpty": "Esta conta já tem peças. Por agora só é possível recuperar para uma conta vazia, sem misturar nem substituir dados.",
+  "backupNotSynced": "A conta ainda não terminou a primeira sincronização, por isso não se sabe se está vazia. Liga-te à internet e espera que termine.",
+  "backupRestoreFailed": "Não foi possível recuperar. Nada foi alterado.",
+  "backupPreviewTitle": "Recuperar este backup?",
+  "backupPreviewDate": "Feito a {date}.",
+  "@backupPreviewDate": {
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "yMMMMd"
+      }
+    }
+  },
+  "backupPreviewCounts": "{garments, plural, =1{1 peça} other{{garments} peças}} e {photos, plural, =0{nenhuma fotografia} =1{1 fotografia} other{{photos} fotografias}}.",
+  "@backupPreviewCounts": {
+    "placeholders": {
+      "garments": {
+        "type": "int"
+      },
+      "photos": {
+        "type": "int"
+      }
+    }
+  },
+  "backupPreviewPending": "{count, plural, =1{Inclui 1 alteração que ainda não tinha sido sincronizada.} other{Inclui {count} alterações que ainda não tinham sido sincronizadas.}}",
+  "@backupPreviewPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupPreviewHow": "As peças são criadas de novo nesta conta e depois sincronizadas.",
+  "backupRestoreConfirm": "Recuperar",
+  "backupRestored": "{count, plural, =0{Backup recuperado (sem peças).} =1{Recuperada 1 peça.} other{Recuperadas {count} peças.}}",
+  "@backupRestored": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "close": "Fechar"
 }

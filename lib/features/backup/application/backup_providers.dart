@@ -4,7 +4,10 @@ import '../../account_sync/application/providers.dart';
 import '../../wardrobe/application/photo_providers.dart';
 import '../../wardrobe/domain/garment_photo.dart';
 import '../data/backup_exporter.dart';
+import '../data/backup_restorer.dart';
+import '../data/file_selector_backup_picker.dart';
 import '../data/file_saver_backup_saver.dart';
+import '../domain/backup_picker.dart';
 import '../domain/backup_saver.dart';
 
 final backupSaverProvider = Provider<BackupSaver>(
@@ -24,5 +27,22 @@ final backupExporterProvider = Provider<BackupExporter?>((ref) {
         : (photo, variant) => storage.download(
             PhotoRules.storagePath(userId, photo.id, variant),
           ),
+  );
+});
+
+final backupPickerProvider = Provider<BackupPicker>(
+  (ref) => const FileSelectorBackupPicker(),
+);
+
+/// `null` enquanto a base da conta não está aberta.
+final backupRestorerProvider = Provider<BackupRestorer?>((ref) {
+  final db = ref.watch(userDatabaseProvider).value;
+  final userId = ref.watch(currentUserProvider).value?.id;
+  if (db == null || userId == null) return null;
+  final sync = ref.watch(syncSummaryProvider);
+  return BackupRestorer(
+    db: db,
+    ownerId: userId,
+    accountSynced: !sync.configured || sync.lastSyncedAt != null,
   );
 });
