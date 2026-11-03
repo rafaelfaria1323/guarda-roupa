@@ -60,12 +60,14 @@ O role só pode ler `garments`. Não tem acesso à allowlist nem às operações
 
 1. Abrir https://dashboard.powersync.com e criar conta, sem cartão.
 2. Criar um projeto/instância **Free**, numa região europeia se existir.
-3. **Database connection**: tipo PostgreSQL/Supabase.
+3. **Database connection**: usar **Set Up with Supabase** (cria o utilizador da base; dispensa o passo 4) e, quando pedir as tabelas a replicar, escolher **só `garments`**. Em alternativa, configurar à mão: tipo PostgreSQL/Supabase.
    - Host, porta e nome da base: Supabase > **Connect** > *Direct connection* (ou *Session pooler* se o direto exigir IPv6).
    - Utilizador `powersync_role` e a password do passo 4.
    - SSL: `verify-full`, se pedido.
    - Testar a ligação e guardar.
-4. **Client auth**: ativar **Use Supabase Auth** (o PowerSync valida o JWT da sessão Supabase). Se pedir o JWT secret/JWKS, seguir as instruções da própria página para Supabase.
+4. **Client auth**: ativar **Use Supabase Auth** (o PowerSync valida o JWT da sessão Supabase) e acrescentar `authenticated` em **JWT Audience**. Depois, **Save and Deploy**.
+   - Sem isto, a consola mostra `PSYNC_S2105 ... Unexpected "aud" claim value: "authenticated"`: o token do Supabase traz `aud = authenticated` e o PowerSync, por defeito, só aceita o URL da instância.
+   - Se depois aparecer um erro de assinatura (`signature`, `kid`, `JWKS`), acrescentar o JWKS URI `https://zeibzbepuexeudzyrqzq.supabase.co/auth/v1/.well-known/jwks.json`.
 5. **Sync Streams**: colar o conteúdo de [`powersync/sync-streams.yaml`](../../powersync/sync-streams.yaml), validar e fazer deploy.
 6. Copiar o **URL da instância** (formato `https://<id>.powersync.journeyapps.com`) e envia-mo. É configuração pública.
 
