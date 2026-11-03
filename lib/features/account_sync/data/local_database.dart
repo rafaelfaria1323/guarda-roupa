@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:powersync/powersync.dart';
 
+import '../../wardrobe/data/photo_files.dart';
 import 'local_schema.dart';
 
 /// Abre a base local **da conta indicada** (ADR-008: uma base por conta;
@@ -13,5 +14,10 @@ Future<PowerSyncDatabase> openUserDatabase(String userId) async {
       : '${(await getApplicationSupportDirectory()).path}/$name';
   final db = PowerSyncDatabase(schema: localSchema, path: path);
   await db.initialize();
+  await prepareLocalTables(db);
   return db;
 }
+
+/// Tabelas locais fora do schema do PowerSync (ex.: bytes das fotos).
+Future<void> prepareLocalTables(PowerSyncDatabase db) =>
+    db.execute(PhotoFiles.createTable);

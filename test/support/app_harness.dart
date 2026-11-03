@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guarda_roupa/app/app.dart';
 import 'package:guarda_roupa/app/config.dart';
@@ -26,6 +27,7 @@ Future<({FakeAuthService auth, PowerSyncDatabase db})> pumpApp(
   Size size = phone,
   AuthUser? user = const AuthUser(id: 'user-a', email: 'a@example.com'),
   AppConfig config = testConfig,
+  List<Override> overrides = const [],
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -42,6 +44,7 @@ Future<({FakeAuthService auth, PowerSyncDatabase db})> pumpApp(
         appConfigProvider.overrideWithValue(config),
         authServiceProvider.overrideWithValue(auth),
         databaseOpenerProvider.overrideWithValue((_) async => db),
+        ...overrides,
       ],
       child: const GuardaRoupaApp(),
     ),

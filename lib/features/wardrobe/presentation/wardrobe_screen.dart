@@ -9,6 +9,7 @@ import '../../account_sync/application/providers.dart';
 import '../domain/garment.dart';
 import '../domain/garment_filter.dart';
 import '../domain/wardrobe_repository.dart';
+import 'garment_photo_view.dart';
 import 'labels.dart';
 
 class WardrobeScreen extends ConsumerStatefulWidget {
@@ -137,7 +138,12 @@ class _GarmentTile extends StatelessWidget {
       if (garment.isArchived) l10n.garmentArchived,
     ].join(' · ');
     return ListTile(
-      leading: const Icon(Icons.checkroom_outlined),
+      leading: garment.photos.isEmpty
+          ? const SizedBox.square(
+              dimension: 48,
+              child: Icon(Icons.checkroom_outlined),
+            )
+          : GarmentPhotoView(photo: garment.photos.first, size: 48),
       title: Text(garment.name ?? category),
       subtitle: subtitle.isEmpty ? null : Text(subtitle),
       trailing: AvailabilityChip(availability: garment.availability),

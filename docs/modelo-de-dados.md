@@ -22,6 +22,8 @@ Estado: desenho lógico; não é uma migração SQL pronta para executar. Data: 
 | `GarmentOccasion` | Peça e ocasião adequada |
 | `MediaAsset` | Proprietário, ID/hash, MIME, dimensões, variante, estado local/cloud |
 | `GarmentMedia` | Peça, asset e posição |
+
+**Implementação atual das fotografias (incremento 1).** Enquanto só as peças têm imagens, `MediaAsset` + `GarmentMedia` ficam numa coluna JSON tipada `garments.photos` (até 5; a primeira é a capa): `{id, width, height, bytes, thumb_bytes, sha256}`, validada no servidor (`garment_photos_valid`). Os ficheiros JPEG (1600 px e miniatura 320 px, sem metadados) estão no bucket privado `garment-photos` em `{utilizador}/{foto}/main.jpg|thumb.jpg`, e neste dispositivo na tabela SQLite local `photo_files` (fora do schema sincronizado; apagada ao terminar sessão). As operações `attach_photo`/`detach_photo` passam por `apply_garment_operation`; `attach_photo` só aceita a foto se os dois ficheiros já existirem no Storage. Separar em tabelas quando outras entidades (conjuntos, inspirações) tiverem imagens.
 | `Occasion` | ID estável, nome e regras/preferências |
 | `Outfit` | Conjunto guardado, nome, estado |
 | `OutfitItem` | Conjunto, peça, papel contextual, ordem de camada |

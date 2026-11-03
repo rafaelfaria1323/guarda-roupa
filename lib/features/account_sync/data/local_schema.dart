@@ -17,6 +17,7 @@ const localSchema = Schema([
     Column.text('brand'),
     Column.text('notes'),
     Column.text('colors'),
+    Column.text('photos'),
     Column.text('availability'),
     Column.text('archived_at'),
     Column.text('created_at'),

@@ -1,0 +1,12 @@
+import 'dart:typed_data';
+
+/// Ficheiros no Storage privado. Os caminhos vêm de
+/// `PhotoRules.storagePath`.
+abstract interface class PhotoStorage {
+  /// Idempotente: enviar de novo o mesmo ficheiro não é erro.
+  Future<void> upload(String path, Uint8List bytes);
+
+  Future<Uint8List> download(String path);
+
+  Future<void> remove(List<String> paths);
+}
