@@ -7,6 +7,9 @@ import 'package:sqlite_async/sqlite_async.dart';
 import '../../../core/domain/result.dart';
 import '../../care/data/powersync_care_repository.dart';
 import '../../care/domain/care_policies.dart';
+import '../../inspirations/data/powersync_inspiration_repository.dart';
+import '../../inspirations/data/powersync_preference_repository.dart';
+import '../../inspirations/domain/style_preference.dart';
 import '../../outfits/data/powersync_outfit_repository.dart';
 import '../../outfits/domain/outfit.dart';
 import '../../wardrobe/data/garment_row.dart';
@@ -181,11 +184,41 @@ final class BackupExporter {
         ),
       );
     }
+    // Inspirações e preferências ativas. Uma preferência cuja inspiração já
+    // foi eliminada vai sem origem.
+    final inspirations = [
+      for (final row in await tx.getAll(
+        'SELECT * FROM inspirations WHERE deleted_at IS NULL '
+        'ORDER BY created_at, id',
+      ))
+        ?PowerSyncInspirationRepository.fromRow(row),
+    ];
+    final exported = {for (final i in inspirations) i.id};
+    final preferences = [
+      for (final row in await tx.getAll(
+        'SELECT * FROM style_preferences WHERE deleted_at IS NULL '
+        'ORDER BY created_at, id',
+      ))
+        if (PowerSyncPreferenceRepository.fromRow(row) case final p?)
+          exported.contains(p.inspirationId)
+              ? p
+              : StylePreference(
+                  id: p.id,
+                  subject: p.subject,
+                  value: p.value,
+                  stance: p.stance,
+                  occasions: p.occasions,
+                  createdAt: p.createdAt,
+                  updatedAt: p.updatedAt,
+                ),
+    ];
     return BackupHistory(
       wears: wears,
       cleanings: cleanings,
       policies: policies.values.toList(),
       outfits: outfits,
+      inspirations: inspirations,
+      preferences: preferences,
     );
   }
 

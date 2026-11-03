@@ -10,6 +10,10 @@ import 'package:guarda_roupa/features/backup/data/backup_exporter.dart';
 import 'package:guarda_roupa/features/backup/domain/backup.dart';
 import 'package:guarda_roupa/features/care/data/powersync_care_repository.dart';
 import 'package:guarda_roupa/features/care/domain/care_policies.dart';
+import 'package:guarda_roupa/features/inspirations/data/powersync_inspiration_repository.dart';
+import 'package:guarda_roupa/features/inspirations/data/powersync_preference_repository.dart';
+import 'package:guarda_roupa/features/inspirations/domain/inspiration.dart';
+import 'package:guarda_roupa/features/inspirations/domain/style_preference.dart';
 import 'package:guarda_roupa/features/outfits/data/powersync_outfit_repository.dart';
 import 'package:guarda_roupa/features/outfits/domain/outfit.dart';
 import 'package:guarda_roupa/features/wardrobe/data/powersync_wardrobe_repository.dart';
@@ -18,6 +22,7 @@ import 'package:guarda_roupa/features/wardrobe/domain/garment_attributes.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_category.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_color.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_photo.dart';
+import 'package:guarda_roupa/features/wardrobe/domain/reference_color.dart';
 import 'package:guarda_roupa/features/wear/data/powersync_wear_repository.dart';
 import 'package:guarda_roupa/features/wear/domain/calendar_day.dart';
 import 'package:powersync/powersync.dart';
@@ -175,6 +180,8 @@ void main() {
         'cleaning_events': 0,
         'care_policies': 0,
         'outfits': 0,
+        'inspirations': 0,
+        'style_preferences': 0,
       });
       final files = (m['files']! as List).cast<Map<String, Object?>>();
       expect(
@@ -183,6 +190,7 @@ void main() {
           'data/garments.json',
           'data/history.json',
           'data/outfits.json',
+          'data/style.json',
         ]),
       );
       expect(files.every((f) => (f['sha256']! as String).length == 64), true);
@@ -342,6 +350,128 @@ void main() {
         ),
       );
       expect(problem(bad), isA<CorruptBackup>());
+    });
+
+    test('v4 sem estilo', () {
+      expect(
+        problem(downgrade(zip, 4, ['data/style.json'])),
+        isA<CorruptBackup>(),
+      );
+    });
+
+    test('inspiração ou preferência inválida', () {
+      Map<String, Object?> inspiration([
+        Map<String, Object?> extra = const {},
+      ]) => {
+        'id': 'i1',
+        'title': 'Neutros',
+        'source_url': 'https://example.com/a',
+        'notes': null,
+        'palette': [0x1F2A44],
+        'formality': 'dressy',
+        'patterns': ['stripes'],
+        'textures': <String>[],
+        'occasions': ['evening'],
+        'created_at': '2026-11-01T10:00:00.000Z',
+        'updated_at': '2026-11-01T10:00:00.000Z',
+        ...extra,
+      };
+      Map<String, Object?> preference([
+        Map<String, Object?> extra = const {},
+      ]) => {
+        'id': 'p1',
+        'subject': 'pattern',
+        'value': 'stripes',
+        'stance': 'like',
+        'occasions': <String>[],
+        'inspiration_id': 'i1',
+        'created_at': '2026-11-01T10:00:00.000Z',
+        'updated_at': '2026-11-01T10:00:00.000Z',
+        ...extra,
+      };
+      Map<String, Object?> style({
+        List<Object?>? inspirations,
+        List<Object?>? preferences,
+      }) => {
+        'inspirations': inspirations ?? [inspiration()],
+        'preferences': preferences ?? [preference()],
+      };
+      final base = ok(
+        BackupCodec.decode(withJson(zip, 'data/style.json', style())),
+      );
+      expect(base.history.inspirations.single.palette, [0x1F2A44]);
+      expect(base.history.preferences.single.inspirationId, 'i1');
+      expect(base.summary.inspirations, 1);
+      expect(base.summary.preferences, 1);
+      final cases = <String, Object?>{
+        'sem título nem link': style(
+          inspirations: [
+            inspiration({'title': null, 'source_url': null}),
+          ],
+        ),
+        'link javascript': style(
+          inspirations: [
+            inspiration({'source_url': 'javascript:alert(1)'}),
+          ],
+        ),
+        'título por aparar': style(
+          inspirations: [
+            inspiration({'title': ' x '}),
+          ],
+        ),
+        'cor fora do RGB': style(
+          inspirations: [
+            inspiration({
+              'palette': [0x1000000],
+            }),
+          ],
+        ),
+        'cor repetida': style(
+          inspirations: [
+            inspiration({
+              'palette': [1, 1],
+            }),
+          ],
+        ),
+        'formalidade desconhecida': style(
+          inspirations: [
+            inspiration({'formality': 'gala'}),
+          ],
+        ),
+        'padrão repetido': style(
+          inspirations: [
+            inspiration({
+              'patterns': ['stripes', 'stripes'],
+            }),
+          ],
+        ),
+        'inspiração repetida': style(
+          inspirations: [inspiration(), inspiration()],
+        ),
+        'valor que não é do assunto': style(
+          preferences: [
+            preference({'value': 'knit'}),
+          ],
+        ),
+        'posição desconhecida': style(
+          preferences: [
+            preference({'stance': 'love'}),
+          ],
+        ),
+        'origem que não está no backup': style(
+          preferences: [
+            preference({'inspiration_id': 'outra'}),
+          ],
+        ),
+        'sem preferências': {'inspirations': <Object?>[]},
+      };
+      for (final MapEntry(:key, :value) in cases.entries) {
+        expect(
+          problem(withJson(zip, 'data/style.json', value)),
+          isA<CorruptBackup>(),
+          reason: key,
+        );
+      }
     });
 
     test('conjunto inválido ou com peça que não está no backup', () {
@@ -527,6 +657,7 @@ void main() {
       final v1 = downgrade(await export(), 1, [
         'data/history.json',
         'data/outfits.json',
+        'data/style.json',
       ]);
       final contents = ok(BackupCodec.decode(v1));
       expect(contents.garments, hasLength(1));
@@ -597,10 +728,118 @@ void main() {
 
     test('backup v2 (sem conjuntos) continua a ser lido', () async {
       await add(const GarmentDraft(category: GarmentCategory.shirt));
-      final v2 = downgrade(await export(), 2, ['data/outfits.json']);
+      final v2 = downgrade(await export(), 2, [
+        'data/outfits.json',
+        'data/style.json',
+      ]);
       final contents = ok(BackupCodec.decode(v2));
       expect(contents.garments, hasLength(1));
       expect(contents.history.outfits, isEmpty);
+    });
+  });
+
+  group('estilo (v4)', () {
+    late PowerSyncInspirationRepository inspirations;
+    late PowerSyncPreferenceRepository preferences;
+
+    setUp(() {
+      final clock = FixedClock(DateTime.utc(2026, 11, 3, 12));
+      inspirations = PowerSyncInspirationRepository(
+        db: db,
+        ownerId: 'user-a',
+        clock: clock,
+      );
+      preferences = PowerSyncPreferenceRepository(
+        db: db,
+        ownerId: 'user-a',
+        clock: clock,
+      );
+    });
+
+    test(
+      'ida e volta: só os ativos; origem eliminada vai sem origem',
+      () async {
+        final kept = ok(
+          await inspirations.createInspiration(
+            InspirationDraft(
+              title: 'Neutros',
+              sourceUrl: 'https://example.com/a',
+              palette: [ReferenceColor.navy.rgb],
+              formality: Formality.smartCasual,
+              occasions: const {Occasion.workCasual},
+            ),
+          ),
+        );
+        final gone = ok(
+          await inspirations.createInspiration(
+            const InspirationDraft(
+              title: 'Riscas',
+              patterns: {GarmentPattern.stripes},
+            ),
+          ),
+        );
+        ok(
+          await preferences.createPreferences(
+            PreferenceDraft.fromInspiration(kept),
+          ),
+        );
+        ok(
+          await preferences.createPreferences(
+            PreferenceDraft.fromInspiration(gone),
+          ),
+        );
+        final avoided = ok(
+          await preferences.createPreference(
+            const PreferenceDraft(
+              subject: PreferenceSubject.combo,
+              value: 'tonal',
+              stance: PreferenceStance.avoid,
+            ),
+          ),
+        );
+        ok(await preferences.deletePreference(avoided.id));
+        ok(await inspirations.deleteInspiration(gone.id));
+
+        final zip = await export();
+        final contents = ok(BackupCodec.decode(zip));
+        final i = contents.history.inspirations.single;
+        expect(i.id, kept.id);
+        expect(i.sourceUrl, 'https://example.com/a');
+        expect(i.formality, Formality.smartCasual);
+        final prefs = contents.history.preferences;
+        expect(
+          [for (final p in prefs) '${p.subject.id}:${p.value}'],
+          unorderedEquals([
+            'color:${ReferenceColor.navy.rgb}',
+            'formality:smart_casual',
+            'pattern:stripes',
+          ]),
+        );
+        StylePreference about(PreferenceSubject s) =>
+            prefs.firstWhere((p) => p.subject == s);
+        expect(about(PreferenceSubject.color).inspirationId, kept.id);
+        expect(about(PreferenceSubject.color).occasions, {Occasion.workCasual});
+        expect(
+          about(PreferenceSubject.pattern).inspirationId,
+          isNull,
+          reason: 'a origem foi eliminada',
+        );
+        final counts = manifestOf(zip)['counts']! as Map;
+        expect(counts['inspirations'], 1);
+        expect(counts['style_preferences'], 3);
+      },
+    );
+
+    test('backup v3 (sem estilo) continua a ser lido', () async {
+      ok(
+        await inspirations.createInspiration(
+          const InspirationDraft(title: 'x'),
+        ),
+      );
+      final v3 = downgrade(await export(), 3, ['data/style.json']);
+      final contents = ok(BackupCodec.decode(v3));
+      expect(contents.history.inspirations, isEmpty);
+      expect(contents.summary.inspirations, 0);
     });
   });
 

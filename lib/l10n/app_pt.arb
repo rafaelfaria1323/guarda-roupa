@@ -466,6 +466,17 @@
       }
     }
   },
+  "backupPreviewStyle": "{inspirations, plural, =0{Sem inspirações} =1{1 inspiração} other{{inspirations} inspirações}} e {preferences, plural, =0{nenhuma preferência} =1{1 preferência} other{{preferences} preferências}} de estilo.",
+  "@backupPreviewStyle": {
+    "placeholders": {
+      "inspirations": {
+        "type": "int"
+      },
+      "preferences": {
+        "type": "int"
+      }
+    }
+  },
   "backupPreviewPending": "{count, plural, =1{Inclui 1 alteração que ainda não tinha sido sincronizada.} other{Inclui {count} alterações que ainda não tinham sido sincronizadas.}}",
   "@backupPreviewPending": {
     "placeholders": {
@@ -474,7 +485,7 @@
       }
     }
   },
-  "backupPreviewHow": "As peças, o histórico e os conjuntos são criados de novo nesta conta e depois sincronizados.",
+  "backupPreviewHow": "As peças, o histórico, os conjuntos, as inspirações e as preferências são criados de novo nesta conta e depois sincronizados.",
   "backupRestoreConfirm": "Recuperar",
   "backupRestored": "{count, plural, =0{Backup recuperado (sem peças).} =1{Recuperada 1 peça.} other{Recuperadas {count} peças.}}",
   "@backupRestored": {
