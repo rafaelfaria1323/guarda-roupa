@@ -27,6 +27,11 @@ flutter analyze
 
 ## CI
 
-Cada PR corre em paralelo: links da documentação, formatação/análise, testes, build Web e build Android.
-Os testes são divididos automaticamente em shards de ~100 testes (`tool/ci/test_shards.py`): 300 testes → 3 shards.
+Cada PR corre em paralelo: links da documentação, formatação/análise e testes.
+Os builds Android e Web ficam fora da CI por agora, para entregar mais depressa. Voltam quando houver distribuição.
+
+Os testes são divididos em shards por `tool/ci/test_shards.py`. O script estima o custo de cada ficheiro e
+escolhe o número de shards que minimiza o tempo total, tendo em conta o custo fixo de arranque de cada
+job (só acrescenta um shard se poupar pelo menos 30 s). Depois distribui os ficheiros de forma equilibrada
+(algoritmo LPT). As estimativas podem ser afinadas por variáveis de ambiente quando houver tempos reais.
 Alterações só a documentação não correm os jobs Flutter.
