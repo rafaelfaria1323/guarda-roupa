@@ -7,6 +7,8 @@ import 'package:sqlite_async/sqlite_async.dart';
 import '../../../core/domain/result.dart';
 import '../../care/data/powersync_care_repository.dart';
 import '../../care/domain/care_policies.dart';
+import '../../outfits/data/powersync_outfit_repository.dart';
+import '../../outfits/domain/outfit.dart';
 import '../../wardrobe/data/garment_row.dart';
 import '../../wardrobe/data/photo_files.dart';
 import '../../wardrobe/domain/garment_category.dart';
@@ -154,10 +156,36 @@ final class BackupExporter {
         rotationDays: rotation,
       );
     }
+    // Conjuntos ativos, sem as peças eliminadas; um conjunto que fique sem
+    // peças fica de fora.
+    final outfits = <Outfit>[];
+    for (final row in await tx.getAll(
+      'SELECT * FROM outfits WHERE deleted_at IS NULL '
+      'ORDER BY created_at, id',
+    )) {
+      final o = PowerSyncOutfitRepository.fromRow(row);
+      if (o == null) continue;
+      final items = [
+        for (final i in o.items)
+          if (kept.contains(i.garmentId.value)) i,
+      ];
+      if (items.isEmpty) continue;
+      outfits.add(
+        Outfit(
+          id: o.id,
+          name: o.name,
+          occasions: o.occasions,
+          items: items,
+          createdAt: o.createdAt,
+          updatedAt: o.updatedAt,
+        ),
+      );
+    }
     return BackupHistory(
       wears: wears,
       cleanings: cleanings,
       policies: policies.values.toList(),
+      outfits: outfits,
     );
   }
 

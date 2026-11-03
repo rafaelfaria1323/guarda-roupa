@@ -20,7 +20,7 @@ Contam só utilizações confirmadas (“Vesti hoje”) desde a última limpeza 
 - Definições → **Aviso de lavagem por categoria**; cada peça pode ter o seu na ficha. `0` = sem aviso; “Predefinido” volta ao valor da tabela acima.
 - Sem limpeza registada contam todas as utilizações registadas (não se presume que a peça acabou de ser lavada). No mesmo dia, conta a ordem de registo entre utilização e limpeza.
 - Dados: `cleaning_events` e `care_policies` (uma linha por categoria ou peça, id determinístico; último a escrever ganha, campo a campo), escritos por `apply_wear_operation` (`record_cleaning`, `void_cleaning`, `set_policy`). `care_policies.rotation_days` fica pronto para a rotatividade.
-- Backup (formato v2): limpezas e valores escolhidos entram e são recuperados.
+- Backup (desde o formato v2): limpezas e valores escolhidos entram e são recuperados.
 - Por fazer: indicar nódoas/uso intenso e limpeza profissional.
 
 ## Dois conceitos separados

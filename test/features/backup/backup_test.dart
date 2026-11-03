@@ -10,6 +10,8 @@ import 'package:guarda_roupa/features/backup/data/backup_exporter.dart';
 import 'package:guarda_roupa/features/backup/domain/backup.dart';
 import 'package:guarda_roupa/features/care/data/powersync_care_repository.dart';
 import 'package:guarda_roupa/features/care/domain/care_policies.dart';
+import 'package:guarda_roupa/features/outfits/data/powersync_outfit_repository.dart';
+import 'package:guarda_roupa/features/outfits/domain/outfit.dart';
 import 'package:guarda_roupa/features/wardrobe/data/powersync_wardrobe_repository.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_attributes.dart';
@@ -86,6 +88,17 @@ Uint8List withJson(Uint8List zip, String path, Object? json) {
   });
 }
 
+/// Tira [paths] do ZIP e do manifest e marca-o com [version].
+Uint8List downgrade(Uint8List zip, int version, List<String> paths) =>
+    withManifest(rewrite(zip, (name, _) => paths.contains(name) ? {} : null), (
+      m,
+    ) {
+      m['version'] = version;
+      (m['files']! as List).removeWhere(
+        (f) => paths.contains((f as Map)['path']),
+      );
+    });
+
 Map<String, Object?> jsonIn(Uint8List zip, String path) => jsonDecode(
   utf8.decode(ZipDecoder().decodeBytes(zip).findFile(path)!.content),
 ) as Map<String, Object?>;
@@ -161,11 +174,16 @@ void main() {
         'wear_events': 0,
         'cleaning_events': 0,
         'care_policies': 0,
+        'outfits': 0,
       });
       final files = (m['files']! as List).cast<Map<String, Object?>>();
       expect(
         files.map((f) => f['path']),
-        containsAll(['data/garments.json', 'data/history.json']),
+        containsAll([
+          'data/garments.json',
+          'data/history.json',
+          'data/outfits.json',
+        ]),
       );
       expect(files.every((f) => (f['sha256']! as String).length == 64), true);
       final text = jsonEncode(m);
@@ -316,6 +334,83 @@ void main() {
       expect(problem(bad), isA<CorruptBackup>());
     });
 
+    test('v3 sem conjuntos', () {
+      final bad = withManifest(
+        rewrite(zip, (name, _) => name == 'data/outfits.json' ? {} : null),
+        (m) => (m['files']! as List).removeWhere(
+          (f) => (f as Map)['path'] == 'data/outfits.json',
+        ),
+      );
+      expect(problem(bad), isA<CorruptBackup>());
+    });
+
+    test('conjunto inválido ou com peça que não está no backup', () {
+      final garment = (jsonIn(zip, 'data/garments.json')['garments']! as List)
+          .cast<Map<String, Object?>>()
+          .first['id'];
+      Map<String, Object?> outfit({
+        Object? name,
+        List<Object?> occasions = const [],
+        List<Object?>? items,
+      }) => {
+        'outfits': [
+          {
+            'id': 'o1',
+            'name': name,
+            'occasions': occasions,
+            'items':
+                items ??
+                [
+                  {'garment_id': garment, 'role': 'main_top'},
+                ],
+            'created_at': '2026-11-01T10:00:00.000Z',
+            'updated_at': '2026-11-01T10:00:00.000Z',
+          },
+        ],
+      };
+      expect(
+        ok(BackupCodec.decode(withJson(zip, 'data/outfits.json', outfit())))
+            .history
+            .outfits,
+        hasLength(1),
+        reason: 'o caso base é válido',
+      );
+      final cases = <String, Map<String, Object?>>{
+        'peça de fora': outfit(
+          items: [
+            {'garment_id': 'outra', 'role': 'main_top'},
+          ],
+        ),
+        'papel desconhecido': outfit(
+          items: [
+            {'garment_id': garment, 'role': 'capa'},
+          ],
+        ),
+        'chave a mais': outfit(
+          items: [
+            {'garment_id': garment, 'role': 'main_top', 'x': 1},
+          ],
+        ),
+        'peça repetida': outfit(
+          items: [
+            {'garment_id': garment, 'role': 'main_top'},
+            {'garment_id': garment, 'role': 'accessory'},
+          ],
+        ),
+        'sem peças': outfit(items: []),
+        'nome vazio': outfit(name: ' '),
+        'nome longo': outfit(name: 'x' * 121),
+        'ocasião desconhecida': outfit(occasions: ['praia']),
+      };
+      for (final MapEntry(:key, :value) in cases.entries) {
+        expect(
+          problem(withJson(zip, 'data/outfits.json', value)),
+          isA<CorruptBackup>(),
+          reason: key,
+        );
+      }
+    });
+
     test('histórico que refere uma peça que não está no backup', () {
       final history = jsonIn(zip, 'data/history.json');
       final cases = <String, Map<String, Object?>>{
@@ -429,21 +524,83 @@ void main() {
 
     test('backup v1 (sem histórico) continua a ser lido', () async {
       await add(const GarmentDraft(category: GarmentCategory.shirt));
-      final v1 = withManifest(
-        rewrite(
-          await export(),
-          (name, _) => name == 'data/history.json' ? {} : null,
-        ),
-        (m) {
-          m['version'] = 1;
-          (m['files']! as List).removeWhere(
-            (f) => (f as Map)['path'] == 'data/history.json',
-          );
-        },
-      );
+      final v1 = downgrade(await export(), 1, [
+        'data/history.json',
+        'data/outfits.json',
+      ]);
       final contents = ok(BackupCodec.decode(v1));
       expect(contents.garments, hasLength(1));
       expect(contents.history.wears, isEmpty);
+    });
+  });
+
+  group('conjuntos (v3)', () {
+    late PowerSyncOutfitRepository outfits;
+
+    setUp(() {
+      outfits = PowerSyncOutfitRepository(
+        db: db,
+        ownerId: 'user-a',
+        clock: FixedClock(DateTime.utc(2026, 11, 3, 12)),
+      );
+    });
+
+    test('ida e volta: só os ativos e sem as peças eliminadas', () async {
+      final top = (await add(
+        const GarmentDraft(category: GarmentCategory.tShirt),
+      )).id;
+      final shoes = (await add(
+        const GarmentDraft(category: GarmentCategory.sneakers),
+      )).id;
+      final gone = (await add(
+        const GarmentDraft(category: GarmentCategory.trousers),
+      )).id;
+      final kept = ok(
+        await outfits.createOutfit(
+          OutfitDraft(
+            name: 'Sexta',
+            occasions: const {Occasion.casual, Occasion.evening},
+            items: [
+              OutfitItem(top, OutfitRole.mainTop),
+              OutfitItem(gone, OutfitRole.bottom),
+              OutfitItem(shoes, OutfitRole.footwear),
+            ],
+          ),
+        ),
+      );
+      ok(
+        await outfits.createOutfit(
+          OutfitDraft(items: [OutfitItem(gone, OutfitRole.bottom)]),
+        ),
+      );
+      final deleted = ok(
+        await outfits.createOutfit(
+          OutfitDraft(items: [OutfitItem(top, OutfitRole.mainTop)]),
+        ),
+      );
+      ok(await outfits.deleteOutfit(deleted.id));
+      ok(await repo.deleteGarment(gone));
+
+      final zip = await export();
+      final contents = ok(BackupCodec.decode(zip));
+      final o = contents.history.outfits.single;
+      expect(o.id, kept.id);
+      expect(o.name, 'Sexta');
+      expect(o.occasions, {Occasion.casual, Occasion.evening});
+      expect(o.items, [
+        OutfitItem(top, OutfitRole.mainTop),
+        OutfitItem(shoes, OutfitRole.footwear),
+      ]);
+      expect(contents.summary.outfits, 1);
+      expect((manifestOf(zip)['counts']! as Map)['outfits'], 1);
+    });
+
+    test('backup v2 (sem conjuntos) continua a ser lido', () async {
+      await add(const GarmentDraft(category: GarmentCategory.shirt));
+      final v2 = downgrade(await export(), 2, ['data/outfits.json']);
+      final contents = ok(BackupCodec.decode(v2));
+      expect(contents.garments, hasLength(1));
+      expect(contents.history.outfits, isEmpty);
     });
   });
 

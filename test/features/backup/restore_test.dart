@@ -9,6 +9,8 @@ import 'package:guarda_roupa/features/backup/data/backup_restorer.dart';
 import 'package:guarda_roupa/features/backup/domain/backup.dart';
 import 'package:guarda_roupa/features/care/data/powersync_care_repository.dart';
 import 'package:guarda_roupa/features/care/domain/care_policies.dart';
+import 'package:guarda_roupa/features/outfits/data/powersync_outfit_repository.dart';
+import 'package:guarda_roupa/features/outfits/domain/outfit.dart';
 import 'package:guarda_roupa/features/wardrobe/data/powersync_wardrobe_repository.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/availability.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment.dart';
@@ -273,5 +275,61 @@ void main() {
       reason: 'as peças chegam primeiro ao servidor',
     );
     expect(await target.getAll('SELECT * FROM sync_conflicts'), isEmpty);
+  });
+
+  test('recupera conjuntos com os ids novos das peças', () async {
+    final outfits = PowerSyncOutfitRepository(db: source, ownerId: 'user-a');
+    Future<GarmentId> add(GarmentCategory c, String name) async =>
+        ok(await sourceRepo.addGarment(GarmentDraft(category: c, name: name)))
+            .id;
+    final top = await add(GarmentCategory.tShirt, 'Top');
+    final shoes = await add(GarmentCategory.sneakers, 'Ténis');
+    final old = await add(GarmentCategory.coat, 'Velho');
+    ok(
+      await outfits.createOutfit(
+        OutfitDraft(
+          name: 'Sexta',
+          occasions: const {Occasion.workCasual},
+          items: [
+            OutfitItem(top, OutfitRole.mainTop),
+            OutfitItem(shoes, OutfitRole.footwear),
+            OutfitItem(old, OutfitRole.outerLayer),
+          ],
+        ),
+      ),
+    );
+    ok(await sourceRepo.archiveGarment(old));
+
+    final contents = ok(await restorer().inspect(await backupOfSource()));
+    expect(contents.summary.outfits, 1);
+    ok(await restorer().apply(contents));
+
+    final ids = {for (final g in await all(targetRepo)) g.name: g.id};
+    final restored = await PowerSyncOutfitRepository(
+      db: target,
+      ownerId: 'user-b',
+    ).watchOutfits().first;
+    final o = restored.single;
+    expect(o.name, 'Sexta');
+    expect(o.occasions, {Occasion.workCasual});
+    expect(o.items, [
+      OutfitItem(ids['Top']!, OutfitRole.mainTop),
+      OutfitItem(ids['Ténis']!, OutfitRole.footwear),
+      OutfitItem(ids['Velho']!, OutfitRole.outerLayer),
+    ], reason: 'a peça arquivada continua no conjunto');
+
+    final server = ScriptedUploader();
+    await OperationUploadQueue(server).upload(target);
+    expect(server.log.where((l) => l.startsWith('outfit')), [
+      'outfit create_outfit',
+    ]);
+    expect(
+      server.log.indexOf('outfit create_outfit'),
+      greaterThan(server.log.lastIndexOf('apply archive')),
+      reason: 'as peças chegam primeiro ao servidor',
+    );
+    final op = server.received.last;
+    expect(op['outfit_id'], o.id);
+    expect((op['data']! as Map)['items'], hasLength(3));
   });
 }

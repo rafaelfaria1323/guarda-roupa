@@ -351,6 +351,14 @@
       }
     }
   },
+  "backupPreviewOutfits": "{count, plural, =1{1 conjunto guardado.} other{{count} conjuntos guardados.}}",
+  "@backupPreviewOutfits": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "backupPreviewPending": "{count, plural, =1{Inclui 1 alteração que ainda não tinha sido sincronizada.} other{Inclui {count} alterações que ainda não tinham sido sincronizadas.}}",
   "@backupPreviewPending": {
     "placeholders": {
@@ -359,7 +367,7 @@
       }
     }
   },
-  "backupPreviewHow": "As peças e o histórico são criados de novo nesta conta e depois sincronizados.",
+  "backupPreviewHow": "As peças, o histórico e os conjuntos são criados de novo nesta conta e depois sincronizados.",
   "backupRestoreConfirm": "Recuperar",
   "backupRestored": "{count, plural, =0{Backup recuperado (sem peças).} =1{Recuperada 1 peça.} other{Recuperadas {count} peças.}}",
   "@backupRestored": {

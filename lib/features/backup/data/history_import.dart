@@ -4,8 +4,11 @@ import 'package:sqlite_async/sqlite_async.dart';
 
 import '../../care/data/powersync_care_repository.dart';
 import '../../care/domain/care_policies.dart';
+import '../../outfits/data/powersync_outfit_repository.dart';
 import '../../wardrobe/data/garment_row.dart';
+import '../../outfits/domain/outfit.dart';
 import '../../wardrobe/domain/garment.dart';
+import '../../wardrobe/domain/garment_attributes.dart';
 import '../domain/backup.dart';
 
 /// Recupera o histórico de um backup para as peças acabadas de importar
@@ -15,7 +18,8 @@ import '../domain/backup.dart';
 /// (`record_wear`, `record_cleaning`, `set_policy`), pela ordem em que
 /// foram registadas: assim o servidor mantém a ordem entre uma utilização
 /// e uma limpeza do mesmo dia. Só corre num destino vazio, por isso não
-/// duplica utilizações de uma conta existente.
+/// duplica utilizações de uma conta existente. Os conjuntos também ficam
+/// com ids novos (`create_outfit`).
 abstract final class HistoryImport {
   static Future<void> write(
     SqliteWriteContext tx, {
@@ -145,6 +149,41 @@ abstract final class HistoryImport {
         'laundry_after': p.laundryAfter,
         'rotation_days': p.rotationDays,
       });
+    }
+
+    for (final o in history.outfits) {
+      final id = await newId();
+      final items = PowerSyncOutfitRepository.itemsJson([
+        for (final i in o.items)
+          OutfitItem(GarmentId(mapped(i.garmentId)), i.role),
+      ]);
+      final occasions = [
+        for (final occasion in Occasion.values)
+          if (o.occasions.contains(occasion)) occasion.id,
+      ];
+      await tx.execute(
+        'INSERT INTO outfits (id, owner_id, name, occasions, items, '
+        'created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [
+          id,
+          ownerId,
+          o.name,
+          jsonEncode(occasions),
+          jsonEncode(items),
+          GarmentRow.iso(o.createdAt),
+          stamp,
+        ],
+      );
+      await tx.execute(
+        'INSERT INTO outfit_operations (id, outfit_id, kind, data, created_at) '
+        'VALUES (uuid(), ?, ?, ?, ?)',
+        [
+          id,
+          'create_outfit',
+          jsonEncode({'items': items, 'name': ?o.name, 'occasions': occasions}),
+          stamp,
+        ],
+      );
     }
   }
 }
