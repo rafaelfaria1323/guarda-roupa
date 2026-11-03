@@ -28,7 +28,7 @@ Atualizado a 2026-11-03. "Feito" quer dizer implementado, com testes automático
 | 2 — Catálogo e recuperação | Feito: filtros, cores, atributos, eliminar, backup ZIP e recuperação para conta vazia | [guarda-roupa](features/guarda-roupa.md), [backups](features/backups-e-recuperacao.md) |
 | 3 — Uso e lavandaria | Feito: "Vesti hoje", histórico, corrigir/desfazer, lavandaria (P-07) e rotatividade (P-06); backup v2 | [utilização](features/utilizacao-e-rotatividade.md), [lavandaria](features/lavandaria.md) |
 | 4 — Conjuntos e estilo | Feito: conjuntos (backup v3), inspirações com link, imagem e proporções, preferências (backup v4/v5) | [conjuntos](features/conjuntos-e-ocasioes.md), [inspirações](features/inspiracoes-e-estilo.md) |
-| 5 — Motor diário | Em curso: núcleo do motor (modelos, restrições, rotatividade, preferências, conforto P-17); falta previsão (P-18) e o ecrã de sugestões | [motor](features/motor-de-combinacoes.md) |
+| 5 — Motor diário | Em curso: núcleo do motor (modelos, restrições, rotatividade, preferências, conforto P-17); previsão Open-Meteo com cache e localização (P-18); falta o ecrã de sugestões | [motor](features/motor-de-combinacoes.md) |
 | 6 a 9 | Por começar | — |
 
 Ações do utilizador ainda abertas: voltar a fazer deploy das Sync Streams no painel do PowerSync quando um stream novo é adicionado a `powersync/sync-streams.yaml` (os de lavandaria, conjuntos, inspirações e preferências); executar a POC em dois dispositivos.

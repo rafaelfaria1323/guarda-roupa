@@ -63,6 +63,8 @@ void main() {
   Future<void> tapRestore(WidgetTester tester) async {
     await tester.tap(find.byTooltip('Definições'));
     await settle(tester);
+    await tester.ensureVisible(find.byKey(const Key('backup-restore')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('backup-restore')));
     await settleUntil(tester, find.byType(AlertDialog));
   }

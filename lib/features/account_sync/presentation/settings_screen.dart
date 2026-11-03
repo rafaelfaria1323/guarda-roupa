@@ -6,6 +6,7 @@ import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../backup/presentation/export_backup_tile.dart';
 import '../../backup/presentation/restore_backup_tile.dart';
+import '../../weather/application/weather_providers.dart';
 import '../application/providers.dart';
 import 'sync_status.dart';
 
@@ -51,6 +52,15 @@ class SettingsScreen extends ConsumerWidget {
               style: Theme.of(context).textTheme.titleSmall,
             ),
             dense: true,
+          ),
+          ListTile(
+            key: const Key('weather-location'),
+            leading: const Icon(Icons.place_outlined),
+            title: Text(l10n.weatherLocationTitle),
+            subtitle: Text(
+              ref.watch(weatherLocationProvider).value?.name ?? '',
+            ),
+            onTap: () => context.push(AppRoutes.weatherLocation),
           ),
           ListTile(
             key: const Key('care-settings'),

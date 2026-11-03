@@ -13,7 +13,28 @@ Estado: necessária no MVP do motor.
   - chuva ou vento ≥ 30 km/h: casaco e calçado marcados para chuva/vento à frente, marcados como não adequados atrás; no calor com chuva, um impermeável aparece como camada opcional;
   - aquecimento desconhecido nunca exclui: a peça entra com nota.
 
-Implementado no motor (`lib/features/engine/domain/comfort.dart`); falta a previsão (Open-Meteo, cache e frescura) e o ecrã para editar os limites. O que conta como "chuva" a partir da previsão decide-se com a previsão.
+Implementado no motor (`lib/features/engine/domain/comfort.dart`); falta o ecrã para editar os limites.
+
+## Implementado (2026-11-03): previsão e localização
+
+- **Localização:** Definições › Localização da meteorologia. Pesquisa por nome na geocodificação do Open-Meteo e escolha numa lista (nome, região, coordenadas). Guarda-se neste dispositivo (tabela local `local_settings`, fora da sincronização e do backup), com coordenadas arredondadas a duas casas decimais. Sem escolha, Torres Vedras (39,09; −9,26; Europe/Lisbon).
+- **Pedido:** `api.open-meteo.com/v1/forecast` com coordenadas arredondadas, fuso do local, 7 dias e valores horários: sensação térmica, precipitação, probabilidade de precipitação e vento a 10 m (km/h). Não envia mais nada. Sem chave.
+- **Resumo por dia** (`DayWeather`), só das 8 h às 20 h locais (a madrugada não conta):
+  - média, mínimo e máximo da sensação térmica;
+  - precipitação somada e probabilidade máxima;
+  - vento máximo.
+  - Um dia com horas em falta fica de fora.
+- **Chuva para o motor** (`RainRule`): ≥ 1 mm nessas horas, ou probabilidade ≥ 50 %. São valores técnicos iniciais, a rever com o utilizador. O motor recebe a sensação média, a chuva e o vento máximo.
+- **Cache** (`WeatherRepository`, tabela local `weather_cache` por local):
+  - pede no máximo uma vez a cada 3 h, salvo pedido explícito para atualizar;
+  - com menos de 6 h, a previsão é *recente*; uma cópia mais velha (sem rede ou pedido falhado) é *antiga* e diz quando foi obtida;
+  - sem cópia é *ausente*, e o mesmo fora dos 7 dias;
+  - mudar de local nunca usa a previsão de outro;
+  - nunca se inventa uma previsão.
+- **Atribuição:** "Dados meteorológicos: Open-Meteo.com" no ecrã da localização; também aparece onde a previsão for mostrada.
+- **Testes:** usam um cliente HTTP falso e nunca vão à rede.
+
+Ainda não: mostrar a previsão no planeador e ligá-la ao motor ("Sugestões para hoje"), o contexto manual sem previsão e o aviso quando uma previsão nova muda um plano aceite.
 
 ## Contexto inicial
 

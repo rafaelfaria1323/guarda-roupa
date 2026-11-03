@@ -3,6 +3,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:powersync/powersync.dart';
 
 import '../../wardrobe/data/photo_files.dart';
+import '../../weather/data/weather_repository.dart';
 import 'local_schema.dart';
 
 /// Abre a base local **da conta indicada** (ADR-008: uma base por conta;
@@ -18,6 +19,11 @@ Future<PowerSyncDatabase> openUserDatabase(String userId) async {
   return db;
 }
 
-/// Tabelas locais fora do schema do PowerSync (ex.: bytes das fotos).
-Future<void> prepareLocalTables(PowerSyncDatabase db) =>
-    db.execute(PhotoFiles.createTable);
+/// Tabelas locais fora do schema do PowerSync (bytes das fotos, previsão e
+/// definições deste dispositivo).
+Future<void> prepareLocalTables(PowerSyncDatabase db) async {
+  await db.execute(PhotoFiles.createTable);
+  for (final sql in WeatherTables.create) {
+    await db.execute(sql);
+  }
+}
