@@ -27,6 +27,16 @@ Estado: desenho lógico; não é uma migração SQL pronta para executar. Data: 
 
 **Implementação atual dos conjuntos (incremento 4).** `Outfit` é a tabela `outfits` (`name` opcional, `occasions` JSON validado por `garment_occasions_valid`, `deleted_at`); `OutfitItem` e `OutfitOccasion` ficam em colunas JSON: `items = [{garment_id, role}]`, validada por `outfit_items_valid` (1–20, peças únicas, um só `main_top`/`bottom`/`one_piece`/`footwear`). A ordem da lista é a ordem de camada. Uma peça eliminada não apaga o conjunto.
 
+**Implementação atual das inspirações (incremento 4).**
+- `Inspiration` é a tabela `inspirations`, com estes campos:
+  - `title` e/ou `source_url`, pelo menos um dos dois, e o link só `http(s)`;
+  - `notes`;
+  - `palette`: JSON de RGB distintos, até 8;
+  - `formality`: `relaxed`, `smart_casual` ou `dressy`;
+  - `patterns`, `textures` e `occasions`: JSON de ids conhecidos;
+  - `deleted_at`.
+- Ainda não há imagem nem `StylePreference`.
+
 **Atributos da peça (incremento 2).** Colunas opcionais em `garments`, `null` = desconhecido: `pattern` (plain, stripes, checks, dots, floral, print, other), `texture` (smooth, ribbed, knit, textured, fuzzy), `warmth` (light, medium, warm), `rain_ok`/`wind_ok` (boolean), `occasions` (jsonb, lista sem repetidos de casual, work_casual, evening; vazia = desconhecido), `material` (≤ 120) e `care` (≤ 300) como texto livre da etiqueta. Os IDs são validados no servidor por `check`; o cliente ignora valores que não conhece (versões futuras). Cada atributo é um campo do `edit`, com `from`/`to` para conflitos campo a campo.
 | `Occasion` | ID estável, nome e regras/preferências |
 | `Outfit` | Conjunto guardado, nome, estado |

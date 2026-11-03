@@ -71,6 +71,16 @@ final class ScriptedUploader implements OperationUploader {
     log.add('outfit ${operation['kind']}');
     return responses.isEmpty ? {'result': 'applied'} : responses.removeAt(0);
   }
+
+  @override
+  Future<Map<String, Object?>> applyStyle(
+    Map<String, Object?> operation,
+  ) async {
+    if (failWith case final error?) throw error;
+    received.add(operation);
+    log.add('style ${operation['kind']}');
+    return responses.isEmpty ? {'result': 'applied'} : responses.removeAt(0);
+  }
 }
 
 void main() {

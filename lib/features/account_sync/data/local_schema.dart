@@ -13,6 +13,8 @@ import 'package:powersync/powersync.dart';
 ///   (lavagem, rotatividade); as operações vão também em `wear_operations`.
 /// - `outfits` / `outfit_operations`: conjuntos guardados
 ///   (`apply_outfit_operation`); o `outfit_id` identifica o conjunto.
+/// - `inspirations` / `style_operations`: inspirações
+///   (`apply_style_operation`); o `entity_id` identifica a entidade.
 /// - `sync_conflicts`: local-only. Resultados `merged`/`conflict`/`rejected`
 ///   que o utilizador tem de ver.
 const localSchema = Schema([
@@ -87,6 +89,26 @@ const localSchema = Schema([
   ]),
   Table.insertOnly('outfit_operations', [
     Column.text('outfit_id'),
+    Column.text('kind'),
+    Column.text('data'),
+    Column.text('created_at'),
+  ]),
+  Table('inspirations', [
+    Column.text('owner_id'),
+    Column.text('title'),
+    Column.text('source_url'),
+    Column.text('notes'),
+    Column.text('palette'),
+    Column.text('formality'),
+    Column.text('patterns'),
+    Column.text('textures'),
+    Column.text('occasions'),
+    Column.text('created_at'),
+    Column.text('updated_at'),
+    Column.text('deleted_at'),
+  ]),
+  Table.insertOnly('style_operations', [
+    Column.text('entity_id'),
     Column.text('kind'),
     Column.text('data'),
     Column.text('created_at'),

@@ -47,6 +47,8 @@ class OutfitsScreen extends ConsumerWidget {
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
+        // Os separadores ficam montados lado a lado: sem Hero partilhado.
+        heroTag: null,
         key: const Key('outfit-add'),
         onPressed: ready ? () => context.push(AppRoutes.newOutfit) : null,
         icon: const Icon(Icons.add),

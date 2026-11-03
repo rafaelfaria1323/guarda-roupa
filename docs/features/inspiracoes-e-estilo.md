@@ -2,6 +2,27 @@
 
 Estado: abordagem assistida confirmada; interpretação visual avançada adiada.
 
+## Implementado (incremento 4, primeira parte)
+
+- Separador **Estilo**: lista de inspirações (título ou domínio do link, etiquetas e paleta) e editor com título, link, notas e etiquetas.
+- Uma inspiração precisa de um título ou de um link. Um link sem esquema ganha `https://`. Só são aceites links `http(s)`: o servidor e a app recusam `javascript:` e outros esquemas.
+- O link é só guardado e pode ser copiado. A app não abre nem analisa a página, e a interface diz isso. Também não há imagem nesta versão, por isso não existe nenhuma "análise" que possa ser mostrada.
+- Etiquetas confirmadas pelo utilizador:
+  - paleta: até 8 cores de referência;
+  - formalidade: descontraído, casual cuidado ou arranjado;
+  - ocasiões, padrões e texturas.
+  Sem etiquetas, a inspiração mostra "Sem etiquetas", nada é inventado.
+- Não é posse: não cria nem referencia peças e não aparece no guarda-roupa.
+- Dados:
+  - a tabela `inspirations` é escrita por `apply_style_operation` (`create_inspiration`, `edit_inspiration` campo a campo, `delete_inspiration`) e sincronizada pelo stream `user_inspirations`;
+  - a fila local é `style_operations`, que ficará também para as preferências.
+- Por fazer:
+  - imagem própria ou autorizada (bucket privado);
+  - proporções;
+  - preferências explícitas por contexto;
+  - uso no motor;
+  - entrada no backup.
+
 ## Objetivo
 
 Aproximar sugestões do gosto pessoal sem confundir uma fotografia inspiradora com peças possuídas.
