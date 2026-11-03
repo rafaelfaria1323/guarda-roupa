@@ -67,4 +67,27 @@ void main() {
     expect(apply(const GarmentFilter(text: '   ')), [tShirt, jeans]);
     expect(apply(const GarmentFilter(text: 'inexistente')), isEmpty);
   });
+
+  test('igualdade por valor (o ecrã só recria a consulta se mudar)', () {
+    const a = GarmentFilter(
+      groups: {CategoryGroup.top, CategoryGroup.footwear},
+      text: 'x',
+    );
+    final b = const GarmentFilter(text: 'x')
+        .copyWith(groups: {CategoryGroup.footwear, CategoryGroup.top});
+    expect(a, b);
+    expect(a.hashCode, b.hashCode);
+    expect(a == a.copyWith(includeArchived: true), isFalse);
+    expect(const GarmentFilter(), const GarmentFilter(text: ''));
+  });
+
+  test('isActive', () {
+    expect(const GarmentFilter().isActive, isFalse);
+    expect(const GarmentFilter(text: '  ').isActive, isFalse);
+    expect(
+      const GarmentFilter(availability: {Availability.washing}).isActive,
+      isTrue,
+    );
+    expect(const GarmentFilter(includeArchived: true).isActive, isTrue);
+  });
 }

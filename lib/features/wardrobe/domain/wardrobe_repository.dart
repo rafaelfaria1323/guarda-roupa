@@ -76,6 +76,11 @@ abstract interface class WardrobeRepository {
 
   Future<WardrobeResult<Garment>> unarchiveGarment(GarmentId id);
 
+  /// Elimina definitivamente (tombstone, ADR-008): não volta a aparecer
+  /// nem ressuscita com edições offline de outro dispositivo. Devolve a
+  /// peça tal como estava.
+  Future<WardrobeResult<Garment>> deleteGarment(GarmentId id);
+
   /// Liga uma fotografia já processada. Os bytes ficam neste dispositivo e
   /// são enviados antes de o servidor aceitar a ligação.
   Future<WardrobeResult<Garment>> addPhoto(GarmentId id, ProcessedPhoto photo);

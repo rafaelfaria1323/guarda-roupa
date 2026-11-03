@@ -205,6 +205,44 @@ void main() {
     expect(await repo.watchGarments(const GarmentFilter()).first, isEmpty);
   });
 
+  test('eliminar tira a peça e regista delete com as fotos', () async {
+    final g = ok(
+      await repo.addGarment(const GarmentDraft(category: GarmentCategory.coat)),
+    );
+    final p = ok(
+      await repo.addPhoto(
+        g.id,
+        ProcessedPhoto(
+          width: 1,
+          height: 1,
+          main: Uint8List(1),
+          thumb: Uint8List(1),
+          sha256: '0' * 64,
+        ),
+      ),
+    ).photos.single;
+
+    ok(await repo.deleteGarment(g.id));
+
+    expect(await repo.watchGarment(g.id).first, isNull);
+    expect(
+      await repo
+          .watchGarments(const GarmentFilter(includeArchived: true))
+          .first,
+      isEmpty,
+    );
+    final op = (await pendingOperations(db)).last;
+    expect(op['kind'], 'delete');
+    expect(dataOf(op), {
+      'photo_ids': [p.id],
+    });
+    expect(
+      await repo.setAvailability(g.id, Availability.washing),
+      isA<Err<Garment, WardrobeFailure>>(),
+      reason: 'não se altera uma peça eliminada',
+    );
+  });
+
   group('fotografias', () {
     ProcessedPhoto photo(int seed) => ProcessedPhoto(
       width: 1600,

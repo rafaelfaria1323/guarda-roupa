@@ -15,6 +15,8 @@ import '../domain/garment_category.dart';
 import '../domain/garment_photo.dart';
 import '../domain/photo_picker.dart';
 import '../domain/wardrobe_repository.dart';
+import '../domain/garment_color.dart';
+import 'colors_editor.dart';
 import 'garment_photo_view.dart';
 import 'labels.dart';
 
@@ -34,6 +36,7 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
   final _brand = TextEditingController();
   final _notes = TextEditingController();
   GarmentCategory? _category;
+  List<GarmentColor> _colors = const [];
   bool _loaded = false;
   bool _saving = false;
   bool _processing = false;
@@ -73,23 +76,24 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
     _name.text = garment.name ?? '';
     _brand.text = garment.brand ?? '';
     _notes.text = garment.notes ?? '';
+    _colors = garment.colors;
   }
 
-  /// Mantém as cores atuais: o formulário ainda não as edita.
-  GarmentDraft _draft(Garment? current) => GarmentDraft(
+  GarmentDraft _draft() => GarmentDraft(
     category: _category!,
     name: _name.text,
     brand: _brand.text,
     notes: _notes.text,
-    colors: current?.colors ?? const [],
+    colors: _colors,
   );
 
   Future<void> _save(WardrobeRepository repo, Garment? current) async {
     if (!_formKey.currentState!.validate()) return;
+    if (ColorsEditor.totalPercent(_colors) > 100) return; // erro já visível
     setState(() => _saving = true);
     var result = current == null
-        ? await repo.addGarment(_draft(null))
-        : await repo.updateGarment(current.id, _draft(current));
+        ? await repo.addGarment(_draft())
+        : await repo.updateGarment(current.id, _draft());
     if (result case Ok(value: final created) when current == null) {
       for (final photo in _pending) {
         result = await repo.addPhoto(created.id, photo);
@@ -175,6 +179,37 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
     } finally {
       if (mounted) setState(() => _processing = false);
     }
+  }
+
+  Future<void> _confirmDelete(WardrobeRepository repo, Garment garment) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.garmentDeleteConfirmTitle),
+        content: Text(l10n.garmentDeleteConfirmBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            key: const Key('garment-delete-confirm'),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.garmentDelete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    await _run(
+      () => repo.deleteGarment(garment.id),
+      onOk: (_) => context.pop(),
+    );
   }
 
   Widget _photoSection(WardrobeRepository repo, Garment? garment) {
@@ -314,6 +349,14 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
       appBar: AppBar(
         title: Text(_isNew ? l10n.garmentNew : l10n.garmentEdit),
         actions: [
+          // Sempre visível: o formulário é comprido (fotos, cores).
+          TextButton(
+            key: const Key('garment-save'),
+            onPressed: _saving || _processing
+                ? null
+                : () => _save(repo, garment),
+            child: Text(l10n.garmentSave),
+          ),
           if (garment != null)
             PopupMenuButton<void Function()>(
               onSelected: (action) => action(),
@@ -340,6 +383,10 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
                         : l10n.garmentArchive,
                   ),
                 ),
+                PopupMenuItem(
+                  value: () => _confirmDelete(repo, garment),
+                  child: Text(l10n.garmentDelete),
+                ),
               ],
             ),
         ],
@@ -357,6 +404,30 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
                   label: Text(l10n.garmentArchived),
                 ),
               ),
+            if (garment != null) ...[
+              Text(
+                l10n.garmentAvailability,
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 8),
+              // Aplicada de imediato: é uma transição explícita, não um campo
+              // do formulário.
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final value in Availability.values)
+                    ChoiceChip(
+                      avatar: Icon(availabilityIcon(value)),
+                      label: Text(l10n.availabilityLabel(value.id)),
+                      selected: garment.availability == value,
+                      onSelected: (_) =>
+                          _run(() => repo.setAvailability(garment.id, value)),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 24),
+            ],
             _photoSection(repo, garment),
             DropdownButtonFormField<GarmentCategory>(
               key: const Key('garment-category'),
@@ -409,38 +480,12 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
               maxLines: 5,
               validator: _maxLength(GarmentRules.maxNotesLength),
             ),
-            if (garment != null) ...[
-              const SizedBox(height: 24),
-              Text(
-                l10n.garmentAvailability,
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              const SizedBox(height: 8),
-              // Aplicada de imediato: é uma transição explícita, não um campo
-              // do formulário.
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final value in Availability.values)
-                    ChoiceChip(
-                      avatar: Icon(availabilityIcon(value)),
-                      label: Text(l10n.availabilityLabel(value.id)),
-                      selected: garment.availability == value,
-                      onSelected: (_) =>
-                          _run(() => repo.setAvailability(garment.id, value)),
-                    ),
-                ],
-              ),
-            ],
-            const SizedBox(height: 32),
-            FilledButton(
-              key: const Key('garment-save'),
-              onPressed: _saving || _processing
-                  ? null
-                  : () => _save(repo, garment),
-              child: Text(l10n.garmentSave),
+            const SizedBox(height: 24),
+            ColorsEditor(
+              value: _colors,
+              onChanged: (colors) => setState(() => _colors = colors),
             ),
+            const SizedBox(height: 32),
           ],
         ),
       ),

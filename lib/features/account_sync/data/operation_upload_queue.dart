@@ -34,8 +34,8 @@ abstract interface class OperationUploader {
 ///   aceita escrita direta, por isso não se enviam.
 /// - `attach_photo`: os ficheiros vão primeiro; o servidor só liga a foto se
 ///   existirem. Uma falha no envio deixa a operação na fila.
-/// - `detach_photo`: depois de enviada, apagam-se os ficheiros (no Storage,
-///   em melhor esforço, e neste dispositivo).
+/// - `detach_photo` e `delete`: depois de enviadas, apagam-se os ficheiros
+///   das fotos (no Storage, em melhor esforço, e neste dispositivo).
 final class OperationUploadQueue {
   const OperationUploadQueue(this._uploader);
 
@@ -66,11 +66,10 @@ final class OperationUploadQueue {
 
       final detached = [
         for (final (entry, _) in outcomes)
-          if (entry.opData?['kind'] == 'detach_photo')
-            if (jsonDecode(entry.opData?['data'] as String? ?? '{}') case {
-              'photo_id': final String id,
-            })
-              id,
+          ..._removedPhotos(
+            entry.opData?['kind'],
+            jsonDecode(entry.opData?['data'] as String? ?? '{}'),
+          ),
       ];
       for (final photoId in detached) {
         try {
@@ -107,6 +106,15 @@ final class OperationUploadQueue {
       await transaction.complete();
     }
   }
+
+  static List<String> _removedPhotos(Object? kind, Object? payload) =>
+      switch ((kind, payload)) {
+        ('detach_photo', {'photo_id': final String id}) => [id],
+        ('delete', {'photo_ids': final List<Object?> ids}) => [
+          ...ids.whereType<String>(),
+        ],
+        _ => const [],
+      };
 
   Future<void> _uploadFiles(PowerSyncDatabase db, Object? payload) async {
     if (payload case {'photo': {'id': final String photoId}}) {

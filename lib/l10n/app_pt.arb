@@ -139,5 +139,45 @@
         "type": "int"
       }
     }
-  }
+  },
+  "categoryGroupLabel": "{group, select, top{Tops} bottom{Partes de baixo} onePiece{Peças inteiras} outerwear{Casacos} footwear{Calçado} accessory{Acessórios} other{Outras}}",
+  "@categoryGroupLabel": {
+    "placeholders": {
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "colorLabel": "{color, select, white{Branco} cream{Cru} beige{Bege} khaki{Caqui} brown{Castanho} grey{Cinzento} charcoal{Cinzento-escuro} black{Preto} navy{Azul-marinho} blue{Azul} light_blue{Azul-claro} denim{Ganga} green{Verde} olive{Verde-azeitona} yellow{Amarelo} orange{Laranja} red{Vermelho} burgundy{Bordô} pink{Rosa} purple{Roxo} other{Cor personalizada}}",
+  "@colorLabel": {
+    "placeholders": {
+      "color": {
+        "type": "String"
+      }
+    }
+  },
+  "garmentColors": "Cores",
+  "garmentColorsHint": "Escolhe as cores visíveis e quanto ocupam da peça (aproximado).",
+  "garmentColorsExceed": "As proporções somam mais de 100%.",
+  "garmentColorsMax": "No máximo {max} cores.",
+  "@garmentColorsMax": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "garmentColorRemaining": "Por atribuir: {percent}%",
+  "@garmentColorRemaining": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "garmentDelete": "Eliminar",
+  "garmentDeleteConfirmTitle": "Eliminar esta peça?",
+  "garmentDeleteConfirmBody": "A peça e as fotografias são apagadas em todos os dispositivos. Para guardar o histórico, arquiva em vez de eliminar.",
+  "garmentDeleted": "Peça eliminada.",
+  "wardrobeClearFilters": "Limpar filtros"
 }
