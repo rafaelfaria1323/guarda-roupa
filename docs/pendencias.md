@@ -9,7 +9,7 @@ Uma pendência não deve desaparecer por estar descrita em Markdown. Fechar apen
 | P-01 | Backend — **Decidido 2026-11-03: Supabase Free** | Criar projeto (guia 02) e registar região/limites | Criação da infraestrutura |
 | P-02 | Login — **Decidido 2026-11-03: Google OAuth** | Configurar projeto Google e callbacks (guia 03); demonstrar entrada e recuperação | Fluxo de conta |
 | P-03 | Sync — **Em POC: PowerSync + Supabase escolhido para a primeira POC** (2026-11-03) | Executar a POC mínima abaixo em Android/Safari; aprovar ou recorrer ao protocolo próprio | Fundação |
-| P-04 | Conflitos e privacidade | Definir semântica, autorização, logout e confirmação idempotente | Uso da conta em dois dispositivos |
+| P-04 | Conflitos e privacidade — **Proposta em [ADR-008](decisoes/008-conflitos-e-privacidade.md)** (2026-11-03) | Utilizador aprova as 3 decisões do ADR-008; validar na POC | Uso da conta em dois dispositivos |
 | P-05 | PWA/fotografias | Demonstrar armazenamento persistente, quotas, HEIC e reabertura offline no iPhone | Onboarding real |
 | P-06 | Política de rotatividade | Definir modos e valores iniciais editáveis para tops/calças; calçado/acessórios já podem repetir | Motor com políticas reais |
 | P-07 | Recomendações de lavagem | Aprovar defaults informativos e overrides, sem automatismo implícito | Avisos iniciais |
