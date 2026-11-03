@@ -32,6 +32,17 @@ begin
   raise notice 'ok - %', label;
 end $$;
 
+
+-- Tenta criar um ficheiro como o utilizador atual; devolve se conseguiu.
+create function pg_temp.try_insert_object(path text, bucket text default 'garment-photos')
+returns boolean language plpgsql as $$
+begin
+  insert into storage.objects (bucket_id, name) values (bucket, path);
+  return true;
+exception when insufficient_privilege or foreign_key_violation then
+  return false;
+end $$;
+
 \set G '10000000-0000-0000-0000-000000000001'
 
 -- ------------------------------------------------------------------ P-16
@@ -211,6 +222,96 @@ select pg_temp.check('e não ressuscita nem altera', (select deleted_at is not n
 
 select pg_temp.op('70000000-0000-0000-0000-000000000007', 'create', '{"category":"t_shirt"}') as r \gset
 select pg_temp.check('recriar com o mesmo id é rejeitado', :'r'::jsonb ->> 'reason' = 'deleted');
+commit;
+
+
+-- -------------------------------------------------------------- fotografias
+\set P 'a0000000-0000-0000-0000-000000000001'
+\set G2 '10000000-0000-0000-0000-000000000002'
+begin;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a', 'eu@example.com');
+select pg_temp.op('a1000000-0000-0000-0000-000000000001', 'create', '{"category":"shirt"}', :'G2') as r \gset
+select pg_temp.check('cria peça para fotos', :'r'::jsonb ->> 'result' = 'applied');
+
+select jsonb_build_object('photo', jsonb_build_object(
+  'id', :'P', 'width', 1200, 'height', 1600, 'bytes', 250000,
+  'thumb_bytes', 12000, 'sha256', repeat('ab', 32))) as photo \gset
+
+select pg_temp.op('a1000000-0000-0000-0000-000000000002', 'attach_photo', :'photo', :'G2') as r \gset
+select pg_temp.check('foto sem ficheiros no Storage é rejeitada', :'r'::jsonb ->> 'reason' = 'missing_file');
+
+-- O utilizador só escreve na sua pasta.
+insert into storage.objects (bucket_id, name) values
+  ('garment-photos', '00000000-0000-0000-0000-00000000000a/' || :'P' || '/main.jpg');
+select pg_temp.op('a1000000-0000-0000-0000-000000000003', 'attach_photo', :'photo', :'G2') as r \gset
+select pg_temp.check('só com a principal continua rejeitada', :'r'::jsonb ->> 'reason' = 'missing_file');
+insert into storage.objects (bucket_id, name) values
+  ('garment-photos', '00000000-0000-0000-0000-00000000000a/' || :'P' || '/thumb.jpg');
+
+select pg_temp.op('a1000000-0000-0000-0000-000000000004', 'attach_photo', :'photo', :'G2') as r \gset
+select pg_temp.check('com os dois ficheiros, liga a foto', :'r'::jsonb ->> 'result' = 'applied');
+select pg_temp.check('fica nos metadados da peça',
+  (select jsonb_array_length(photos) = 1 and photos -> 0 ->> 'id' = :'P'
+   from public.garments where id = :'G2'));
+
+select pg_temp.op('a1000000-0000-0000-0000-000000000005', 'attach_photo', :'photo', :'G2') as r \gset
+select pg_temp.check('ligar de novo (outro op_id) não duplica',
+  :'r'::jsonb ->> 'result' = 'applied'
+  and (select jsonb_array_length(photos) = 1 from public.garments where id = :'G2'));
+
+select pg_temp.op('a1000000-0000-0000-0000-000000000006', 'attach_photo',
+  jsonb_set(:'photo'::jsonb, '{photo,sha256}', '"x"'), :'G2') as r \gset
+select pg_temp.check('metadados inválidos são rejeitados', :'r'::jsonb ->> 'reason' = 'invalid');
+select pg_temp.op('a1000000-0000-0000-0000-000000000007', 'attach_photo',
+  jsonb_set(:'photo'::jsonb, '{photo,id}', '"../x"'), :'G2') as r \gset
+select pg_temp.check('id de foto inválido é rejeitado', :'r'::jsonb ->> 'reason' = 'invalid');
+
+select pg_temp.check('não se escreve na pasta de outro utilizador', (
+  select count(*) = 0 from (select 1) x
+  where pg_temp.try_insert_object('00000000-0000-0000-0000-00000000000b/x/main.jpg')));
+select pg_temp.check('nem noutro bucket', (
+  select count(*) = 0 from (select 1) x
+  where pg_temp.try_insert_object('00000000-0000-0000-0000-00000000000a/x/main.jpg', 'outro')));
+
+select pg_temp.op('a1000000-0000-0000-0000-000000000008', 'detach_photo',
+  jsonb_build_object('photo_id', :'P'), :'G2') as r \gset
+select pg_temp.check('desligar foto', :'r'::jsonb ->> 'result' = 'applied'
+  and (select photos = '[]'::jsonb from public.garments where id = :'G2'));
+select pg_temp.op('a1000000-0000-0000-0000-000000000009', 'detach_photo',
+  jsonb_build_object('photo_id', :'P'), :'G2') as r \gset
+select pg_temp.check('desligar de novo é idempotente', :'r'::jsonb ->> 'result' = 'applied');
+commit;
+
+begin;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000b', 'outra@example.com');
+select pg_temp.check('outro utilizador não vê os ficheiros', (select count(*) = 0 from storage.objects));
+select pg_temp.op('a1000000-0000-0000-0000-000000000010', 'attach_photo', :'photo', :'G2') as r \gset
+select pg_temp.check('nem liga fotos à peça de outro', :'r'::jsonb ->> 'reason' = 'not_found');
+commit;
+
+begin;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a', 'eu@example.com');
+-- Limite de 5 fotos.
+do $$
+declare i int; pid text;
+begin
+  for i in 1..6 loop
+    pid := format('a00000%s0-0000-0000-0000-000000000000', i);
+    insert into storage.objects (bucket_id, name) values
+      ('garment-photos', auth.uid() || '/' || pid || '/main.jpg'),
+      ('garment-photos', auth.uid() || '/' || pid || '/thumb.jpg');
+    perform pg_temp.op(format('a2000000-0000-0000-0000-00000000000%s', i), 'attach_photo',
+      jsonb_build_object('photo', jsonb_build_object('id', pid, 'width', 10, 'height', 10,
+        'bytes', 100, 'thumb_bytes', 10, 'sha256', repeat('cd', 32))),
+      '10000000-0000-0000-0000-000000000002');
+  end loop;
+end $$;
+select pg_temp.check('no máximo 5 fotos por peça',
+  (select jsonb_array_length(photos) = 5 from public.garments where id = :'G2'));
+reset role;
+select pg_temp.check('a sexta fica rejeitada (too_many)',
+  (select result ->> 'reason' = 'too_many' from public.applied_operations
+   where op_id = 'a2000000-0000-0000-0000-000000000006'));
 commit;
 
 \echo 'Todos os testes SQL passaram.'

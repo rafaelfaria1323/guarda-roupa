@@ -2,7 +2,7 @@
 
 Aplicação pessoal de gestão de guarda-roupa: peças, conjuntos, utilização, lavandaria, meteorologia, motor de combinações e planeamento semanal.
 
-**Estado:** POC de sincronização (incremento 1): login Google, base local por conta (PowerSync/SQLite) e catálogo de peças (criar, editar, disponibilidade, duplicar, arquivar, pesquisar). Fotografias e restantes funcionalidades por implementar — ver [roadmap](docs/roadmap.md).
+**Estado:** POC de sincronização (incremento 1): login Google, base local por conta (PowerSync/SQLite) catálogo de peças (criar, editar, disponibilidade, duplicar, arquivar, pesquisar) e fotografias das peças (câmara/galeria, sincronizadas por Storage privado). Restantes funcionalidades por implementar — ver [roadmap](docs/roadmap.md).
 
 - Plataformas: Android + PWA (iPhone), com Flutter
 - Dados: local-first, com sincronização entre dispositivos via Supabase

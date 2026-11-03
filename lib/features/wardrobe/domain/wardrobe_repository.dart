@@ -1,7 +1,10 @@
+import 'dart:typed_data';
+
 import '../../../core/domain/result.dart';
 import 'availability.dart';
 import 'garment.dart';
 import 'garment_filter.dart';
+import 'garment_photo.dart';
 
 /// Falhas possíveis de uma operação do guarda-roupa, distintas entre si.
 sealed class WardrobeFailure {
@@ -22,6 +25,12 @@ final class GarmentNotFound extends WardrobeFailure {
 /// A peça foi eliminada (tombstone). Não se ressuscita (ADR-008).
 final class GarmentDeleted extends WardrobeFailure {
   const GarmentDeleted(this.id);
+  final GarmentId id;
+}
+
+/// A peça já tem o máximo de fotografias.
+final class TooManyPhotos extends WardrobeFailure {
+  const TooManyPhotos(this.id);
   final GarmentId id;
 }
 
@@ -66,4 +75,21 @@ abstract interface class WardrobeRepository {
   Future<WardrobeResult<Garment>> archiveGarment(GarmentId id);
 
   Future<WardrobeResult<Garment>> unarchiveGarment(GarmentId id);
+
+  /// Liga uma fotografia já processada. Os bytes ficam neste dispositivo e
+  /// são enviados antes de o servidor aceitar a ligação.
+  Future<WardrobeResult<Garment>> addPhoto(GarmentId id, ProcessedPhoto photo);
+
+  /// Idempotente. Os ficheiros são apagados depois de o servidor aceitar.
+  Future<WardrobeResult<Garment>> removePhoto(GarmentId id, String photoId);
+
+  /// Bytes neste dispositivo, ou `null` se ainda não foram descarregados.
+  Future<Uint8List?> photoBytes(String photoId, PhotoVariant variant);
+
+  /// Guarda bytes descarregados de outro dispositivo.
+  Future<void> cachePhotoBytes(
+    String photoId,
+    PhotoVariant variant,
+    Uint8List bytes,
+  );
 }

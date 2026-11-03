@@ -114,5 +114,30 @@
   "signOutDiscardConfirmBody": "Esta ação não pode ser desfeita.",
   "cancel": "Cancelar",
   "settingsBackup": "Dados e backup",
-  "settingsBackupHint": "Exportação e recuperação chegam no incremento 2."
+  "settingsBackupHint": "Exportação e recuperação chegam no incremento 2.",
+  "garmentPhotos": "Fotografias",
+  "photoTake": "Tirar fotografia",
+  "photoPick": "Escolher da galeria",
+  "photoRemove": "Remover fotografia",
+  "photoLimit": "No máximo {max} fotografias por peça.",
+  "@photoLimit": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "photoHeic": "Fotografias HEIC ainda não são suportadas. Exporta uma cópia em JPEG e tenta de novo.",
+  "photoUnsupported": "Este ficheiro não é uma imagem suportada (JPEG, PNG ou WebP).",
+  "photoTooLarge": "Esta imagem é demasiado grande.",
+  "photoPickFailed": "Não foi possível abrir a câmara ou a galeria. Verifica as permissões.",
+  "photoUnavailable": "Fotografia ainda não disponível neste dispositivo",
+  "photoOf": "Fotografia {index}",
+  "@photoOf": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  }
 }

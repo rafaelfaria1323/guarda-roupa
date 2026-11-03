@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:powersync/powersync.dart';
 import 'package:sqlite3/common.dart' show SqliteException;
@@ -9,8 +10,10 @@ import '../domain/availability.dart';
 import '../domain/garment.dart';
 import '../domain/garment_factory.dart';
 import '../domain/garment_filter.dart';
+import '../domain/garment_photo.dart';
 import '../domain/wardrobe_repository.dart';
 import 'garment_row.dart';
+import 'photo_files.dart';
 
 /// Implementação local-first sobre o SQLite do PowerSync.
 ///
@@ -192,6 +195,62 @@ final class PowerSyncWardrobeRepository implements WardrobeRepository {
         });
         return Ok(next);
       });
+
+  @override
+  Future<WardrobeResult<Garment>> addPhoto(
+    GarmentId id,
+    ProcessedPhoto photo,
+  ) => _mutate(id, (tx, current) async {
+    if (current.photos.length >= PhotoRules.maxPerGarment) {
+      return Err(TooManyPhotos(id));
+    }
+    final added = photo.toPhoto(_factory.newId());
+    final next = _factory.withPhotos(current, [...current.photos, added]);
+    for (final variant in PhotoVariant.values) {
+      await PhotoFiles.put(tx, added.id, variant, photo.bytesOf(variant));
+    }
+    await _writePhotos(tx, next);
+    await _recordOperation(tx, id, 'attach_photo', {
+      'photo': GarmentRow.photoJson(added),
+    });
+    return Ok(next);
+  });
+
+  @override
+  Future<WardrobeResult<Garment>> removePhoto(GarmentId id, String photoId) =>
+      _mutate(id, (tx, current) async {
+        if (!current.photos.any((p) => p.id == photoId)) return Ok(current);
+        final next = _factory.withPhotos(current, [
+          for (final p in current.photos)
+            if (p.id != photoId) p,
+        ]);
+        await _writePhotos(tx, next);
+        // Os bytes ficam até a fila enviar a operação: um attach ainda por
+        // enviar precisa deles.
+        await _recordOperation(tx, id, 'detach_photo', {'photo_id': photoId});
+        return Ok(next);
+      });
+
+  @override
+  Future<Uint8List?> photoBytes(String photoId, PhotoVariant variant) =>
+      PhotoFiles.get(_db, photoId, variant);
+
+  @override
+  Future<void> cachePhotoBytes(
+    String photoId,
+    PhotoVariant variant,
+    Uint8List bytes,
+  ) =>
+      _db.writeTransaction((tx) => PhotoFiles.put(tx, photoId, variant, bytes));
+
+  Future<void> _writePhotos(SqliteWriteContext tx, Garment next) => tx.execute(
+    'UPDATE garments SET photos = ?, updated_at = ? WHERE id = ?',
+    [
+      GarmentRow.encodePhotos(next.photos),
+      GarmentRow.iso(next.updatedAt),
+      next.id.value,
+    ],
+  );
 
   Future<WardrobeResult<Garment>> _mutate(
     GarmentId id,

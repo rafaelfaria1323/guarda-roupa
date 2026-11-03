@@ -1,12 +1,37 @@
+import 'dart:typed_data';
+
 import 'package:powersync/powersync.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../wardrobe/domain/garment_photo.dart';
+import '../../wardrobe/domain/photo_storage.dart';
 import 'operation_upload_queue.dart';
+import 'supabase_photo_storage.dart';
 
 final class SupabaseOperationUploader implements OperationUploader {
-  const SupabaseOperationUploader(this._client);
+  const SupabaseOperationUploader(this._client, this._storage);
 
   final SupabaseClient _client;
+  final PhotoStorage _storage;
+
+  String get _uid {
+    final id = _client.auth.currentUser?.id;
+    if (id == null) throw StateError('Sem sessão');
+    return id;
+  }
+
+  @override
+  Future<void> uploadPhotoFile(
+    String photoId,
+    PhotoVariant variant,
+    Uint8List bytes,
+  ) => _storage.upload(PhotoRules.storagePath(_uid, photoId, variant), bytes);
+
+  @override
+  Future<void> removePhotoFiles(String photoId) => _storage.remove([
+    for (final v in PhotoVariant.values)
+      PhotoRules.storagePath(_uid, photoId, v),
+  ]);
 
   @override
   Future<Map<String, Object?>> apply(Map<String, Object?> operation) async {
@@ -25,7 +50,9 @@ final class SupabasePowerSyncConnector extends PowerSyncBackendConnector {
   SupabasePowerSyncConnector({
     required this._client,
     required this._powerSyncUrl,
-  }) : _queue = OperationUploadQueue(SupabaseOperationUploader(_client));
+  }) : _queue = OperationUploadQueue(
+         SupabaseOperationUploader(_client, SupabasePhotoStorage(_client)),
+       );
 
   final SupabaseClient _client;
   final String _powerSyncUrl;

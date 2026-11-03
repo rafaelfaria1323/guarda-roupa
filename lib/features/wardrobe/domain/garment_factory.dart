@@ -4,6 +4,7 @@ import '../../../core/domain/clock.dart';
 import '../../../core/domain/result.dart';
 import 'availability.dart';
 import 'garment.dart';
+import 'garment_photo.dart';
 
 typedef IdGenerator = String Function();
 
@@ -55,6 +56,7 @@ final class GarmentFactory {
         brand: GarmentRules.normalizeText(draft.brand),
         notes: GarmentRules.normalizeText(draft.notes),
         colors: List.unmodifiable(draft.colors),
+        photos: garment.photos,
         availability: garment.availability,
         archivedAt: garment.archivedAt,
         createdAt: garment.createdAt,
@@ -73,11 +75,15 @@ final class GarmentFactory {
   Garment unarchive(Garment garment) =>
       garment.isArchived ? _copy(garment, clearArchive: true) : garment;
 
+  Garment withPhotos(Garment garment, List<GarmentPhoto> photos) =>
+      _copy(garment, photos: List.unmodifiable(photos));
+
   Garment _copy(
     Garment g, {
     Availability? availability,
     DateTime? archivedAt,
     bool clearArchive = false,
+    List<GarmentPhoto>? photos,
   }) => Garment(
     id: g.id,
     category: g.category,
@@ -85,6 +91,7 @@ final class GarmentFactory {
     brand: g.brand,
     notes: g.notes,
     colors: g.colors,
+    photos: photos ?? g.photos,
     availability: availability ?? g.availability,
     archivedAt: clearArchive ? null : (archivedAt ?? g.archivedAt),
     createdAt: g.createdAt,

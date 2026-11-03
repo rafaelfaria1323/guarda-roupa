@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guarda_roupa/features/account_sync/data/local_database.dart';
 import 'package:guarda_roupa/features/account_sync/data/local_schema.dart';
 import 'package:powersync/powersync.dart';
 
@@ -10,6 +11,7 @@ Future<PowerSyncDatabase> openTestDatabase() async {
   final dir = Directory.systemTemp.createTempSync('guarda_roupa_test_');
   final db = PowerSyncDatabase(schema: localSchema, path: '${dir.path}/t.db');
   await db.initialize();
+  await prepareLocalTables(db);
   addTearDown(() async {
     await db.close();
     dir.deleteSync(recursive: true);

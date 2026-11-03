@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guarda_roupa/core/domain/result.dart';
@@ -8,6 +9,7 @@ import 'package:guarda_roupa/features/wardrobe/domain/garment.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_category.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_color.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_filter.dart';
+import 'package:guarda_roupa/features/wardrobe/domain/garment_photo.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/wardrobe_repository.dart';
 import 'package:powersync/powersync.dart';
 
@@ -201,5 +203,96 @@ void main() {
       "VALUES ('x', 'categoria_futura', 'available', '2026-11-03T00:00:00Z')",
     );
     expect(await repo.watchGarments(const GarmentFilter()).first, isEmpty);
+  });
+
+  group('fotografias', () {
+    ProcessedPhoto photo(int seed) => ProcessedPhoto(
+      width: 1600,
+      height: 1200,
+      main: Uint8List.fromList([1, 2, seed]),
+      thumb: Uint8List.fromList([3, seed]),
+      sha256: seed.toRadixString(16).padLeft(64, '0'),
+    );
+
+    Future<Garment> add() async => ok(
+      await repo.addGarment(
+        const GarmentDraft(category: GarmentCategory.shirt),
+      ),
+    );
+
+    test('adicionar guarda os bytes, os metadados e a operação', () async {
+      final g = await add();
+      final after = ok(await repo.addPhoto(g.id, photo(7)));
+      final p = after.photos.single;
+      expect((p.width, p.height, p.bytes, p.thumbBytes), (1600, 1200, 3, 2));
+
+      final stored = await repo.watchGarment(g.id).first;
+      expect(stored!.photos.single, p);
+      expect(await repo.photoBytes(p.id, PhotoVariant.main), [1, 2, 7]);
+      expect(await repo.photoBytes(p.id, PhotoVariant.thumb), [3, 7]);
+
+      final op = (await pendingOperations(db)).last;
+      expect(op['kind'], 'attach_photo');
+      expect(dataOf(op)['photo'], {
+        'id': p.id,
+        'width': 1600,
+        'height': 1200,
+        'bytes': 3,
+        'thumb_bytes': 2,
+        'sha256': p.sha256,
+      });
+    });
+
+    test('no máximo 5 fotografias', () async {
+      final g = await add();
+      for (var i = 0; i < PhotoRules.maxPerGarment; i++) {
+        ok(await repo.addPhoto(g.id, photo(i)));
+      }
+      final r = await repo.addPhoto(g.id, photo(9));
+      expect(
+        r,
+        isA<Err<Garment, WardrobeFailure>>().having(
+          (e) => e.failure,
+          'failure',
+          isA<TooManyPhotos>(),
+        ),
+      );
+      expect((await repo.watchGarment(g.id).first)!.photos, hasLength(5));
+    });
+
+    test('remover regista detach e mantém os bytes até ao envio', () async {
+      final g = await add();
+      final p = ok(await repo.addPhoto(g.id, photo(1))).photos.single;
+      final after = ok(await repo.removePhoto(g.id, p.id));
+      expect(after.photos, isEmpty);
+      expect((await repo.watchGarment(g.id).first)!.photos, isEmpty);
+      expect(await repo.photoBytes(p.id, PhotoVariant.main), isNotNull);
+      final op = (await pendingOperations(db)).last;
+      expect(op['kind'], 'detach_photo');
+      expect(dataOf(op), {'photo_id': p.id});
+
+      final ops = (await pendingOperations(db)).length;
+      ok(await repo.removePhoto(g.id, p.id));
+      expect(
+        await pendingOperations(db),
+        hasLength(ops),
+        reason: 'idempotente',
+      );
+    });
+
+    test('editar, arquivar e duplicar mantêm as fotos certas', () async {
+      final g = await add();
+      ok(await repo.addPhoto(g.id, photo(1)));
+      final edited = ok(
+        await repo.updateGarment(
+          g.id,
+          const GarmentDraft(category: GarmentCategory.shirt, name: 'Nova'),
+        ),
+      );
+      expect(edited.photos, hasLength(1));
+      expect(ok(await repo.archiveGarment(g.id)).photos, hasLength(1));
+      // A cópia é outra peça física: não partilha as fotografias.
+      expect(ok(await repo.duplicateGarment(g.id)).photos, isEmpty);
+    });
   });
 }

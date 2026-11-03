@@ -1,6 +1,7 @@
 import 'availability.dart';
 import 'garment_category.dart';
 import 'garment_color.dart';
+import 'garment_photo.dart';
 
 /// Identidade estável de uma peça física (UUID), igual em todos os
 /// dispositivos.
@@ -22,6 +23,7 @@ final class Garment {
     this.brand,
     this.notes,
     this.colors = const [],
+    this.photos = const [],
     this.archivedAt,
   });
 
@@ -31,6 +33,9 @@ final class Garment {
   final String? brand;
   final String? notes;
   final List<GarmentColor> colors;
+
+  /// A primeira é a capa. No máximo [PhotoRules.maxPerGarment].
+  final List<GarmentPhoto> photos;
   final Availability availability;
 
   /// Peças arquivadas mantêm o histórico mas não são candidatas.

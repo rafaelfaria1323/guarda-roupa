@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:powersync/powersync.dart';
 
 import '../../../app/config.dart';
+import '../../wardrobe/data/photo_files.dart';
 import '../../wardrobe/data/powersync_wardrobe_repository.dart';
 import '../../wardrobe/domain/wardrobe_repository.dart';
 import '../data/local_database.dart';
@@ -132,6 +133,13 @@ final syncSummaryProvider = Provider<SyncSummary>((ref) {
 /// e bloqueia quando há pendências.
 Future<void> signOut(WidgetRef ref) async {
   final db = ref.read(userDatabaseProvider).value;
-  await db?.disconnectAndClear();
+  if (db != null) await clearAccountData(db);
   await ref.read(authServiceProvider).signOut();
+}
+
+/// Apaga tudo o que a conta deixou neste dispositivo.
+Future<void> clearAccountData(PowerSyncDatabase db) async {
+  await db.disconnectAndClear();
+  // Fora do schema do PowerSync: o clear acima não lhe toca.
+  await db.writeTransaction(PhotoFiles.clear);
 }
