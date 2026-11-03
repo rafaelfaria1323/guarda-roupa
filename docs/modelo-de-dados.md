@@ -35,7 +35,13 @@ Estado: desenho lógico; não é uma migração SQL pronta para executar. Data: 
   - `formality`: `relaxed`, `smart_casual` ou `dressy`;
   - `patterns`, `textures` e `occasions`: JSON de ids conhecidos;
   - `deleted_at`.
-- Ainda não há imagem nem `StylePreference`.
+- `StylePreference` é a tabela `style_preferences`, com estes campos:
+  - `subject` (`color`, `pattern`, `texture`, `formality`, `combo`) e `value`, validado por `style_preference_value_valid` (cor: RGB em decimal; os outros: ids conhecidos);
+  - `stance`: `like` ou `avoid`;
+  - `occasions`: o contexto (vazio = sempre);
+  - `inspiration_id`: a origem opcional (só do próprio; fica `null` se a inspiração for apagada de vez);
+  - `deleted_at`.
+- Ainda não há imagem.
 
 **Atributos da peça (incremento 2).** Colunas opcionais em `garments`, `null` = desconhecido: `pattern` (plain, stripes, checks, dots, floral, print, other), `texture` (smooth, ribbed, knit, textured, fuzzy), `warmth` (light, medium, warm), `rain_ok`/`wind_ok` (boolean), `occasions` (jsonb, lista sem repetidos de casual, work_casual, evening; vazia = desconhecido), `material` (≤ 120) e `care` (≤ 300) como texto livre da etiqueta. Os IDs são validados no servidor por `check`; o cliente ignora valores que não conhece (versões futuras). Cada atributo é um campo do `edit`, com `from`/`to` para conflitos campo a campo.
 | `Occasion` | ID estável, nome e regras/preferências |

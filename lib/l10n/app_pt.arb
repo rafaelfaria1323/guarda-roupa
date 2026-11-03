@@ -122,6 +122,75 @@
   "inspirationTooManyColors": "Escolhe até 8 cores.",
   "inspirationSaveFailed": "Não foi possível guardar a inspiração.",
   "inspirationNoTags": "Sem etiquetas",
+  "styleInspirations": "Inspirações",
+  "stylePreferences": "Preferências",
+  "preferenceAdd": "Preferência",
+  "preferencesEmpty": "Ainda não há preferências.",
+  "preferencesEmptyHint": "Diz o que gostas ou evitas. Serve só para ordenar sugestões com peças que já tens; nunca é uma peça.",
+  "preferenceNewTitle": "Nova preferência",
+  "preferenceEditTitle": "Preferência",
+  "preferenceHint": "Uma preferência só pesa na ordem das sugestões. Não cria nem esconde peças.",
+  "preferenceStance": "Posição",
+  "preferenceStanceLabel": "{stance, select, like{Gosto} avoid{Evito} other{—}}",
+  "@preferenceStanceLabel": {
+    "placeholders": {
+      "stance": {}
+    }
+  },
+  "preferenceSubject": "Sobre",
+  "preferenceSubjectLabel": "{subject, select, color{Cor} pattern{Padrão} texture{Textura} formality{Formalidade} combo{Combinação} other{Outro}}",
+  "@preferenceSubjectLabel": {
+    "placeholders": {
+      "subject": {}
+    }
+  },
+  "preferenceValue": "Valor",
+  "comboLabel": "{combo, select, neutral_base{Base neutra} single_accent{Um só destaque} tonal{Tons próximos} other{Outra}}",
+  "@comboLabel": {
+    "placeholders": {
+      "combo": {}
+    }
+  },
+  "preferenceOccasions": "Contexto",
+  "preferenceOccasionsHint": "Sem ocasiões escolhidas, vale sempre.",
+  "preferenceAlways": "Sempre",
+  "preferenceTitle": "{stance, select, like{Gosto: {value}} avoid{Evito: {value}} other{{value}}}",
+  "@preferenceTitle": {
+    "placeholders": {
+      "stance": {},
+      "value": {}
+    }
+  },
+  "preferenceFromInspiration": "Da inspiração «{name}»",
+  "@preferenceFromInspiration": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "preferenceSaved": "Preferência guardada.",
+  "preferenceDelete": "Eliminar preferência",
+  "preferenceDeleteConfirm": "Eliminar esta preferência? As peças e as inspirações não mudam.",
+  "preferenceDeleted": "Preferência eliminada.",
+  "preferenceNotFound": "Esta preferência já não existe.",
+  "preferenceInvalid": "Escolhe um valor válido.",
+  "preferenceDuplicate": "Já tens uma preferência para isto, no mesmo contexto.",
+  "preferenceSaveFailed": "Não foi possível guardar a preferência.",
+  "inspirationMakePreferences": "Criar preferências",
+  "inspirationMakePreferencesHint": "A partir das etiquetas guardadas, em: {context}. As que já existem são ignoradas.",
+  "@inspirationMakePreferencesHint": {
+    "placeholders": {
+      "context": {}
+    }
+  },
+  "inspirationMakePreferencesConfirm": "Criar",
+  "inspirationPreferencesCreated": "{count, plural, =0{Nenhuma preferência nova (já existiam).} =1{1 preferência criada.} other{{count} preferências criadas.}}",
+  "@inspirationPreferencesCreated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsAccount": "Conta e sincronização",
   "categoryLabel": "{category, select, t_shirt{T-shirt} shirt{Camisa} polo{Polo} top{Top} sweater{Camisola} sweatshirt{Sweatshirt} cardigan{Casaco de malha} trousers{Calças} jeans{Calças de ganga} shorts{Calções} skirt{Saia} dress{Vestido} jumpsuit{Macacão} jacket{Casaco} blazer{Blazer} coat{Sobretudo} raincoat{Impermeável} sneakers{Ténis} shoes{Sapatos} boots{Botas} sandals{Sandálias} accessory{Acessório} other{Outra}}",
   "@categoryLabel": {

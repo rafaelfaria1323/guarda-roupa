@@ -29,3 +29,6 @@ streams:
   user_inspirations:
     auto_subscribe: true
     query: SELECT * FROM inspirations WHERE owner_id = auth.user_id() AND deleted_at IS NULL
+  user_style_preferences:
+    auto_subscribe: true
+    query: SELECT * FROM style_preferences WHERE owner_id = auth.user_id() AND deleted_at IS NULL

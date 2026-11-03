@@ -10,14 +10,28 @@ Future<void> openStyle(WidgetTester tester) async {
   await settle(tester);
 }
 
+/// O SnackBar é do Scaffold exterior e tapa o FAB e o fundo das listas.
+Future<void> dismissSnackBar(WidgetTester tester) async {
+  tester
+      .state<ScaffoldMessengerState>(find.byType(ScaffoldMessenger))
+      .removeCurrentSnackBar();
+  await tester.pumpAndSettle();
+}
+
 /// Toca numa etiqueta do editor, deslocando a lista até ela existir.
 Future<void> tapTag(WidgetTester tester, String key) async {
   final finder = find.byKey(Key(key));
+  // Um campo com foco puxa a lista de volta para si; um SnackBar tapa o
+  // fundo de uma lista curta.
+  FocusManager.instance.primaryFocus?.unfocus();
+  await dismissSnackBar(tester);
   await tester.scrollUntilVisible(
     finder,
     200,
     scrollable: find.byType(Scrollable).first,
   );
+  // Ao centro: na borda pode ficar por baixo de um SnackBar.
+  await Scrollable.ensureVisible(tester.element(finder), alignment: 0.5);
   await tester.pumpAndSettle();
   await tester.tap(finder);
   await tester.pumpAndSettle();
