@@ -1,4 +1,8 @@
-# Sync Streams do PowerSync (colar em PowerSync Dashboard > Sync Streams).
+# Sync Streams do PowerSync. Publicadas pelo workflow "Supabase" depois das
+# migrações (secret POWERSYNC_ADMIN_TOKEN); sem ele, colar em PowerSync
+# Dashboard > Sync Streams. Cada tabela aqui tem de estar na publicação
+# `powersync`, com SELECT para powersync_role, e no schema local da app
+# (tool/ci/check_powersync.py).
 #
 # Cada utilizador recebe só as suas peças. As peças eliminadas (tombstone,
 # deleted_at preenchido) saem do stream e são removidas dos dispositivos.

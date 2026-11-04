@@ -1,10 +1,11 @@
 -- Stub mínimo do ambiente Supabase para testar as migrações num PostgreSQL
 -- local. NÃO executar no projeto Supabase real.
 -- Os roles são globais ao cluster: criar só se ainda não existirem.
+-- powersync_role: no projeto real é criado à mão (guia 08 §4).
 do $$
 declare r text;
 begin
-  foreach r in array array['anon', 'authenticated', 'supabase_auth_admin'] loop
+  foreach r in array array['anon', 'authenticated', 'supabase_auth_admin', 'powersync_role'] loop
     if not exists (select 1 from pg_roles where rolname = r) then
       execute format('create role %I nologin', r);
     end if;

@@ -54,7 +54,7 @@ grant usage on schema public to powersync_role;
 grant select on public.garments to powersync_role;
 ```
 
-O role só pode ler `garments`. Não tem acesso à allowlist nem às operações.
+Aqui o role só recebe `garments`. As outras tabelas sincronizadas (utilizações, limpezas, políticas, conjuntos, inspirações, preferências e plano) recebem SELECT pela migração `20261112000001_powersync_grants.sql`, aplicada pelo workflow “Supabase”. O role nunca tem acesso à allowlist nem às operações. O teste `supabase/tests/powersync_test.sql` confirma que o role lê todas as tabelas da publicação `powersync`, e só essas.
 
 ## 5. Criar a instância PowerSync (plano Free)
 
@@ -69,7 +69,9 @@ O role só pode ler `garments`. Não tem acesso à allowlist nem às operações
    - Sem isto, a consola mostra `PSYNC_S2105 ... Unexpected "aud" claim value: "authenticated"`: o token do Supabase traz `aud = authenticated` e o PowerSync, por defeito, só aceita o URL da instância.
    - Se depois aparecer um erro de assinatura (`signature`, `kid`, `JWKS`), acrescentar o JWKS URI `https://zeibzbepuexeudzyrqzq.supabase.co/auth/v1/.well-known/jwks.json`.
 5. **Sync Streams**: colar o conteúdo de [`powersync/sync-streams.yaml`](../../powersync/sync-streams.yaml), validar e fazer deploy.
-   - Sempre que esse ficheiro mudar (cada tabela nova, por exemplo `user_outfits`, `user_inspirations` e `user_plan_entries`), é preciso voltar a colá-lo e fazer deploy. Sem isso, os dados novos ficam só no dispositivo onde foram criados.
+   - Depois, para não ter de repetir isto: cria um token pessoal no PowerSync Dashboard e guarda-o no GitHub como secret `POWERSYNC_ADMIN_TOKEN`. A partir daí, o workflow “Supabase” faz o deploy deste ficheiro a cada merge na `main` (`powersync deploy sync-config`, CLI 0.10.3), depois das migrações, e valida-o em dry-run nos PRs. A instância vem do `POWERSYNC_URL` de `config/public.json`.
+   - Sem o secret, cada mudança no ficheiro tem de voltar a ser colada aqui, senão os dados novos ficam só no dispositivo onde foram criados.
+   - `tool/ci/check_powersync.py`, na CI, confirma que a publicação, as Sync Streams e o schema local da app têm as mesmas tabelas.
 6. Copiar o **URL da instância** (formato `https://<id>.powersync.journeyapps.com`) e envia-mo. É configuração pública.
 
 Se a página pedir cartão ou plano pago, parar e avisar ([custos](../custos-e-limitacoes.md)).

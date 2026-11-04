@@ -1,7 +1,8 @@
 name: Supabase
 
-# Aplica as migrações de supabase/migrations/ ao projeto Supabase e publica
-# as Edge Functions de supabase/functions/.
+# Aplica as migrações de supabase/migrations/ ao projeto Supabase, publica
+# as Edge Functions de supabase/functions/ e faz deploy das Sync Streams
+# (powersync/sync-streams.yaml) na instância PowerSync.
 #
 # - Em PRs que mexem em migrações: só mostra o que seria aplicado (dry-run).
 # - Depois de a CI passar na main: aplica (`supabase db push`). Sem migrações
@@ -12,6 +13,9 @@ name: Supabase
 #                    (Dashboard > Connect > Session pooler).
 #   SUPABASE_ACCESS_TOKEN  só para publicar as Edge Functions
 #                    (Dashboard > Account > Access Tokens).
+#   POWERSYNC_ADMIN_TOKEN  token pessoal do PowerSync, só para o deploy das
+#                    Sync Streams (PowerSync Dashboard > Access Tokens). A
+#                    instância vem do POWERSYNC_URL de config/public.json.
 # As migrações ligam diretamente à base: não precisam de access token nem de
 # `supabase link`. O projeto vem de config/public.json. Sem os secrets, os
 # jobs avisam e não falham.
@@ -22,6 +26,7 @@ on:
       - 'supabase/migrations/**'
       - 'supabase/functions/**'
       - 'supabase/config.toml'
+      - 'powersync/**'
       - '.github/workflows/supabase.yml'
   workflow_run:
     workflows: [CI]
@@ -41,6 +46,8 @@ env:
   SUPABASE_CLI_VERSION: 2.122.1
   SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
   SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+  PS_ADMIN_TOKEN: ${{ secrets.POWERSYNC_ADMIN_TOKEN }}
+  POWERSYNC_CLI_VERSION: 0.10.3
 
 jobs:
   plan:
@@ -124,3 +131,43 @@ jobs:
           version: ${{ env.SUPABASE_CLI_VERSION }}
       - if: steps.secrets.outputs.ok == 'true'
         run: supabase functions deploy import-product --project-ref "${{ steps.secrets.outputs.ref }}" --use-api
+
+  # Sync Streams: valida em PRs, faz deploy depois das migrações (as streams
+  # leem tabelas que as migrações criam). O PowerSync só muda se o ficheiro
+  # mudou: um deploy igual ao atual não faz nada.
+  powersync:
+    name: Sync Streams do PowerSync
+    needs: deploy
+    # Em PRs o deploy das migrações não corre (skipped): só dry-run aqui.
+    # Na main, só se as migrações foram aplicadas.
+    if: >-
+      always() &&
+      (github.event_name == 'pull_request' || needs.deploy.result == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - id: secrets
+        run: |
+          if [ -z "$PS_ADMIN_TOKEN" ]; then
+            echo "::warning::Secret POWERSYNC_ADMIN_TOKEN em falta: Sync Streams não publicadas."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            id=$(python3 -c "import json,urllib.parse; print(urllib.parse.urlparse(json.load(open('config/public.json'))['POWERSYNC_URL']).hostname.split('.')[0])")
+            echo "instance=$id" >> "$GITHUB_OUTPUT"
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.secrets.outputs.ok == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - if: steps.secrets.outputs.ok == 'true'
+        name: Deploy (dry-run em PRs)
+        run: >-
+          npx --yes "powersync@${POWERSYNC_CLI_VERSION}" deploy sync-config
+          --instance-id "${{ steps.secrets.outputs.instance }}"
+          --directory powersync
+          --sync-config-file-path powersync/sync-streams.yaml
+          ${{ github.event_name == 'pull_request' && '--dry-run' || '' }}

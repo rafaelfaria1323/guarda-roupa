@@ -24,6 +24,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python3 tool/ci/check_links.py
+      # Publicação, Sync Streams e schema local com as mesmas tabelas.
+      - run: python3 tool/ci/check_powersync.py
 
   changes:
     name: Deteção de alterações
