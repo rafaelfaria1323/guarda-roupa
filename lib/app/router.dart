@@ -41,11 +41,13 @@ abstract final class AppRoutes {
   static const weatherLocation = '/definicoes/localizacao';
   static const wear = '/vesti';
 
-  /// "Vesti hoje" com estas peças já escolhidas (por confirmar).
-  static String wearWith(Iterable<String> garmentIds) => Uri(
-    path: wear,
-    queryParameters: {'pecas': garmentIds.join(',')},
-  ).toString();
+  /// "Vesti hoje" com estas peças já escolhidas (por confirmar). Com
+  /// [planEntryId], guardar confirma essa entrada do plano.
+  static String wearWith(Iterable<String> garmentIds, {String? planEntryId}) =>
+      Uri(
+        path: wear,
+        queryParameters: {'pecas': garmentIds.join(','), 'plano': ?planEntryId},
+      ).toString();
   static String correctWear(String eventId) => '/vesti/$eventId';
 }
 
@@ -137,6 +139,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             ))
               if (id.isNotEmpty) GarmentId(id),
           ],
+          planEntryId: state.uri.queryParameters['plano'],
         ),
       ),
       GoRoute(

@@ -2,7 +2,7 @@
 
 Estado: necessária no MVP de planeamento; um conjunto por dia inicialmente.
 
-## Implementado (2026-11-04, dados)
+## Implementado (2026-11-04, dados, pesquisa e ecrã)
 
 - Tabela `plan_entries` e `apply_plan_operation` ([modelo](../modelo-de-dados.md)): uma entrada por dia com ocasião, provisório, peças e estado; edições com `base_version` desatualizada ficam como **proposta pendente** (ADR-008), tal como um segundo “criar” para o mesmo dia vindo de outro dispositivo. Aceitar aplica a proposta; rejeitar descarta-a.
 - Regras da semana (P-19, `WeekPlanRules`): 7 dias; os dias úteis começam em “Trabalho (smart casual)”, o fim de semana “a decidir” e provisório (pode ficar vazio).
@@ -14,7 +14,12 @@ Estado: necessária no MVP de planeamento; um conjunto por dia inicialmente.
   - Escolhas fixadas entram tal como estão e contam como reserva. Um dia pode ficar fora da pesquisa (fim de semana vazio).
   - Cada dia diz o estado (`planned`, `pinned`, `skipped`, `notFound` com as lacunas) e que peças principais repete. Uma repetição permitida é identificada, nunca escondida.
   - A ordem é cronológica, por isso as regras de intervalo só precisam de olhar para trás. A pesquisa devolve quantas semanas parciais avaliou: é limitada e não promete o ótimo global.
-- Por fazer: ecrã da semana com cartões por dia e propostas quando a disponibilidade ou a previsão mudam.
+- Ecrã “Esta semana” no Planeador (`WeekPlanCard`): um cartão por dia, de hoje a 6 dias depois, com a ocasião (lista com “A decidir”), “Pode não acontecer” (provisório), as peças e o estado (Por planear, Proposto, Aceite, Vestido, Não usado).
+  - “Planear a semana” corre a pesquisa com a previsão de cada dia (o tempo indicado à mão vale para hoje) e grava como **propostos** só os dias ainda não aceites. Dias aceites entram como escolha fixada; aceites vazios ficam fora da pesquisa.
+  - Por dia: aceitar, alterar (volta a proposto), deixar vazio (dias provisórios) e, hoje, “Vesti isto hoje”, que abre “Vesti hoje” com as peças por confirmar e liga a utilização à entrada (`plan_entry_id`). Só aí o dia passa a Vestido.
+  - Repetições e dias sem conjunto possível aparecem no cartão do dia; uma proposta pendente de outro dispositivo mostra o que muda, com “Aplicar” ou “Manter o atual”.
+  - Dias confirmados ou passados não se editam.
+- Por fazer: propostas de alteração quando uma peça fica suja ou indisponível, ou a previsão muda.
 
 ## Objetivo
 

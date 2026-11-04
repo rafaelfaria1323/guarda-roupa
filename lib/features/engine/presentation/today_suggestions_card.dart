@@ -142,8 +142,16 @@ class _WeatherLine extends ConsumerWidget {
     final value = report.value;
     if (value == null) {
       return Wrap(
+        spacing: 8,
         crossAxisAlignment: WrapCrossAlignment.center,
-        children: [Text(l10n.weatherLoading), manualButton],
+        children: [
+          const SizedBox.square(
+            dimension: 16,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          Text(l10n.weatherLoading),
+          manualButton,
+        ],
       );
     }
     final weather = value.weather;
