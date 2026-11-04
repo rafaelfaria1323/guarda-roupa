@@ -18,6 +18,9 @@ import '../domain/photo_picker.dart';
 import '../domain/wardrobe_repository.dart';
 import '../domain/garment_color.dart';
 import '../../care/presentation/garment_laundry_section.dart';
+import '../../import/application/import_providers.dart';
+import '../../import/domain/product_import.dart';
+import '../../import/presentation/import_link_screen.dart';
 import '../../care/presentation/garment_rotation_section.dart';
 import '../../wear/presentation/garment_wear_summary.dart';
 import 'attributes_editor.dart';
@@ -226,6 +229,51 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
     await _run(
       () => repo.deleteGarment(garment.id),
       onOk: (_) => context.pop(),
+    );
+  }
+
+  /// Preenche a peça nova com o que o utilizador escolheu num link. A
+  /// categoria e as cores ficam por escolher aqui.
+  Future<void> _import(ProductImporter importer) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final imported = await Navigator.of(context).push<ImportedGarment>(
+      MaterialPageRoute(
+        builder: (_) => ImportLinkScreen(
+          importer: importer,
+          maxImages: PhotoRules.maxPerGarment - _pending.length,
+        ),
+      ),
+    );
+    if (imported == null || !mounted) return;
+    setState(() {
+      if (imported.name case final v?) _name.text = v;
+      if (imported.brand case final v?) _brand.text = v;
+      if (imported.notes case final v?) _notes.text = v;
+      if (imported.material case final v?) _material.text = v;
+      _processing = imported.images.isNotEmpty;
+    });
+    var failed = imported.failedImages;
+    final process = ref.read(photoProcessorProvider);
+    try {
+      for (final bytes in imported.images) {
+        if (_pending.length >= PhotoRules.maxPerGarment) break;
+        switch (await process(bytes)) {
+          case Ok(value: final photo):
+            if (mounted) setState(() => _pending.add(photo));
+          case Err():
+            failed++;
+        }
+      }
+    } finally {
+      if (mounted) setState(() => _processing = false);
+    }
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          failed > 0 ? l10n.importImagesFailed(failed) : l10n.importDone,
+        ),
+      ),
     );
   }
 
@@ -445,6 +493,22 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
               ),
               const SizedBox(height: 24),
             ],
+            if (garment == null)
+              if (ref.watch(productImporterProvider) case final importer?)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: OutlinedButton.icon(
+                      key: const Key('garment-import'),
+                      onPressed: _saving || _processing
+                          ? null
+                          : () => _import(importer),
+                      icon: const Icon(Icons.link),
+                      label: Text(l10n.importFromLink),
+                    ),
+                  ),
+                ),
             _photoSection(repo, garment),
             DropdownButtonFormField<GarmentCategory>(
               key: const Key('garment-category'),

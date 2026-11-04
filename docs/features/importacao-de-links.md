@@ -2,7 +2,7 @@
 
 Estado: importante, mas posterior à fundação/MVP; suporte definido por loja e POC, não universal.
 
-## Implementado (2026-11-04, função; em teste)
+## Implementado (2026-11-04, função e app; lojas em teste)
 
 - Decisão (P-12): Zara, Uniqlo, Pull&Bear e Bershka primeiro; a função corre em **Supabase Edge Functions** (`supabase/functions/import-product`, Deno).
 - Lista fechada de lojas (`stores.ts`), todas `poc`: nenhuma é anunciada como suportada sem o [smoke](../../tool/import/README.md) com links reais.
@@ -18,7 +18,13 @@ Estado: importante, mas posterior à fundação/MVP; suporte definido por loja e
 - Respostas: `ok`, `unsupported_store`, `invalid_url`, `fetch_failed` (com `timeout`, `blocked`, `not_found`, `too_large`, …), `no_metadata` e `rate_limited`. Uma página sem dados nunca dá um produto inventado.
 - Imagens: `{image}` copia uma imagem só de um domínio de imagens da própria loja, para a peça ficar com o ficheiro e não com um link temporário.
 - Testes Deno com fixtures **sintéticas** no CI (parser, regras de URL, redirecionamentos, limites, erros e quota) e testes SQL da quota. Publicação pelo workflow Supabase com o secret `SUPABASE_ACCESS_TOKEN`.
-- Por fazer: o fluxo na app (colar link, pré-visualização, escolher variante e imagem, confirmar e criar a peça) e o smoke com links reais. O ambiente de desenvolvimento na cloud não chega aos domínios das lojas, por isso o smoke corre no Mac.
+- Na app (`lib/features/import/`): “Importar de um link” no formulário de peça nova, só com Supabase configurado.
+  - Lê a página com a sessão do utilizador (`SupabaseProductImporter`, via `http`: as imagens vêm em binário). Sem sessão não faz pedidos.
+  - A pré-visualização mostra a loja “em teste”, cada campo com a origem (“dados da página” ou “pré-visualização da página: confirma”), a descrição, a escolha da variante (“Qual é a tua?”) e as imagens a copiar. Por omissão copia-se uma imagem, porque cada cópia conta para a quota; a imagem da variante escolhida passa a ser a escolhida.
+  - “Usar na peça nova” preenche nome, marca (ou a loja), material e notas (descrição, cor na loja, tamanho e o link; o link nunca é cortado) e junta as imagens às fotos por guardar, processadas como as da galeria. **A categoria e as cores escolhem-se sempre no formulário**; nada é gravado antes de “Guardar”.
+  - Erros com mensagem própria: loja fora da lista, link inválido, página bloqueada, página inexistente, página sem dados, quota esgotada, conta sem acesso e função indisponível. Em todos há “Preencher à mão”, que segue só com o link nas notas.
+  - Testes com um importador falso (fluxo completo, erros, botão ausente sem Supabase) e do cliente com `MockClient`.
+- Por fazer: o smoke com links reais e confirmar os domínios das imagens. O ambiente de desenvolvimento na cloud não chega aos domínios das lojas, por isso o smoke corre no Mac. A função só fica publicada quando o secret `SUPABASE_ACCESS_TOKEN` existir; até lá a app mostra “A importação não está disponível agora”.
 
 ### Lojas
 
