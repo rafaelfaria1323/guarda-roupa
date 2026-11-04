@@ -38,6 +38,12 @@ A IA local opcional (Definições › IA local) precisa, na Web, do modelo e do 
 tool/models/fetch_models.sh
 ```
 
+A build completa da PWA (a mesma que o workflow `PWA` publica no Cloudflare Pages, [guia 04](docs/guias/04-publicar-pwa.md)) faz tudo isto:
+
+```bash
+tool/web/build_pwa.sh
+```
+
 Sem `POWERSYNC_URL` em `config/public.json`, a app funciona só localmente e mostra "sincronização por configurar". Ver o [guia 08](docs/guias/08-poc-sincronizacao.md).
 
 ## CI

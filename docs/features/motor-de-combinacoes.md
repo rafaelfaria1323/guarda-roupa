@@ -29,7 +29,7 @@ Cartão no Planeador, por baixo de "Vesti hoje":
 
 ### Conjunto: cores, padrões e texturas (2026-11-04)
 
-`OutfitHarmony` (`lib/features/engine/domain/outfit_harmony.dart`) lê o conjunto sem a camada opcional. Os valores são uma proposta ([P-21](../pendencias.md)), não uma "verdade de moda":
+`OutfitHarmony` (`lib/features/engine/domain/outfit_harmony.dart`) lê o conjunto sem a camada opcional. Os valores foram aceites pelo utilizador a 2026-11-04 ([P-21](../pendencias.md)); são um gosto, não uma "verdade de moda":
 
 - **Neutras:** branco, cru, bege, caqui, castanho, cinzento, cinzento-escuro, preto, azul-marinho e ganga. Uma cor fora da lista de referência é neutra com croma OKLCH < 0,05. Conta a cor dominante de cada peça (a de maior proporção).
 - **Base neutra:** todas as peças grandes (top, parte de baixo, peça única, camadas) com cor dominante neutra.
