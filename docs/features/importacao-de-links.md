@@ -48,7 +48,7 @@ Decisão do utilizador (2026-11-04): aceitar **qualquer link** de loja, não só
   - Deno com fixtures **sintéticas** no CI: parser (JSON-LD, microdata, Twitter/HTML, título sozinho), regras de rede (IPs, nomes locais, DNS privado), redirecionamentos, limites, erros, imagens autorizadas e perfil;
   - SQL da quota e dos perfis;
   - Flutter com um importador falso e do cliente com `MockClient`.
-- **Publicação** pelo workflow Supabase, com o secret `SUPABASE_ACCESS_TOKEN`. Até lá, a app mostra “A importação não está disponível agora”.
+- **Publicação** pelo workflow Supabase, com o secret `SUPABASE_ACCESS_TOKEN` (permissão `edge_functions_write`). Publicada desde 2026-11-04. Se a função não estiver publicada, a app mostra “A importação não está disponível agora”.
 - **Por fazer**: o smoke com links reais ([tool/import/README.md](../../tool/import/README.md)). O ambiente de desenvolvimento na cloud não chega aos sites das lojas, por isso corre no Mac. Sites que bloqueiam pedidos automáticos (anti-bot) vão continuar a falhar: o perfil mostra-o como “costuma falhar” e fica a introdução manual.
 - **Próximo passo possível**: usar as correções do utilizador (categoria escolhida, nome editado) para sugerir a categoria da próxima peça do mesmo site. Fica para depois: precisa de mais dados reais.
 

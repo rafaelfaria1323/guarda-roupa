@@ -20,7 +20,7 @@ Uma pendência não deve desaparecer por estar descrita em Markdown. Fechar apen
 | P-09 | Perfis e desempenho | Escolher dispositivos de referência e orçamento mensurável | Gate de desempenho |
 | P-10 | Automação E2E | POC Patrol Android/Chromium; guião iPhone real, sem equivalência fictícia | Evidência por plataforma |
 | P-11 | Recuperação com cloud | Definir substituição/recuperação sem replay de eventos nem ressurreição silenciosa | Recuperação sobre conta existente |
-| P-12 | Lojas suportadas — **Decidido 2026-11-04:** qualquer site público, com perfil por domínio que se atualiza sozinho (antes: Zara, Uniqlo, Pull&Bear e Bershka); função em Supabase Edge Functions | **Função e fluxo na app feitos**; falta publicar a função (secret `SUPABASE_ACCESS_TOKEN`) e o [smoke](../tool/import/README.md) com links reais (corre no Mac; a cloud não chega às lojas) | Dizer que uma loja funciona |
+| P-12 | Lojas suportadas — **Decidido 2026-11-04:** qualquer site público, com perfil por domínio que se atualiza sozinho (antes: Zara, Uniqlo, Pull&Bear e Bershka); função em Supabase Edge Functions | **Função e fluxo na app feitos; função publicada a 2026-11-04**; falta o [smoke](../tool/import/README.md) com links reais (corre no Mac; a cloud não chega às lojas) | Dizer que uma loja funciona |
 | P-13 | Pinterest | Confirmar permissões/API; link não garante imagem | Importação automática de Pins |
 | P-14 | Modelo IA — **POC aprovada pelo utilizador (2026-11-04)** ([IA local](features/ia-local.md#poc-implementada-2026-11-04)): runtime `flutter_onnxruntime`. Feitos os dois, descarregados a pedido em Definições › IA local:
 - recorte U²-Netp (Apache-2.0, 4,6 MB), usado nas cores pela foto; verificado só com imagens sintéticas;
@@ -35,8 +35,8 @@ Uma pendência não deve desaparecer por estar descrita em Markdown. Fechar apen
 
 Notas para não esquecer (2026-11-04):
 
-1. **Secret `SUPABASE_ACCESS_TOKEN`** no GitHub (Settings → Secrets and variables → Actions), com um token criado no Supabase em Account → Access Tokens. Depois correr à mão o workflow “Supabase” (ou esperar pelo próximo merge na `main`). Sem ele a função `import-product` não é publicada e a app diz “A importação não está disponível agora”.
-2. **Experimentar links reais** das lojas que se usam (P-12): na app, depois de publicar a função, ou no Mac com o [smoke](../tool/import/README.md). Lojas importantes que falhem ou tragam dados errados: mandar o resultado para afinar o parser.
+1. ~~**Secret `SUPABASE_ACCESS_TOKEN`**~~ no GitHub (Settings → Secrets and variables → Actions), com um token criado no Supabase em Account → Access Tokens. **Feito a 2026-11-04:** o token precisa da permissão `edge_functions_write`. O workflow “Supabase” publica `import-product` a cada merge na `main`, e a função responde 401 sem sessão.
+2. **Experimentar links reais** das lojas que se usam (P-12): na app (a função já está publicada) ou no Mac com o [smoke](../tool/import/README.md). Lojas importantes que falhem ou tragam dados errados: mandar o resultado para afinar o parser.
 3. **Manequim 3D** (P-20): ideia guardada no roadmap; retomar mais tarde.
 4. **Rever a proposta P-21** (cores, padrões e texturas): se a lista de neutras ou a regra dos padrões não bate com o teu gosto, diz o que mudar. Para já só pesa quando há uma preferência de combinação em Estilo › Preferências.
 5. **IA local** (P-14, POC aprovada):
