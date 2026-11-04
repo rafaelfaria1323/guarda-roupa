@@ -123,7 +123,8 @@ void main() {
     final row = (await tester.runAsync(
       () => app.db.get('SELECT colors FROM garments'),
     ))!;
-    final colors = jsonDecode(row['colors'] as String) as List;
+    final colors = (jsonDecode(row['colors'] as String) as List)
+        .cast<Map<String, Object?>>();
     expect(colors.single['confirmed'], false);
   });
 }
