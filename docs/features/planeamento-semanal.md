@@ -7,7 +7,14 @@ Estado: necessária no MVP de planeamento; um conjunto por dia inicialmente.
 - Tabela `plan_entries` e `apply_plan_operation` ([modelo](../modelo-de-dados.md)): uma entrada por dia com ocasião, provisório, peças e estado; edições com `base_version` desatualizada ficam como **proposta pendente** (ADR-008), tal como um segundo “criar” para o mesmo dia vindo de outro dispositivo. Aceitar aplica a proposta; rejeitar descarta-a.
 - Regras da semana (P-19, `WeekPlanRules`): 7 dias; os dias úteis começam em “Trabalho (smart casual)”, o fim de semana “a decidir” e provisório (pode ficar vazio).
 - Um plano nunca conta como utilização: só “Vesti hoje” cria `wear_events`, e a mesma entrada confirmada em dois dispositivos dá uma só utilização (`plan_entry_id`).
-- Por fazer: pesquisa semanal sobre o motor, ecrã da semana com cartões por dia e propostas quando a disponibilidade ou a previsão mudam.
+- Pesquisa semanal (`WeeklyPlanner`, Dart puro): beam search cronológica sobre os candidatos do motor diário (largura 8, 5 candidatos por dia por omissão).
+  - Os dias já escolhidos entram como **utilizações projetadas** (reservas) e a rotatividade de cada dia vê-as. Só servem para planear: não são utilizações nem contam para a lavagem.
+  - Roupa indisponível fica de fora; não se presume uma lavagem futura.
+  - Ordem explícita, sem pesos: papéis em falta, avisos das peças (rotatividade, lavagem, conforto, ocasião desconhecida, preferência a evitar), peças principais repetidas na semana, soma das posições no motor diário. Empate desfeito pelas peças escolhidas, por isso o mesmo pedido dá a mesma semana.
+  - Escolhas fixadas entram tal como estão e contam como reserva. Um dia pode ficar fora da pesquisa (fim de semana vazio).
+  - Cada dia diz o estado (`planned`, `pinned`, `skipped`, `notFound` com as lacunas) e que peças principais repete. Uma repetição permitida é identificada, nunca escondida.
+  - A ordem é cronológica, por isso as regras de intervalo só precisam de olhar para trás. A pesquisa devolve quantas semanas parciais avaliou: é limitada e não promete o ótimo global.
+- Por fazer: ecrã da semana com cartões por dia e propostas quando a disponibilidade ou a previsão mudam.
 
 ## Objetivo
 
