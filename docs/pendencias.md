@@ -25,6 +25,17 @@ Uma pendência não deve desaparecer por estar descrita em Markdown. Fechar apen
 | P-14 | Modelo IA | Licença, operadores, tamanho, precisão e desempenho | Ativar análise visual automática |
 | P-15 | Assinatura/distribuição Android — **applicationId decidido 2026-11-03: `pt.rafaelfaria.guarda_roupa`** | Guardar chave de assinatura e comprovar atualização sem apagar dados | Distribuição estável |
 | P-16 | Registo — **Decidido 2026-11-03: só o proprietário** (e uma conta de experiência) | Impor a regra no servidor (Auth + RLS), não apenas na UI | Expor login publicamente |
+| P-20 | Manequim 3D dos conjuntos — **Adiado 2026-11-04** pelo utilizador ([feature](features/manequim-3d.md)) | Ao retomar: POC com moldes por categoria pintados com as cores das peças; decidir a origem dos modelos 3D | Nada no MVP |
+
+## Ações do utilizador por fazer
+
+Notas para não esquecer (2026-11-04):
+
+1. **Secret `SUPABASE_ACCESS_TOKEN`** no GitHub (Settings → Secrets and variables → Actions), com um token criado no Supabase em Account → Access Tokens. Depois correr à mão o workflow “Supabase” (ou esperar pelo próximo merge na `main`). Sem ele a função `import-product` não é publicada e a app diz “A importação não está disponível agora”.
+2. **Experimentar links reais** das lojas que se usam (P-12): na app, depois de publicar a função, ou no Mac com o [smoke](../tool/import/README.md). Lojas importantes que falhem ou tragam dados errados: mandar o resultado para afinar o parser.
+3. **Manequim 3D** (P-20): ideia guardada no roadmap; retomar mais tarde.
+
+Também em aberto: voltar a fazer deploy das Sync Streams no PowerSync quando um stream novo é adicionado; a POC em dois dispositivos (P-03).
 
 ## O que já não está pendente como requisito
 
@@ -60,6 +71,7 @@ Idempotência de retries e da mesma entrada de plano não deduplica magicamente 
 | P-02 | Google OAuth como único método de login inicial | Utilizador | 2026-11-03 | Decidido; não configurado |
 | P-03 | PowerSync + Supabase como motor de sincronização | Utilizador | 2026-11-03 | Aprovado provisoriamente: ligado e sincronizado; testes com dois dispositivos adiados pelo utilizador (problemas tratados quando aparecerem) |
 | P-16 | Apenas o proprietário (e conta de experiência) pode usar a app | Utilizador | 2026-11-03 | Implementado no servidor: `allowed_users`, `is_allowed()` nas políticas e funções, hook “Before User Created” |
+| P-20 | Manequim 3D dos conjuntos fica para mais tarde, no roadmap | Utilizador | 2026-11-04 | Adiado |
 | P-12 | Qualquer site público, aprendido por domínio (substitui a lista Zara, Uniqlo, Pull&Bear e Bershka); Supabase Edge Functions | Utilizador | 2026-11-04 | Decidido; estado de cada site vem do uso |
 | P-15 | `applicationId` = `pt.rafaelfaria.guarda_roupa` (fixo a partir do OAuth/primeira instalação) | Utilizador | 2026-11-03 | Decidido; assinatura release por definir |
 | P-17 | Limites de conforto (proposta: 22/14 °C, vento 30 km/h) | Utilizador | 2026-11-03 | Decidido; editável mais tarde |

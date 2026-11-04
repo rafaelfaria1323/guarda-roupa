@@ -41,6 +41,7 @@ Uma recomendação de package não é uma garantia de compatibilidade com todos 
 | [Inspirações e estilo](features/inspiracoes-e-estilo.md) | Referências visuais e preferências assistidas |
 | [Autenticação e sincronização](features/autenticacao-e-sincronizacao.md) | Conta, dois dispositivos, offline, conflitos e dados privados |
 | [Importação de links](features/importacao-de-links.md) | Produtos de lojas, metadados, variantes e limitações |
+| [Manequim 3D](features/manequim-3d.md) | Conjunto num manequim 3D (adiado) |
 | [Backups e recuperação](features/backups-e-recuperacao.md) | Exportação, integridade e recuperação sem perda silenciosa |
 | [IA local](features/ia-local.md) | Evolução opcional, modelos e limites de inferência |
 | [Subscrições e evolução](features/subscricoes-e-evolucao.md) | Futuro comercial, pagamentos e custos |
