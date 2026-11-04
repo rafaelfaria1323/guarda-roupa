@@ -16,6 +16,7 @@ Não há estimativas de calendário sem conhecer disponibilidade e resultados da
 | 7 — Entrada assistida por lojas | POC por loja e importador limitado | Infraestrutura estável e regras de acesso | Dados/variante confirmáveis, erros e alternativa manual |
 | 8 — IA local | POC de modelo e runtime | Dados de qualidade e licença | Precisão/desempenho úteis na PWA, sem tornar a app dependente do modelo |
 | 9 — Produto comercial | Multiutilizador público, pagamentos e operação | Utilidade validada e revisão de custos | Regras das lojas, autorização e obrigações operacionais |
+| Mais tarde — Manequim 3D | Conjunto vestido num manequim 3D, com zoom e a rodar | Conjuntos e cores das peças; modelos 3D com licença | POC com moldes por categoria antes de investir em modelos |
 
 ## Estado da implementação
 
@@ -32,8 +33,9 @@ Atualizado a 2026-11-04. "Feito" quer dizer implementado, com testes automático
 | 6 — Semana utilizável | Feito: dados do plano (`plan_entries`, propostas pendentes, P-19), pesquisa semanal (beam search com reservas e diversidade), ecrã “Esta semana” (aceitar, deixar vazio, “Vesti isto hoje”) e mudanças posteriores (peça suja, arquivada ou desadequada à previsão: avisa e propõe trocar só essa, aplicada após confirmação) | [planeamento](features/planeamento-semanal.md), [motor](features/motor-de-combinacoes.md) |
 | 7 — Entrada assistida por lojas | Em curso: função `import-product` (Supabase Edge Functions) para **qualquer site público** (JSON-LD, microdata, Open Graph/Twitter, HTML simples), com proteções de rede, quota, imagens só as oferecidas e perfil por domínio que se atualiza sozinho (“site novo” → “costuma funcionar” / “costuma falhar”). Fluxo na app: colar link, pré-visualização com origem dos campos, variante e imagens, formulário pré-preenchido com categoria e cores por confirmar, erros com alternativa manual. Falta publicar a função e o smoke com links reais | [importação](features/importacao-de-links.md) |
 | 8 a 9 | Por começar | — |
+| Manequim 3D | Adiado (P-20): ideia e opções registadas, POC proposta | [manequim 3D](features/manequim-3d.md) |
 
-Ações do utilizador ainda abertas: voltar a fazer deploy das Sync Streams no painel do PowerSync quando um stream novo é adicionado a `powersync/sync-streams.yaml` (os de lavandaria, conjuntos, inspirações e preferências); executar a POC em dois dispositivos.
+Ações do utilizador ainda abertas (lista em [pendências](pendencias.md#ações-do-utilizador-por-fazer)): criar o secret `SUPABASE_ACCESS_TOKEN` para publicar a importação; experimentar links reais de lojas; voltar a fazer deploy das Sync Streams no painel do PowerSync quando um stream novo é adicionado a `powersync/sync-streams.yaml` (os de lavandaria, conjuntos, inspirações e preferências); executar a POC em dois dispositivos.
 
 ## MVP versus incremento
 
