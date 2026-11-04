@@ -1,6 +1,6 @@
 # Feature futura — IA local
 
-Estado: opcional; nenhum modelo selecionado. Plano da POC e candidatos levantados a 2026-11-04 ([abaixo](#candidatos-e-plano-2026-11-04)); a decisão de avançar com modelos é do utilizador (P-14).
+Estado: POC aprovada pelo utilizador e implementada (2026-11-04): recorte de fundo, categoria e peças parecidas, tudo opcional e descarregado a pedido ([POC implementada](#poc-implementada-2026-11-04)). Falta medir em aparelho (P-14).
 
 ## Casos potencialmente úteis
 
@@ -41,7 +41,7 @@ Levantamento de fontes públicas, a confirmar em cada model card original antes 
 | 1 | Cores da peça | Contagem de cores da foto, mapeadas às cores de referência; ignora o fundo pela borda. **Implementado como sugestão** ([fotografias](fotografias-e-ficheiros.md)) | — | — | — |
 | 2 | Recortar o fundo (melhora as cores, a futura textura do [manequim 3D](manequim-3d.md) e as miniaturas) | Fundo estimado pela borda (já usado nas cores). **U²-Netp implementado nas cores** (POC abaixo) | U²-Netp; ISNet general; BiRefNet lite | U²-Net/ISNet Apache-2.0; BiRefNet MIT. **Evitar RMBG-1.4/2.0** (Bria: não comercial sem acordo) | U²-Netp ≈ 4,6 MB (320×320); ISNet e BiRefNet lite na ordem das centenas de MB em FP32, menos quantizados |
 | 3 | Sugerir a categoria | Escolha manual. **FashionCLIP q4 implementado** (POC abaixo): 90 % top-1 em fotos reais | Marqo FashionCLIP (zero-shot: comparar a foto com textos "t-shirt", "calças", …) | Apache-2.0 | Encoder de imagem ≈ 345 MB FP32, ≈ 87 MB int8; os textos das categorias calculam-se uma vez |
-| 4 | Inspirações parecidas com peças próprias | Etiquetas confirmadas (atual) | O mesmo FashionCLIP (semelhança de embeddings) | Apache-2.0 | Reutiliza o modelo da tarefa 3 |
+| 4 | Inspirações parecidas com peças próprias | Etiquetas confirmadas (atual). **Peças parecidas implementado** (POC abaixo) | O mesmo FashionCLIP (semelhança de embeddings) | Apache-2.0 | Reutiliza o modelo da tarefa 3 |
 
 Postos de parte:
 - **MobileCLIP (Apple):** licença dos pesos própria e, na versão 2, só para investigação.
@@ -119,6 +119,15 @@ Postos de parte:
   - cerca de 1,4 s por foto (WASM), 2,2 s na primeira, que inclui abrir a sessão;
   - remover limpa a Cache Storage.
 - **Por medir:** tempo e memória no Android e no iPhone; fotos do guarda-roupa real.
+
+**Peças parecidas com uma inspiração — feito (2026-11-04):**
+
+- **Na app:** no editor de uma inspiração com imagem, com o FashionCLIP descarregado, "Procurar peças parecidas" compara a miniatura da imagem com a capa (miniatura) de cada peça não arquivada. Mostra as 5 mais parecidas por cosseno e um toque abre a peça. Não liga nada, não cria etiquetas e não muda a inspiração.
+  - Cada capa analisa-se uma vez por dispositivo; o embedding fica na tabela local `photo_embeddings` (fora da sincronização, apagada ao terminar sessão). Na Web são cerca de 1,4 s por capa na primeira vez.
+  - Peças cuja foto ainda não está neste dispositivo ficam de fora, e a app diz quantas. Sem modelo, o botão não aparece.
+- **Medição:** `tool/models/eval_similar.py`, nas mesmas 621 fotos. Para cada foto, entre as 5 mais parecidas, 74 % têm a mesma etiqueta: 98 % no calçado, 92 % nas calças, 37 % nas blusas e 42 % em "Longsleeve", que se confundem com outras peças de cima.
+  - Os cossenos de pares da mesma etiqueta (mediana 0,61) e de etiquetas diferentes (0,48) sobrepõem-se muito, por isso não há limite mínimo: mostra-se só uma ordem.
+  - Inspirações costumam ser looks inteiros e não peças soltas. Isto não foi medido: está por ver com imagens reais do utilizador.
 
 ## Alternativas
 

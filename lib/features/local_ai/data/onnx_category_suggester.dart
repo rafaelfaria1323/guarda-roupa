@@ -5,22 +5,17 @@ import 'package:flutter/services.dart';
 import '../../wardrobe/domain/category_suggestion.dart';
 import '../../wardrobe/domain/garment_category.dart';
 import '../domain/category_suggester.dart';
-import '../domain/local_model.dart';
-import 'onnx_model.dart';
+import '../domain/image_embedder.dart';
 
-/// FashionCLIP (encoder de imagem) com o ONNX Runtime, contra os textos das
-/// categorias em [textsAsset].
-final class OnnxCategorySuggester implements CategorySuggester {
-  OnnxCategorySuggester(
-    ModelStore store,
-    LocalModel model, {
-    AssetBundle? bundle,
-  }) : _model = OnnxModel(store, model),
-       _bundle = bundle ?? rootBundle;
+/// Categorias pelo embedding da foto, contra os textos das categorias em
+/// [textsAsset] (calculados com o mesmo FashionCLIP).
+final class EmbeddingCategorySuggester implements CategorySuggester {
+  EmbeddingCategorySuggester(this._embedder, {AssetBundle? bundle})
+    : _bundle = bundle ?? rootBundle;
 
   static const textsAsset = 'assets/models/fashionclip_categories.json';
 
-  final OnnxModel _model;
+  final ImageEmbedder _embedder;
   final AssetBundle _bundle;
   CategoryTexts? _texts;
 
@@ -30,19 +25,13 @@ final class OnnxCategorySuggester implements CategorySuggester {
       jsonDecode(await _bundle.loadString(textsAsset)),
     );
     if (texts == null) return null;
-    final input = FashionClip.input(bytes);
-    if (input == null) return null;
-    final out = await _model.run(input, const [
-      1,
-      3,
-      FashionClip.side,
-      FashionClip.side,
-    ]);
-    if (out == null) return null;
-    final ranked = FashionClip.rank(out, texts);
+    final embedding = await _embedder.embed(bytes);
+    if (embedding == null) return null;
+    final ranked = FashionClip.rank(embedding, texts);
     return ranked.isEmpty ? null : ranked;
   }
 
+  // O embedder é partilhado; fecha-o quem o criou.
   @override
-  Future<void> close() => _model.close();
+  Future<void> close() async {}
 }

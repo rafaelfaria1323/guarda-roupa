@@ -650,7 +650,7 @@
     }
   },
   "inspirationImage": "Imagem",
-  "inspirationImageHint": "Opcional: uma fotografia tua ou que tens autorização para guardar. Fica privada e a app não a analisa — as etiquetas são só as que escolheres.",
+  "inspirationImageHint": "Opcional: uma fotografia tua ou que tens autorização para guardar. Fica privada. As etiquetas são só as que escolheres; a imagem só é comparada com as tuas peças se o pedires, e neste dispositivo.",
   "inspirationImageReplace": "Trocar imagem",
   "inspirationImageRightsTitle": "Imagem tua ou autorizada?",
   "inspirationImageRightsBody": "Guarda só imagens que tiraste ou que tens autorização para guardar. Para referências de outras pessoas, guarda o link.",
@@ -1114,5 +1114,28 @@
   "localAiCategoryBody": "Propõe as três categorias mais prováveis da peça pela foto; escolhes tu. Em fotos reais de teste acertou à primeira em cerca de 9 em cada 10. É um ficheiro grande: de preferência, descarrega com Wi-Fi.",
   "categoryFromPhoto": "Sugerir categoria pela foto",
   "categorySuggestions": "Sugestões pela foto (toca para escolher):",
-  "categorySuggestFailed": "Não foi possível sugerir a categoria por esta foto."
+  "categorySuggestFailed": "Não foi possível sugerir a categoria por esta foto.",
+  "similarGarmentsFind": "Procurar peças parecidas",
+  "similarGarmentsHint": "Peças tuas mais parecidas com a imagem (semelhança visual, neste dispositivo). É só para olhar: nada muda.",
+  "similarGarmentsNone": "Ainda não há peças com foto para comparar.",
+  "similarGarmentsProgress": "A comparar com as tuas peças… {done} de {total}",
+  "@similarGarmentsProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "similarGarmentsSkipped": "{count, plural, =1{1 peça ficou de fora: a foto ainda não está neste dispositivo.} other{{count} peças ficaram de fora: as fotos ainda não estão neste dispositivo.}}",
+  "@similarGarmentsSkipped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "similarGarmentsFailed": "Não foi possível analisar a imagem. As peças não mudaram."
 }

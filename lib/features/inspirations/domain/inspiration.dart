@@ -40,8 +40,9 @@ enum Proportion {
 
 /// Uma referência de estilo: título e/ou link, com etiquetas confirmadas
 /// pelo utilizador e, opcionalmente, uma imagem própria ou autorizada (que
-/// a app não analisa). Não é posse: não aparece no guarda-roupa nem é
-/// sugerida como peça. A app não abre nem analisa o link.
+/// nunca gera etiquetas; só se compara com as peças a pedido, no
+/// dispositivo). Não é posse: não aparece no guarda-roupa nem é sugerida
+/// como peça. A app não abre nem analisa o link.
 final class Inspiration {
   const Inspiration({
     required this.id,

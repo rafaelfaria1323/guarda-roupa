@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:powersync/powersync.dart';
 
 import '../../../app/config.dart';
+import '../../local_ai/data/photo_embeddings.dart';
 import '../../wardrobe/data/photo_files.dart';
 import '../../wardrobe/data/powersync_wardrobe_repository.dart';
 import '../../wardrobe/domain/wardrobe_repository.dart';
@@ -143,4 +144,5 @@ Future<void> clearAccountData(PowerSyncDatabase db) async {
   await db.disconnectAndClear();
   // Fora do schema do PowerSync: o clear acima não lhe toca.
   await db.writeTransaction(PhotoFiles.clear);
+  await db.writeTransaction(PhotoEmbeddings.clear);
 }

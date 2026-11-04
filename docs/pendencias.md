@@ -24,7 +24,8 @@ Uma pendência não deve desaparecer por estar descrita em Markdown. Fechar apen
 | P-13 | Pinterest | Confirmar permissões/API; link não garante imagem | Importação automática de Pins |
 | P-14 | Modelo IA — **POC aprovada pelo utilizador (2026-11-04)** ([IA local](features/ia-local.md#poc-implementada-2026-11-04)): runtime `flutter_onnxruntime`. Feitos os dois, descarregados a pedido em Definições › IA local:
 - recorte U²-Netp (Apache-2.0, 4,6 MB), usado nas cores pela foto; verificado só com imagens sintéticas;
-- sugestão de categoria com Marqo FashionCLIP q4 (Apache-2.0, 80,9 MB): 90,2 % top-1 e 96,9 % top-3 em 621 fotos reais (CC0); verificado também na build Web no Chromium | Medir tempo e memória no Android e no iPhone, com fotos do guarda-roupa real | Ativar análise visual automática |
+- sugestão de categoria com Marqo FashionCLIP q4 (Apache-2.0, 80,9 MB): 90,2 % top-1 e 96,9 % top-3 em 621 fotos reais (CC0); verificado também na build Web no Chromium;
+- peças parecidas com uma inspiração (o mesmo FashionCLIP): 74 % das 5 mais parecidas com a mesma etiqueta, nas mesmas fotos | Medir tempo e memória no Android e no iPhone, com fotos do guarda-roupa real | Ativar análise visual automática |
 | P-15 | Assinatura/distribuição Android — **applicationId decidido 2026-11-03: `pt.rafaelfaria.guarda_roupa`** | Guardar chave de assinatura e comprovar atualização sem apagar dados | Distribuição estável |
 | P-16 | Registo — **Decidido 2026-11-03: só o proprietário** (e uma conta de experiência) | Impor a regra no servidor (Auth + RLS), não apenas na UI | Expor login publicamente |
 | P-20 | Manequim 3D dos conjuntos — **Adiado 2026-11-04** pelo utilizador ([feature](features/manequim-3d.md)) | Ao retomar: POC com moldes por categoria pintados com as cores das peças; decidir a origem dos modelos 3D | Nada no MVP |
@@ -39,7 +40,7 @@ Notas para não esquecer (2026-11-04):
 3. **Manequim 3D** (P-20): ideia guardada no roadmap; retomar mais tarde.
 4. **Rever a proposta P-21** (cores, padrões e texturas): se a lista de neutras ou a regra dos padrões não bate com o teu gosto, diz o que mudar. Para já só pesa quando há uma preferência de combinação em Estilo › Preferências.
 5. **IA local** (P-14, POC aprovada):
-   - Experimentar, no Android e na PWA, o recorte e a sugestão de categoria (Definições › IA local) com fotos tuas. A PWA precisa de `tool/models/fetch_models.sh` antes da build Web. Diz se as cores e as categorias sugeridas acertam, e se o tempo de espera é aceitável no telemóvel.
+   - Experimentar, no Android e na PWA, o recorte, a sugestão de categoria e as peças parecidas de uma inspiração (Definições › IA local) com fotos tuas. A PWA precisa de `tool/models/fetch_models.sh` antes da build Web. Diz se as cores, as categorias e as peças parecidas acertam, e se o tempo de espera é aceitável no telemóvel.
 
    Detalhes em [IA local](features/ia-local.md#poc-implementada-2026-11-04).
 
