@@ -13,7 +13,13 @@ Estado: necessária no MVP do motor.
   - chuva ou vento ≥ 30 km/h: casaco e calçado marcados para chuva/vento à frente, marcados como não adequados atrás; no calor com chuva, um impermeável aparece como camada opcional;
   - aquecimento desconhecido nunca exclui: a peça entra com nota.
 
-Implementado no motor (`lib/features/engine/domain/comfort.dart`); falta o ecrã para editar os limites.
+Implementado no motor (`lib/features/engine/domain/comfort.dart`). Os valores acima são os de origem. Editam-se em Definições › Conforto e tempo (`ComfortSettingsScreen`):
+
+- calor de 15 a 35 °C e frio de 0 a 25 °C, de grau em grau; o frio fica sempre abaixo do calor, e os botões que o violariam ficam desativados;
+- vento de 10 a 80 km/h, de 5 em 5;
+- há um botão para repor os valores de origem.
+
+Os limites ficam neste dispositivo (`local_settings`, chave `comfort_thresholds`, em JSON), como a localização: não sincronizam e não entram no backup. Um valor guardado inválido volta aos de origem. Aplicam-se às sugestões de hoje, à geração da semana e à revisão do plano (avisos de peça desadequada à previsão).
 
 ## Implementado (2026-11-03): previsão e localização
 
