@@ -2,6 +2,13 @@
 
 Estado: necessária no MVP de planeamento; um conjunto por dia inicialmente.
 
+## Implementado (2026-11-04, dados)
+
+- Tabela `plan_entries` e `apply_plan_operation` ([modelo](../modelo-de-dados.md)): uma entrada por dia com ocasião, provisório, peças e estado; edições com `base_version` desatualizada ficam como **proposta pendente** (ADR-008), tal como um segundo “criar” para o mesmo dia vindo de outro dispositivo. Aceitar aplica a proposta; rejeitar descarta-a.
+- Regras da semana (P-19, `WeekPlanRules`): 7 dias; os dias úteis começam em “Trabalho (smart casual)”, o fim de semana “a decidir” e provisório (pode ficar vazio).
+- Um plano nunca conta como utilização: só “Vesti hoje” cria `wear_events`, e a mesma entrada confirmada em dois dispositivos dá uma só utilização (`plan_entry_id`).
+- Por fazer: pesquisa semanal sobre o motor, ecrã da semana com cartões por dia e propostas quando a disponibilidade ou a previsão mudam.
+
 ## Objetivo
 
 Escolher uma semana coerente, não apenas repetir sete chamadas independentes ao gerador diário.

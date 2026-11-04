@@ -81,7 +81,7 @@ void main() {
     expect(find.text('Inspiração guardada.'), findsOne);
     expect(inList('pinterest.com'), findsOne, reason: 'sem título, o domínio');
     expect(
-      find.text('Casual cuidado · Trabalho informal · Malha'),
+      find.text('Casual cuidado · Trabalho (smart casual) · Malha'),
       findsOne,
       reason: 'só as etiquetas escolhidas',
     );
@@ -105,7 +105,7 @@ void main() {
     await saveInspiration(tester);
     expect(inList('Malhas neutras'), findsOne);
     expect(
-      find.text('pinterest.com\nDescontraído · Trabalho informal'),
+      find.text('pinterest.com\nDescontraído · Trabalho (smart casual)'),
       findsOne,
     );
 

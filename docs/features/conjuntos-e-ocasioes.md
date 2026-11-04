@@ -4,7 +4,7 @@ Estado: necessária no MVP.
 
 ## Implementado (incremento 4)
 
-- Separador **Conjuntos**: lista (nome ou as primeiras peças, nº de peças, ocasiões, “Incompleto” e aviso de peças indisponíveis) e editor com nome opcional (até 120 caracteres), ocasiões (casual, trabalho informal, noite/saída), peças e papel de cada uma.
+- Separador **Conjuntos**: lista (nome ou as primeiras peças, nº de peças, ocasiões, “Incompleto” e aviso de peças indisponíveis) e editor com nome opcional (até 120 caracteres), ocasiões (casual, trabalho (smart casual), noite/saída), peças e papel de cada uma.
 - O papel é sugerido pela categoria e pode ser corrigido. `main_top`, `bottom`, `one_piece` e `footwear` são únicos; `mid_layer`, `outer_layer` e `accessory` repetem-se. 1–20 peças, sem repetir a mesma.
 - “Falta: …” (calçado e top+parte de baixo, ou peça única) é só um aviso: um conjunto incompleto guarda-se na mesma. Casaco e acessórios nunca são obrigatórios.
 - Peças a lavar/a secar/indisponíveis, arquivadas ou eliminadas mantêm-se no conjunto com aviso; nada muda sozinho. Peças novas têm de estar ativas.
@@ -17,7 +17,7 @@ Estado: necessária no MVP.
 
 Guardar composições reutilizáveis, atribuir uma ou mais ocasiões e recuperar sugestões adequadas sem confundir composição, plano e utilização.
 
-Ocasiões iniciais confirmadas: casual, trabalho informal, jantares/saídas. Etiquetas futuras podem ser adicionadas sem misturar nomes traduzidos com IDs técnicos.
+Ocasiões iniciais confirmadas: casual, trabalho (smart casual), jantares/saídas. O id técnico continua `work_casual`; o nome mostrado passou de “Trabalho informal” para “Trabalho (smart casual)” (P-19: o trabalho não pede roupa formal). Etiquetas futuras podem ser adicionadas sem misturar nomes traduzidos com IDs técnicos.
 
 ## Estrutura e papéis
 

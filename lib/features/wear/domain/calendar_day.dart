@@ -36,6 +36,12 @@ final class CalendarDay implements Comparable<CalendarDay> {
   int get month => _utc.month;
   int get day => _utc.day;
 
+  /// 1 = segunda … 7 = domingo ([DateTime.monday]…[DateTime.sunday]).
+  int get weekday => _utc.weekday;
+
+  bool get isWeekend =>
+      weekday == DateTime.saturday || weekday == DateTime.sunday;
+
   CalendarDay addDays(int days) =>
       CalendarDay._(DateTime.utc(year, month, day + days));
 

@@ -26,6 +26,10 @@ abstract interface class OperationUploader {
   /// de erro que [apply].
   Future<Map<String, Object?>> applyStyle(Map<String, Object?> operation);
 
+  /// Envia uma operação do plano (`apply_plan_operation`). Mesmas regras de
+  /// erro que [apply].
+  Future<Map<String, Object?>> applyPlan(Map<String, Object?> operation);
+
   /// Envia um ficheiro de foto. Idempotente; lança em falha de rede.
   Future<void> uploadPhotoFile(
     String photoId,
@@ -49,6 +53,10 @@ abstract interface class OperationUploader {
 ///   `sync_conflicts`, `garment_id` guarda o id do conjunto.
 /// - `style_operations` (PUT): enviadas a `apply_style_operation`; em
 ///   `sync_conflicts`, `garment_id` guarda o id da inspiração.
+/// - `plan_operations` (PUT): enviadas a `apply_plan_operation`; em
+///   `sync_conflicts`, `garment_id` guarda o id da entrada. `conflict`
+///   (versão desatualizada ou dia ocupado) quer dizer que a alteração ficou
+///   como proposta pendente na entrada.
 /// - Escritas em `garments`: são só a visão otimista local; o servidor não
 ///   aceita escrita direta, por isso não se enviam.
 /// - `attach_photo`: os ficheiros vão primeiro; o servidor só liga a foto se
@@ -121,6 +129,16 @@ final class OperationUploadQueue {
                 'data': payload,
               }),
             ));
+          case 'plan_operations':
+            outcomes.add((
+              entry,
+              await _uploader.applyPlan({
+                'op_id': entry.id,
+                'entry_id': data['entry_id'],
+                'kind': kind,
+                'data': payload,
+              }),
+            ));
         }
       }
 
@@ -155,7 +173,8 @@ final class OperationUploadQueue {
               entry.opData?['garment_id'] ??
                   entry.opData?['event_id'] ??
                   entry.opData?['outfit_id'] ??
-                  entry.opData?['entity_id'],
+                  entry.opData?['entity_id'] ??
+                  entry.opData?['entry_id'],
               entry.opData?['kind'],
               outcome is String ? outcome : 'rejected',
               result['reason'],

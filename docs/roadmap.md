@@ -29,7 +29,7 @@ Atualizado a 2026-11-03. "Feito" quer dizer implementado, com testes automático
 | 3 — Uso e lavandaria | Feito: "Vesti hoje", histórico, corrigir/desfazer, lavandaria (P-07) e rotatividade (P-06); backup v2 | [utilização](features/utilizacao-e-rotatividade.md), [lavandaria](features/lavandaria.md) |
 | 4 — Conjuntos e estilo | Feito: conjuntos (backup v3), inspirações com link, imagem e proporções, preferências (backup v4/v5) | [conjuntos](features/conjuntos-e-ocasioes.md), [inspirações](features/inspiracoes-e-estilo.md) |
 | 5 — Motor diário | Feito na base: motor (modelos, restrições, rotatividade, preferências, conforto P-17), previsão Open-Meteo com cache e localização (P-18), "Sugestões para hoje" no Planeador. Ficam para depois: harmonia de cores, padrões/texturas no conjunto, ecrã para editar os limites de conforto | [motor](features/motor-de-combinacoes.md) |
-| 6 — Semana utilizável | Próximo | [motor](features/motor-de-combinacoes.md) |
+| 6 — Semana utilizável | Em curso: dados do plano (`plan_entries`, propostas pendentes, P-19). Falta a pesquisa semanal, o ecrã da semana e as alterações propostas | [motor](features/motor-de-combinacoes.md) |
 | 7 a 9 | Por começar | — |
 
 Ações do utilizador ainda abertas: voltar a fazer deploy das Sync Streams no painel do PowerSync quando um stream novo é adicionado a `powersync/sync-streams.yaml` (os de lavandaria, conjuntos, inspirações e preferências); executar a POC em dois dispositivos.

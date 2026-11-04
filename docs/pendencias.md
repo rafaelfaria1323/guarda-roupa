@@ -16,6 +16,7 @@ Uma pendência não deve desaparecer por estar descrita em Markdown. Fechar apen
 | P-08 | Rotina — **Decidido 2026-11-03 (confirmação):** botão “Vesti hoje” no ecrã de hoje, escolher as peças (ou confirmar o plano) e guardar; corrigir e desfazer depois; sem notificações por agora; planear nunca conta como uso. **Implementado** (registo, histórico, corrigir, desfazer). Dias/ocasiões por defeito do planeamento semanal por decidir | Decidir a rotina semanal com o planeador (incrementos 5–6) | MVP de utilização |
 | P-17 | Conforto — **Decidido 2026-11-03 (proposta):** sensação térmica ≥ 22 °C peças leves; 14–22 °C peças médias (ou leves) com camada opcional; < 14 °C peças quentes, ou leve/média mais casaco; chuva ou vento ≥ 30 km/h preferem casaco e calçado marcados para chuva/vento. Editável mais tarde | **Implementado no motor** (`ComfortThresholds`, `ComfortRules`); falta o ecrã para editar e o que conta como "chuva" na previsão | Calibração pessoal |
 | P-18 | Localização — **Decidido 2026-11-03:** Torres Vedras, coordenadas aproximadas da cidade, fuso Europe/Lisbon, editável nas Definições; Open-Meteo sem GPS | **Implementado** (localização nas Definições, previsão com cache); usada em "Sugestões para hoje" | Previsão real |
+| P-19 | Semana e ocasiões — **Decidido 2026-11-04:** planear os 7 dias; dias úteis começam em “Trabalho (smart casual)” (o trabalho não pede roupa formal); sábado e domingo ficam “a decidir” (sem ocasião) e provisórios: pode não acontecer nada que peça essa roupa, e o dia pode ficar vazio. Um plano nunca conta como utilização (P-08) | **Dados implementados** (`plan_entries`, `apply_plan_operation`, regras `WeekPlanRules`); falta a pesquisa semanal e o ecrã da semana | Semana utilizável |
 | P-09 | Perfis e desempenho | Escolher dispositivos de referência e orçamento mensurável | Gate de desempenho |
 | P-10 | Automação E2E | POC Patrol Android/Chromium; guião iPhone real, sem equivalência fictícia | Evidência por plataforma |
 | P-11 | Recuperação com cloud | Definir substituição/recuperação sem replay de eventos nem ressurreição silenciosa | Recuperação sobre conta existente |
@@ -62,6 +63,7 @@ Idempotência de retries e da mesma entrada de plano não deduplica magicamente 
 | P-15 | `applicationId` = `pt.rafaelfaria.guarda_roupa` (fixo a partir do OAuth/primeira instalação) | Utilizador | 2026-11-03 | Decidido; assinatura release por definir |
 | P-17 | Limites de conforto (proposta: 22/14 °C, vento 30 km/h) | Utilizador | 2026-11-03 | Decidido; editável mais tarde |
 | P-18 | Localização Torres Vedras, Europe/Lisbon, sem GPS | Utilizador | 2026-11-03 | Decidido |
+| P-19 | 7 dias; úteis em trabalho (smart casual), fim de semana a decidir e provisório | Utilizador | 2026-11-04 | Decidido |
 | P-04 | ADR-008: ordem conservadora de disponibilidade, edições de plano concorrentes como proposta, logout com pendências bloqueado | Utilizador | 2026-11-03 | Decidido; validação na POC |
 
 ## Registo futuro de fecho

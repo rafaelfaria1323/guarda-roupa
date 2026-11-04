@@ -33,7 +33,7 @@ String inspirationProblem(AppLocalizations l10n, InspirationProblem p) =>
       InspirationProblem.tooManyColors => l10n.inspirationTooManyColors,
     };
 
-/// "Casual cuidado · Trabalho informal · Riscas", ou "Sem etiquetas".
+/// "Casual cuidado · Trabalho (smart casual) · Riscas", ou "Sem etiquetas".
 String inspirationTags(AppLocalizations l10n, Inspiration i) {
   final parts = [
     if (i.formality case final f?) l10n.formalityLabel(f.id),
