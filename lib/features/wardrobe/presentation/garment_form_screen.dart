@@ -14,6 +14,7 @@ import '../domain/garment.dart';
 import '../domain/garment_attributes.dart';
 import '../domain/garment_category.dart';
 import '../domain/garment_photo.dart';
+import '../domain/photo_colors.dart';
 import '../domain/photo_picker.dart';
 import '../domain/wardrobe_repository.dart';
 import '../domain/garment_color.dart';
@@ -272,6 +273,45 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
       SnackBar(
         content: Text(
           failed > 0 ? l10n.importImagesFailed(failed) : l10n.importDone,
+        ),
+      ),
+    );
+  }
+
+  /// Cores da primeira foto (a capa), por confirmar. Substitui as atuais,
+  /// com "Desfazer".
+  Future<void> _suggestColors(WardrobeRepository repo, Garment? garment) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _processing = true);
+    List<GarmentColor> colors;
+    try {
+      final Uint8List? bytes = garment == null
+          ? _pending.first.thumb
+          : await repo.photoBytes(garment.photos.first.id, PhotoVariant.thumb);
+      // A miniatura (≤ 320 px) analisa-se em milissegundos: sem isolate.
+      colors = bytes == null ? const [] : PhotoColors.suggest(bytes);
+    } on Object {
+      colors = const [];
+    } finally {
+      if (mounted) setState(() => _processing = false);
+    }
+    if (!mounted) return;
+    messenger.hideCurrentSnackBar();
+    if (colors.isEmpty) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.colorsSuggestFailed)));
+      return;
+    }
+    final before = _colors;
+    setState(() => _colors = colors);
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(l10n.colorsSuggested),
+        action: SnackBarAction(
+          label: l10n.wearUndo,
+          onPressed: () {
+            if (mounted) setState(() => _colors = before);
+          },
         ),
       ),
     );
@@ -565,6 +605,10 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
             ColorsEditor(
               value: _colors,
               onChanged: (colors) => setState(() => _colors = colors),
+              onSuggest:
+                  _processing || (garment?.photos.isEmpty ?? _pending.isEmpty)
+                  ? null
+                  : () => _suggestColors(repo, garment),
             ),
             const SizedBox(height: 16),
             AttributesEditor(
