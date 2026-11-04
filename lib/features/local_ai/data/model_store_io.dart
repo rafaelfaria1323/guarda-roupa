@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
@@ -33,19 +32,24 @@ final class FileModelStore implements ModelStore {
     LocalModel model, {
     required void Function(double progress) onProgress,
   }) async {
-    final bytes = await fetchModel(
-      _client,
-      model,
-      model.url,
-      onProgress: onProgress,
-    );
     final file = await _file(model);
     await file.parent.create(recursive: true);
     final tmp = File('${file.path}.part');
-    await tmp.writeAsBytes(bytes, flush: true);
-    if (sha256.convert(await tmp.readAsBytes()).toString() != model.sha256) {
-      await tmp.delete();
-      throw const ModelDownloadException('Erro ao gravar');
+    final sink = tmp.openWrite();
+    try {
+      await fetchModel(
+        _client,
+        model,
+        model.url,
+        onProgress: onProgress,
+        onChunk: sink.add,
+      );
+      await sink.flush();
+      await sink.close();
+    } on Object {
+      await sink.close().catchError((Object _) {});
+      if (await tmp.exists()) await tmp.delete();
+      rethrow;
     }
     await tmp.rename(file.path);
   }

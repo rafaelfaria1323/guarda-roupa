@@ -44,6 +44,16 @@ void main() {
       find.textContaining('U²-Netp · 4,6 MB · licença Apache-2.0'),
       findsOneWidget,
     );
+    expect(
+      find.textContaining(
+        'Marqo FashionCLIP (q4) · 80,9 MB · licença Apache-2.0',
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('local-model-download-fashionclip_q4')),
+      findsOneWidget,
+    );
     expect(store.pending, isNull); // nada se descarrega sem pedir
 
     await tester.tap(find.byKey(download));

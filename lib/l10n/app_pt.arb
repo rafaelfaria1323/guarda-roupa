@@ -1078,7 +1078,7 @@
   "colorsSuggestedHint": "Sugeridas pela foto, ainda por confirmar.",
   "localAiTitle": "IA local",
   "localAiSummaryOff": "Desligada: as sugestões usam o método simples",
-  "localAiSummaryOn": "Recorte do fundo ativo neste dispositivo",
+  "localAiSummaryOn": "Ativa neste dispositivo",
   "localAiIntro": "Os modelos correm só neste dispositivo: as fotos não saem daqui. Descarregar é opcional e pode desfazer-se; sem modelo, a app funciona na mesma e as sugestões usam o método simples.",
   "localAiBackgroundTitle": "Recorte do fundo",
   "localAiBackgroundBody": "Separa a peça do fundo antes de sugerir as cores, para o fundo não contar como cor da peça. As cores continuam por confirmar.",
@@ -1109,5 +1109,10 @@
   "localAiRemove": "Remover",
   "localAiFailed": "Não foi possível descarregar (sem rede ou interrompido). Tenta de novo.",
   "localAiDataNote": "Na Web, a primeira utilização também descarrega o motor do modelo (cerca de 11 MB).",
-  "colorsSuggestedCutout": "Cores sugeridas sem o fundo da foto: confirma ou ajusta."
+  "colorsSuggestedCutout": "Cores sugeridas sem o fundo da foto: confirma ou ajusta.",
+  "localAiCategoryTitle": "Sugestão de categoria",
+  "localAiCategoryBody": "Propõe as três categorias mais prováveis da peça pela foto; escolhes tu. Em fotos reais de teste acertou à primeira em cerca de 9 em cada 10. É um ficheiro grande: de preferência, descarrega com Wi-Fi.",
+  "categoryFromPhoto": "Sugerir categoria pela foto",
+  "categorySuggestions": "Sugestões pela foto (toca para escolher):",
+  "categorySuggestFailed": "Não foi possível sugerir a categoria por esta foto."
 }

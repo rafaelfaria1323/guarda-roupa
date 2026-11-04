@@ -40,7 +40,7 @@ Levantamento de fontes públicas, a confirmar em cada model card original antes 
 |---|---|---|---|---|---|
 | 1 | Cores da peça | Contagem de cores da foto, mapeadas às cores de referência; ignora o fundo pela borda. **Implementado como sugestão** ([fotografias](fotografias-e-ficheiros.md)) | — | — | — |
 | 2 | Recortar o fundo (melhora as cores, a futura textura do [manequim 3D](manequim-3d.md) e as miniaturas) | Fundo estimado pela borda (já usado nas cores). **U²-Netp implementado nas cores** (POC abaixo) | U²-Netp; ISNet general; BiRefNet lite | U²-Net/ISNet Apache-2.0; BiRefNet MIT. **Evitar RMBG-1.4/2.0** (Bria: não comercial sem acordo) | U²-Netp ≈ 4,6 MB (320×320); ISNet e BiRefNet lite na ordem das centenas de MB em FP32, menos quantizados |
-| 3 | Sugerir a categoria | Escolha manual (atual) | Marqo FashionCLIP (zero-shot: comparar a foto com textos "t-shirt", "calças", …) | Apache-2.0 | Encoder de imagem ≈ 345 MB FP32, ≈ 87 MB int8; os textos das categorias calculam-se uma vez |
+| 3 | Sugerir a categoria | Escolha manual. **FashionCLIP q4 implementado** (POC abaixo): 90 % top-1 em fotos reais | Marqo FashionCLIP (zero-shot: comparar a foto com textos "t-shirt", "calças", …) | Apache-2.0 | Encoder de imagem ≈ 345 MB FP32, ≈ 87 MB int8; os textos das categorias calculam-se uma vez |
 | 4 | Inspirações parecidas com peças próprias | Etiquetas confirmadas (atual) | O mesmo FashionCLIP (semelhança de embeddings) | Apache-2.0 | Reutiliza o modelo da tarefa 3 |
 
 Postos de parte:
@@ -74,7 +74,7 @@ Postos de parte:
   - **Android/iOS:** ficheiro no diretório de suporte da app, descarregado do GitHub.
   - **Web:** a PWA serve o modelo da própria origem em `models/`, porque o GitHub não manda cabeçalhos CORS. O `onnxruntime-web` 1.22.0 (só WASM) vem em `ort/`, também da própria origem, sem CDN de terceiros. Só se carrega no primeiro uso.
   - Os dois vão para `web/` com `tool/models/fetch_models.sh`, que confirma o sha256 do modelo e a integridade npm do runtime. Não são versionados.
-  - O acordo fica no `localStorage` e o ficheiro na cache do browser.
+  - O ficheiro fica na Cache Storage do browser.
   - Todos os ficheiros ficam abaixo do limite de 25 MiB por ficheiro do Pages ([custos](../custos-e-limitacoes.md#ia-local)).
 - **Uso:** "Sugerir pela foto" corre o recorte na miniatura da capa e conta só a peça ([fotografias](fotografias-e-ficheiros.md)). As cores ficam sempre por confirmar.
 
@@ -89,12 +89,36 @@ Postos de parte:
 
 **Por medir** (precisa de aparelho e fotos reais): qualidade com 20–30 fotos reais, tempo e memória no Android e no iPhone (PWA). Os testes automáticos usam um recorte falso: não há runtime ONNX nos testes de widgets.
 
-**Sugestão de categoria (FashionCLIP) — por fazer:** os pesos estão no Hugging Face, que a rede do ambiente de desenvolvimento ainda não deixa usar. Sem eles não se mede a precisão (o gate da tarefa 3), por isso não se implementou nada a fingir. Com acesso, os passos são:
+**Sugestão de categoria com FashionCLIP — feito (2026-11-04):**
 
-1. confirmar a licença no model card;
-2. exportar ou obter o encoder de imagem int8 e os embeddings dos textos das categorias;
-3. medir top-1 e top-3;
-4. só se acertar o bastante, mostrar a categoria sugerida, por confirmar.
+- **Modelo:** só o encoder de imagem do [Marqo FashionCLIP](https://huggingface.co/Marqo/marqo-fashionCLIP), na revisão fixa `44f4c655…a81b`. É o `onnx/vision_model_q4.onnx`, com 80 900 704 bytes e sha256 `047e48d8…6dd96`. A licença Apache-2.0 foi confirmada no model card.
+  - Entrada `pixel_values` `[1, 3, 224, 224]`: lado menor a 224, recorte central e normalização do CLIP. Saída `image_embeds` `[1, 512]`.
+- **Textos das categorias:** calculados uma vez com o encoder de texto (FP32) por `tool/models/category_embeddings.py`. Cada categoria é a média de vários textos em inglês. Ficam em `assets/models/fashionclip_categories.json` (118 KB, 22 categorias × 512; "Outra" nunca se sugere). São dados derivados, não os pesos.
+- **Na app:**
+  - Com o modelo descarregado (Definições › IA local) e uma foto, o formulário mostra "Sugerir categoria pela foto". Este botão mostra as 3 categorias mais parecidas (cosseno) e a categoria só muda quando se toca numa delas.
+  - Sem resultado, aparece um aviso e o formulário segue manual. Sem modelo, o botão não aparece.
+- **Onde fica:** nas apps nativas, ficheiro no diretório de suporte, descarregado aos bocados e confirmado antes de ficar com o nome final. Na Web, vem direto do Hugging Face, que manda CORS (são 80 MB, acima do limite de 25 MiB do Pages). Fica na Cache Storage do browser e abre-se por um URL `blob:`, sem voltar à rede.
+  - O U²-Netp na Web também passou para a Cache Storage.
+
+**Medição (gate da tarefa 3):**
+- **Conjunto:** 621 fotos reais do [clothing-dataset](https://github.com/alexeygrigorev/clothing-dataset) (CC0). São fotos tiradas por pessoas, no chão ou num cabide, e não fazem parte dos dados de treino do Marqo. Até 40 por etiqueta, semente fixa.
+- **Etiquetas ambíguas:** valem as categorias que lhes correspondem. "Pants" = calças ou jeans; "Shoes" = qualquer calçado; "Outwear" = casaco, blusão, impermeável ou blazer; "Longsleeve" = uma das peças de cima de manga comprida.
+- **Script:** `tool/models/eval_category.py`.
+
+| Variante | Tamanho | Top-1 | Top-3 | Grupo certo (top-1) |
+|---|---|---|---|---|
+| FP32 | 345 MB | 89,7 % | 97,4 % | 96,6 % |
+| **q4 (escolhida)** | **80,9 MB** | **90,2 %** | **96,9 %** | **96,5 %** |
+| int8 | 87,3 MB | 84,2 % | 94,7 % | 92,8 % |
+| uint8 | 87,3 MB | 85,5 % | 95,2 % | 93,6 % |
+| q4 com o pré-processamento Dart, a partir da miniatura de 320 px (como na app) | 80,9 MB | 89,4 % | 97,3 % | — |
+
+- **Erros mais comuns:** "Blazer" lido como blusão (top-1 42 %, top-3 78 %). T-shirt e top confundem-se às vezes.
+- **Build Web real no Chromium headless:**
+  - 6 de 6 fotos do conjunto com a categoria certa em 1.º lugar;
+  - cerca de 1,4 s por foto (WASM), 2,2 s na primeira, que inclui abrir a sessão;
+  - remover limpa a Cache Storage.
+- **Por medir:** tempo e memória no Android e no iPhone; fotos do guarda-roupa real.
 
 ## Alternativas
 

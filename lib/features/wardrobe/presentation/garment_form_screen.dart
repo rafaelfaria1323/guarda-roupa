@@ -21,6 +21,7 @@ import '../domain/garment_color.dart';
 import '../../care/presentation/garment_laundry_section.dart';
 import '../../import/application/import_providers.dart';
 import '../../local_ai/application/local_ai_providers.dart';
+import '../../local_ai/domain/category_suggester.dart';
 import '../domain/foreground_mask.dart';
 import '../../import/domain/product_import.dart';
 import '../../import/presentation/import_link_screen.dart';
@@ -49,6 +50,12 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
   final _material = TextEditingController();
   final _care = TextEditingController();
   GarmentCategory? _category;
+
+  /// Categorias sugeridas pela foto, à espera de um toque; `null` = nenhuma.
+  List<GarmentCategory>? _categorySuggestions;
+
+  /// Muda quando a categoria muda por código: o campo só lê o valor inicial.
+  int _categoryRevision = 0;
   List<GarmentColor> _colors = const [];
   GarmentAttributes _attributes = const GarmentAttributes();
   bool _loaded = false;
@@ -280,6 +287,42 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
     );
   }
 
+  /// Miniatura da capa (a primeira foto).
+  Future<Uint8List?> _coverThumb(WardrobeRepository repo, Garment? garment) =>
+      garment == null
+      ? Future.value(_pending.first.thumb)
+      : repo.photoBytes(garment.photos.first.id, PhotoVariant.thumb);
+
+  /// Categorias prováveis da capa, para escolher com um toque. Nunca muda a
+  /// categoria sozinha.
+  Future<void> _suggestCategory(
+    WardrobeRepository repo,
+    Garment? garment,
+    CategorySuggester suggester,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _processing = true);
+    List<GarmentCategory>? found;
+    try {
+      final bytes = await _coverThumb(repo, garment);
+      found = bytes == null ? null : await suggester.suggest(bytes);
+    } on Object {
+      found = null;
+    } finally {
+      if (mounted) setState(() => _processing = false);
+    }
+    if (!mounted) return;
+    if (found == null || found.isEmpty) {
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.categorySuggestFailed)),
+      );
+      return;
+    }
+    setState(() => _categorySuggestions = found);
+  }
+
   /// Cores da primeira foto (a capa), por confirmar. Substitui as atuais,
   /// com "Desfazer". Com o modelo de recorte neste dispositivo, o fundo
   /// tira-se primeiro; se o recorte falhar, segue sem ele.
@@ -291,9 +334,7 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
     List<GarmentColor> colors;
     ForegroundMask? mask;
     try {
-      final Uint8List? bytes = garment == null
-          ? _pending.first.thumb
-          : await repo.photoBytes(garment.photos.first.id, PhotoVariant.thumb);
+      final bytes = await _coverThumb(repo, garment);
       if (bytes != null && remover != null) {
         try {
           mask = await remover.mask(bytes);
@@ -331,6 +372,52 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
         ),
       ),
     );
+  }
+
+  /// Botão "Sugerir categoria pela foto" (com o modelo neste dispositivo e
+  /// uma foto) ou as sugestões, cada uma escolhível com um toque.
+  List<Widget> _categoryFromPhoto(WardrobeRepository repo, Garment? garment) {
+    final suggester = ref.watch(categorySuggesterProvider);
+    final hasPhoto = garment?.photos.isNotEmpty ?? _pending.isNotEmpty;
+    if (suggester == null || !hasPhoto) return const [];
+    final l10n = AppLocalizations.of(context);
+    final suggestions = _categorySuggestions;
+    if (suggestions == null) {
+      return [
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: TextButton.icon(
+            key: const Key('category-from-photo'),
+            onPressed: _processing || _saving
+                ? null
+                : () => _suggestCategory(repo, garment, suggester),
+            icon: const Icon(Icons.auto_awesome_outlined),
+            label: Text(l10n.categoryFromPhoto),
+          ),
+        ),
+      ];
+    }
+    return [
+      const SizedBox(height: 8),
+      Text(l10n.categorySuggestions),
+      const SizedBox(height: 4),
+      Wrap(
+        spacing: 8,
+        runSpacing: 4,
+        children: [
+          for (final c in suggestions)
+            ActionChip(
+              key: Key('category-suggestion-${c.id}'),
+              label: Text(l10n.categoryLabel(c.id)),
+              onPressed: () => setState(() {
+                _category = c;
+                _categoryRevision++;
+                _categorySuggestions = null;
+              }),
+            ),
+        ],
+      ),
+    ];
   }
 
   Widget _photoSection(WardrobeRepository repo, Garment? garment) {
@@ -566,24 +653,31 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
                   ),
                 ),
             _photoSection(repo, garment),
-            DropdownButtonFormField<GarmentCategory>(
-              key: const Key('garment-category'),
-              initialValue: _category,
-              decoration: InputDecoration(
-                labelText: l10n.garmentCategory,
-                border: const OutlineInputBorder(),
+            KeyedSubtree(
+              key: ValueKey(_categoryRevision),
+              child: DropdownButtonFormField<GarmentCategory>(
+                key: const Key('garment-category'),
+                initialValue: _category,
+                decoration: InputDecoration(
+                  labelText: l10n.garmentCategory,
+                  border: const OutlineInputBorder(),
+                ),
+                items: [
+                  for (final category in GarmentCategory.values)
+                    DropdownMenuItem(
+                      value: category,
+                      child: Text(l10n.categoryLabel(category.id)),
+                    ),
+                ],
+                validator: (value) =>
+                    value == null ? l10n.garmentCategoryRequired : null,
+                onChanged: (value) => setState(() {
+                  _category = value;
+                  _categorySuggestions = null;
+                }),
               ),
-              items: [
-                for (final category in GarmentCategory.values)
-                  DropdownMenuItem(
-                    value: category,
-                    child: Text(l10n.categoryLabel(category.id)),
-                  ),
-              ],
-              validator: (value) =>
-                  value == null ? l10n.garmentCategoryRequired : null,
-              onChanged: (value) => setState(() => _category = value),
             ),
+            ..._categoryFromPhoto(repo, garment),
             const SizedBox(height: 16),
             TextFormField(
               key: const Key('garment-name'),
