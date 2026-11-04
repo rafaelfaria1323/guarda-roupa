@@ -20,6 +20,8 @@ import '../domain/wardrobe_repository.dart';
 import '../domain/garment_color.dart';
 import '../../care/presentation/garment_laundry_section.dart';
 import '../../import/application/import_providers.dart';
+import '../../local_ai/application/local_ai_providers.dart';
+import '../domain/foreground_mask.dart';
 import '../../import/domain/product_import.dart';
 import '../../import/presentation/import_link_screen.dart';
 import '../../care/presentation/garment_rotation_section.dart';
@@ -279,18 +281,30 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
   }
 
   /// Cores da primeira foto (a capa), por confirmar. Substitui as atuais,
-  /// com "Desfazer".
+  /// com "Desfazer". Com o modelo de recorte neste dispositivo, o fundo
+  /// tira-se primeiro; se o recorte falhar, segue sem ele.
   Future<void> _suggestColors(WardrobeRepository repo, Garment? garment) async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
+    final remover = ref.read(backgroundRemoverProvider);
     setState(() => _processing = true);
     List<GarmentColor> colors;
+    ForegroundMask? mask;
     try {
       final Uint8List? bytes = garment == null
           ? _pending.first.thumb
           : await repo.photoBytes(garment.photos.first.id, PhotoVariant.thumb);
+      if (bytes != null && remover != null) {
+        try {
+          mask = await remover.mask(bytes);
+        } on Object {
+          mask = null;
+        }
+      }
       // A miniatura (≤ 320 px) analisa-se em milissegundos: sem isolate.
-      colors = bytes == null ? const [] : PhotoColors.suggest(bytes);
+      colors = bytes == null
+          ? const []
+          : PhotoColors.suggest(bytes, mask: mask);
     } on Object {
       colors = const [];
     } finally {
@@ -306,7 +320,9 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
     setState(() => _colors = colors);
     messenger.showSnackBar(
       SnackBar(
-        content: Text(l10n.colorsSuggested),
+        content: Text(
+          mask == null ? l10n.colorsSuggested : l10n.colorsSuggestedCutout,
+        ),
         action: SnackBarAction(
           label: l10n.wearUndo,
           onPressed: () {

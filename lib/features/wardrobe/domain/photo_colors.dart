@@ -2,13 +2,16 @@ import 'dart:typed_data';
 
 import 'package:image/image.dart' as img;
 
+import 'foreground_mask.dart';
 import 'garment_color.dart';
 import 'oklab.dart';
 import 'reference_color.dart';
 
 /// Cores sugeridas a partir de uma foto, sem modelo (baseline da IA local,
 /// docs/features/ia-local.md). Cada píxel vai para a cor de referência mais
-/// próxima em OKLab; o fundo estima-se pela borda da foto.
+/// próxima em OKLab. O fundo tira-se com a máscara do recorte (IA local,
+/// se o modelo estiver neste dispositivo) ou, sem ela, estima-se pela borda
+/// da foto.
 ///
 /// O resultado é sempre uma sugestão (`confirmed: false`): sombras, reflexos
 /// e fundos parecidos com a peça enganam.
@@ -27,12 +30,17 @@ abstract final class PhotoColors {
   static const minShare = 0.1;
   static const maxColors = 3;
 
+  /// Uma máscara que marque menos do que isto como peça (ou quase tudo) não
+  /// recortou nada de útil: usa-se a borda.
+  static const minMaskShare = 0.02;
+  static const maxMaskShare = 0.98;
+
   static final _refs = [
     for (final c in ReferenceColor.values) (c, Oklab.fromRgb(c.rgb)),
   ];
 
-  /// `[]` se a imagem não se ler.
-  static List<GarmentColor> suggest(Uint8List bytes) {
+  /// `[]` se a imagem não se ler. Com [mask], só conta o que for peça.
+  static List<GarmentColor> suggest(Uint8List bytes, {ForegroundMask? mask}) {
     final decoded = img.decodeImage(bytes);
     if (decoded == null || decoded.width == 0 || decoded.height == 0) {
       return const [];
@@ -51,11 +59,18 @@ abstract final class PhotoColors {
 
     final w = image.width;
     final h = image.height;
+    final useMask =
+        mask != null &&
+        mask.share >= minMaskShare &&
+        mask.share <= maxMaskShare;
     final grid = List<ReferenceColor?>.filled(w * h, null);
     for (var y = 0; y < h; y++) {
       for (var x = 0; x < w; x++) {
         final p = image.getPixel(x, y);
         if (p.a < p.maxChannelValue / 2) continue; // transparente
+        if (useMask && !mask.isForeground((x + 0.5) / w, (y + 0.5) / h)) {
+          continue;
+        }
         final rgb = (p.r.toInt() << 16) | (p.g.toInt() << 8) | p.b.toInt();
         grid[y * w + x] = _nearest(rgb);
       }
@@ -94,7 +109,7 @@ abstract final class PhotoColors {
     final total = all.values.fold(0, (s, v) => s + v);
     if (total == 0) return const [];
     var counts = all;
-    if (background != null) {
+    if (background != null && !useMask) {
       final rest = count(without: background);
       final kept = rest.values.fold(0, (s, v) => s + v);
       if (kept / total >= minForeground) counts = rest;

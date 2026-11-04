@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../engine/application/suggestion_providers.dart';
+import '../../local_ai/application/local_ai_providers.dart';
+import '../../local_ai/domain/local_model.dart';
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../backup/presentation/export_backup_tile.dart';
@@ -82,6 +84,18 @@ class SettingsScreen extends ConsumerWidget {
             leading: const Icon(Icons.local_laundry_service_outlined),
             title: Text(l10n.careSettingsTitle),
             onTap: () => context.push(AppRoutes.careSettings),
+          ),
+          ListTile(
+            key: const Key('local-ai-settings'),
+            leading: const Icon(Icons.auto_awesome_outlined),
+            title: Text(l10n.localAiTitle),
+            subtitle: Text(
+              ref.watch(localModelProvider(LocalModels.background))
+                      is ModelReady
+                  ? l10n.localAiSummaryOn
+                  : l10n.localAiSummaryOff,
+            ),
+            onTap: () => context.push(AppRoutes.localAiSettings),
           ),
           const ExportBackupTile(),
           const RestoreBackupTile(),

@@ -53,7 +53,7 @@ Um link Pinterest pode ser apenas um bookmark. Acesso à imagem/API e direitos d
 
 ## IA local
 
-Sem custo por inferência cloud, mas há download, RAM, CPU, bateria e licença do modelo. O limite de 25 MiB por ficheiro no Pages afeta tanto pesos como binários WASM.
+Sem custo por inferência cloud, mas há download, RAM, CPU, bateria e licença do modelo. O limite de 25 MiB por ficheiro no Pages afeta tanto pesos como binários WASM. Atual (2026-11-04): `u2netp.onnx` 4,6 MB e `ort-wasm-simd-threaded.wasm` 11 MB, ambos abaixo do limite; o FashionCLIP int8 (≈ 87 MB) não cabe num só ficheiro do Pages e teria de vir de outro alojamento ou em partes.
 
 Não contratar um alojamento de modelos ou API paga como fallback silencioso.
 

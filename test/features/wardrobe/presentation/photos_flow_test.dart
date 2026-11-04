@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guarda_roupa/features/wardrobe/application/photo_providers.dart';
 import 'package:guarda_roupa/features/wardrobe/data/garment_row.dart';
@@ -20,6 +21,7 @@ final _photo = find.byType(Image);
 Future<({PowerSyncDatabase db, FakePhotoPicker picker})> start(
   WidgetTester tester, {
   FakePhotoStorage? storage,
+  List<Override> overrides = const [],
 }) async {
   final picker = FakePhotoPicker();
   final app = await pumpApp(
@@ -27,6 +29,7 @@ Future<({PowerSyncDatabase db, FakePhotoPicker picker})> start(
     overrides: [
       photoPickerProvider.overrideWithValue(picker),
       photoStorageProvider.overrideWithValue(storage),
+      ...overrides,
     ],
   );
   await openWardrobe(tester);

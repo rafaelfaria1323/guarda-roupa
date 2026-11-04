@@ -32,6 +32,12 @@ Na Web, o PowerSync precisa dos ficheiros WASM/worker em `web/` (não versionado
 dart run powersync:setup_web
 ```
 
+A IA local opcional (Definições › IA local) precisa, na Web, do modelo e do `onnxruntime-web` em `web/models/` e `web/ort/` (também não versionados, com sha256/integridade confirmados):
+
+```bash
+tool/models/fetch_models.sh
+```
+
 Sem `POWERSYNC_URL` em `config/public.json`, a app funciona só localmente e mostra "sincronização por configurar". Ver o [guia 08](docs/guias/08-poc-sincronizacao.md).
 
 ## CI
