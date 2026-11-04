@@ -10,9 +10,9 @@ Dart puro em `lib/features/engine/domain/` (`DailyEngine.suggest`), sem UI nem p
 - **Modelos:** top principal + parte de baixo + calçado, ou peça única + calçado. A t-shirt chega como top único. Casaco só quando o conforto o pede (frio com top leve/médio) ou como camada opcional à parte (ameno, ou chuva/vento com um casaco adequado).
 - **Obrigatório:** só peças não arquivadas e disponíveis; nenhuma peça em dois papéis; uma peça com ocasiões indicadas que não incluem a pedida fica de fora. Sem ocasiões indicadas é desconhecido: entra com nota.
 - **Ordem de cada papel, sem pesos:** conforto (serve › serve com casaco › desconhecido › não serve), chuva/vento (casaco e calçado), rotatividade (elegíveis primeiro, P-06), preferências (gosto − evito), menos usadas em 30 dias, usadas há mais tempo, seed. Uma peça confortável mas dentro do intervalo de rotatividade fica à frente de uma elegível que não serve.
-- **Preferências:** cor (RGB de referência), padrão e textura, nas ocasiões da preferência (vazio = sempre). Formalidade e combinações de cor são do conjunto e ainda não entram.
+- **Preferências:** cor (RGB de referência), padrão e textura, nas ocasiões da preferência (vazio = sempre). Combinações de cor contam no conjunto (ver abaixo); a formalidade ainda não entra.
 - **Lavagem (P-07):** só aviso.
-- **Conjuntos:** o i-ésimo conjunto junta a i-ésima peça de cada papel; repetidos saem. Ordem: completos, menos avisos, mais preferências, peças mais bem ordenadas, seed (FNV-1a, igual em todas as plataformas).
+- **Conjuntos:** o i-ésimo conjunto junta a i-ésima peça de cada papel; repetidos saem. Ordem: completos, menos avisos, mais preferências (das peças e da combinação de cor), menos padrões/texturas a competir, peças mais bem ordenadas, seed (FNV-1a, igual em todas as plataformas).
 - **Resultado:** peças/papéis com notas (ocasião, conforto, chuva/vento, rotatividade, uso recente, preferências, lavagem), camada opcional, papéis em falta e estado: válido, parcial (falta calçado ou casaco), nada encontrado (há peças mas nenhuma serve, com o motivo por papel: indisponível ou outra ocasião) e dados insuficientes (não há peças para nenhum modelo). Sem condições, diz que não aplicou regras de conforto.
 
 ### "Sugestões para hoje" (2026-11-03)
@@ -27,7 +27,22 @@ Cartão no Planeador, por baixo de "Vesti hoje":
 - **Sem conjunto possível:** explica os dados insuficientes ou porque nada serve.
 - **"Vou vestir isto":** abre "Vesti hoje" com as peças já escolhidas. Só conta como uso depois de guardar (P-08). As escolhas do cartão não ficam guardadas.
 
-Ainda não: harmonia de cores, equilíbrio de padrões/texturas, acessórios, camada intermédia, conjuntos guardados como preferência, diversidade na semana.
+### Conjunto: cores, padrões e texturas (2026-11-04)
+
+`OutfitHarmony` (`lib/features/engine/domain/outfit_harmony.dart`) lê o conjunto sem a camada opcional. Os valores são uma proposta ([P-21](../pendencias.md)), não uma "verdade de moda":
+
+- **Neutras:** branco, cru, bege, caqui, castanho, cinzento, carvão, preto, azul-marinho e ganga. Uma cor fora da lista de referência é neutra com croma OKLCH < 0,05. Conta a cor dominante de cada peça (a de maior proporção).
+- **Base neutra:** todas as peças grandes (top, parte de baixo, peça única, camadas) com cor dominante neutra.
+- **Um só destaque:** exatamente uma peça (calçado incluído) com uma cor não neutra em pelo menos 25 % dela.
+- **Tons próximos:** duas ou mais peças grandes, todas com cor (croma ≥ 0,03, o que exclui preto, branco e cinzento) e matizes num arco de 30°.
+- **Sem cor indicada numa peça:** a combinação fica por saber. Não se descreve nem conta para preferências.
+- **Ordem:** as combinações só pesam com uma preferência "Gosto"/"Evito" de combinação (Estilo › Preferências, nas ocasiões dela): +1 ou −1, somado às preferências das peças, com a nota da preferência no conjunto. Sem preferência, aparecem só como descrição ("Cores: base neutra").
+- **Padrões e texturas:** padrão por indicar ou liso não conta. Cada padrão além do primeiro, e cada textura forte (marcada ou com pelo) além da primeira, soma um ponto de "competição". O conjunto fica atrás de outro igual em tudo o resto, com a nota "Mais de um padrão: podem competir". Nunca é excluído nem conta como aviso.
+- **Limite:** os pares continuam a ser a i-ésima peça de cada papel. A harmonia ordena estes conjuntos, mas não procura outros pares.
+
+As notas do conjunto aparecem em "Sugestões para hoje". Só o papel em falta fica a vermelho.
+
+Ainda não: formalidade do conjunto, contraste desejado, acessórios, camada intermédia, conjuntos guardados como preferência, diversidade na semana.
 
 ## Objetivo
 

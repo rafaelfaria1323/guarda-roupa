@@ -292,7 +292,10 @@ class _CandidateTile extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
                       text,
-                      style: TextStyle(color: theme.colorScheme.error),
+                      // Só o papel em falta é um problema; o resto explica.
+                      style: note is MissingRole
+                          ? TextStyle(color: theme.colorScheme.error)
+                          : theme.textTheme.bodySmall,
                     ),
                   ),
               if (layer != null)
