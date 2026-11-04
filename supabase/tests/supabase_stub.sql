@@ -5,11 +5,14 @@
 do $$
 declare r text;
 begin
-  foreach r in array array['anon', 'authenticated', 'supabase_auth_admin', 'powersync_role'] loop
+  foreach r in array array['anon', 'authenticated', 'supabase_auth_admin'] loop
     if not exists (select 1 from pg_roles where rolname = r) then
       execute format('create role %I nologin', r);
     end if;
   end loop;
+  if not exists (select 1 from pg_roles where rolname = 'powersync_role') then
+    create role powersync_role replication login;
+  end if;
 end $$;
 create schema auth;
 grant usage on schema auth to anon, authenticated;

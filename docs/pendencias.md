@@ -43,8 +43,8 @@ Notas para não esquecer (2026-11-04):
    - Experimentar, no Android e na PWA, o recorte, a sugestão de categoria e as peças parecidas de uma inspiração (Definições › IA local) com fotos tuas. A PWA precisa de `tool/models/fetch_models.sh` antes da build Web. Diz se as cores, as categorias e as peças parecidas acertam, e se o tempo de espera é aceitável no telemóvel.
 
    Detalhes em [IA local](features/ia-local.md#poc-implementada-2026-11-04).
-6. **Secret `POWERSYNC_ADMIN_TOKEN`** no GitHub, uma vez só (2026-11-04). No PowerSync Dashboard, cria um token pessoal (Personal Access Token) e guarda-o com esse nome em Settings → Secrets and variables → Actions. Depois disso, o workflow “Supabase” faz sozinho o deploy de `powersync/sync-streams.yaml` a cada merge na `main`, e deixa de ser preciso colar as Sync Streams no painel. Sem o secret, o workflow avisa e não publica nada.
-   - As permissões do `powersync_role` nas tabelas novas são dadas por uma migração (`20261112000001_powersync_grants.sql`). Antes desta migração, só `garments` tinha SELECT, por isso as outras tabelas podiam não estar a sincronizar.
+6. ~~**Secret `POWERSYNC_ADMIN_TOKEN`**~~ no GitHub, uma vez só (2026-11-04). No PowerSync Dashboard, cria um token pessoal (Personal Access Token) e guarda-o com esse nome em Settings → Secrets and variables → Actions. Depois disso, o workflow “Supabase” faz sozinho o deploy de `powersync/sync-streams.yaml` a cada merge na `main`, e deixa de ser preciso colar as Sync Streams no painel. Sem o secret, o workflow avisa e não publica nada.
+   - **Feito a 2026-11-04:** o secret existe e o deploy é automático. As permissões dos roles do PowerSync são dadas por `grant_powersync_select()` (migração `20261112000002`). O role da integração (`powersync_<id>`) não tinha SELECT em `plan_entries`, por isso o plano semanal não sincronizava entre dispositivos.
 
 Também em aberto: a POC em dois dispositivos (P-03).
 
