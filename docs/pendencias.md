@@ -20,7 +20,7 @@ Uma pendência não deve desaparecer por estar descrita em Markdown. Fechar apen
 | P-09 | Perfis e desempenho | Escolher dispositivos de referência e orçamento mensurável | Gate de desempenho |
 | P-10 | Automação E2E | POC Patrol Android/Chromium; guião iPhone real, sem equivalência fictícia | Evidência por plataforma |
 | P-11 | Recuperação com cloud | Definir substituição/recuperação sem replay de eventos nem ressurreição silenciosa | Recuperação sobre conta existente |
-| P-12 | Lojas suportadas — **Decidido 2026-11-04:** Zara, Uniqlo, Pull&Bear e Bershka primeiro; função em Supabase Edge Functions | **Função feita, lojas em teste**; falta o fluxo na app e o [smoke](../tool/import/README.md) com links reais (corre no Mac; a cloud não chega às lojas) | Anunciar suporte a uma loja |
+| P-12 | Lojas suportadas — **Decidido 2026-11-04:** Zara, Uniqlo, Pull&Bear e Bershka primeiro; função em Supabase Edge Functions | **Função e fluxo na app feitos, lojas em teste**; falta publicar a função (secret `SUPABASE_ACCESS_TOKEN`) e o [smoke](../tool/import/README.md) com links reais (corre no Mac; a cloud não chega às lojas) | Anunciar suporte a uma loja |
 | P-13 | Pinterest | Confirmar permissões/API; link não garante imagem | Importação automática de Pins |
 | P-14 | Modelo IA | Licença, operadores, tamanho, precisão e desempenho | Ativar análise visual automática |
 | P-15 | Assinatura/distribuição Android — **applicationId decidido 2026-11-03: `pt.rafaelfaria.guarda_roupa`** | Guardar chave de assinatura e comprovar atualização sem apagar dados | Distribuição estável |

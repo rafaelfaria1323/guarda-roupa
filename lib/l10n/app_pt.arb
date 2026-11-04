@@ -919,5 +919,76 @@
     }
   },
   "weekChangeApply": "Aplicar alteração",
-  "weekChangeIgnore": "Manter o plano"
+  "weekChangeIgnore": "Manter o plano",
+  "importFromLink": "Importar de um link",
+  "@importFromLink": {
+    "description": "Botão no formulário de peça nova."
+  },
+  "importTitle": "Importar de um link",
+  "importUrl": "Link do produto",
+  "importUrlHelp": "Zara, Uniqlo, Pull&Bear ou Bershka (em teste)",
+  "importRead": "Ler a página",
+  "importStoreTesting": "{store} · em teste",
+  "@importStoreTesting": {
+    "placeholders": {
+      "store": {
+        "type": "String"
+      }
+    }
+  },
+  "importSource": "{source, select, jsonLd{dados da página} openGraph{pré-visualização da página: confirma} other{da página}}",
+  "@importSource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "importColor": "Cor na loja",
+  "importVariant": "Qual é a tua?",
+  "importImages": "Imagens a copiar",
+  "importOtherImages": "{count, plural, =1{1 imagem é de outro domínio e não se pode copiar} other{{count} imagens são de outro domínio e não se podem copiar}}",
+  "@importOtherImages": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importConfirmLater": "A categoria e as cores escolhes a seguir, no formulário. Nada é guardado até carregares em Guardar.",
+  "importUse": "Usar na peça nova",
+  "importManual": "Preencher à mão",
+  "importFailure": "{kind, select, unsupported{Por agora só links da Zara, Uniqlo, Pull&Bear e Bershka.} invalid{Este link não parece válido.} blocked{A loja não deixou ler a página.} notFound{A página não existe ou já não está à venda.} failed{Não foi possível ler a página.} noMetadata{A página não tem os dados do produto.} rateLimited{Muitas importações seguidas. Tenta mais tarde.} notAllowed{A importação precisa de sessão iniciada com uma conta autorizada.} other{A importação não está disponível agora. Verifica a ligação.}}",
+  "@importFailure": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "importStoreColor": "Cor na loja: {color}",
+  "@importStoreColor": {
+    "placeholders": {
+      "color": {
+        "type": "String"
+      }
+    }
+  },
+  "importSize": "Tamanho: {size}",
+  "@importSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "importDone": "Dados importados. Confirma a categoria e as cores.",
+  "importImagesFailed": "{count, plural, =1{1 imagem não foi copiada} other{{count} imagens não foram copiadas}}",
+  "@importImagesFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }
