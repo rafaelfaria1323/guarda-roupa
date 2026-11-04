@@ -102,7 +102,7 @@ final class SupabaseProductImporter implements ProductImporter {
 
   static ImportFailure _failure(Map<String, Object?> json, int status) =>
       switch (json['result']) {
-        'unsupported_store' => const UnsupportedStore(),
+        'not_public' => const NotPublic(),
         'invalid_url' => const InvalidLink(),
         'no_metadata' => const NoMetadata(),
         'rate_limited' => const RateLimited(),

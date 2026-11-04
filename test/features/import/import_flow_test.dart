@@ -18,7 +18,6 @@ const url = 'https://www.zara.com/pt/pt/camisa-p1.html';
 
 final sample = ProductPreview(
   storeName: 'Zara',
-  storeInTesting: true,
   url: url,
   name: 'Camisa de linho',
   brand: 'Zara',
@@ -99,7 +98,7 @@ void main() {
     await openImport(tester, url);
 
     expect(importer.previews, [url]);
-    expect(find.text('Zara · em teste'), findsOneWidget);
+    expect(find.text('Zara · site novo'), findsOneWidget);
     expect(find.text('Camisa de linho'), findsOneWidget);
     expect(find.text('Nome · dados da página'), findsOneWidget);
     expect(find.text('Qual é a tua?'), findsOneWidget);
@@ -143,10 +142,10 @@ void main() {
     expect(ops.map((o) => o['kind']), ['create', 'attach_photo']);
   });
 
-  testWidgets('loja fora da lista: diz porquê e deixa preencher à mão', (
+  testWidgets('página sem dados: diz porquê e deixa preencher à mão', (
     tester,
   ) async {
-    final importer = FakeImporter()..next = const Err(UnsupportedStore());
+    final importer = FakeImporter()..next = const Err(NoMetadata());
     final app = await pumpApp(
       tester,
       overrides: [productImporterProvider.overrideWithValue(importer)],
@@ -154,10 +153,7 @@ void main() {
     await openWardrobe(tester);
     await openImport(tester, 'https://loja.example/p/1');
 
-    expect(
-      find.text('Por agora só links da Zara, Uniqlo, Pull&Bear e Bershka.'),
-      findsOneWidget,
-    );
+    expect(find.text('A página não tem os dados do produto.'), findsOneWidget);
     await tester.tap(find.byKey(const Key('import-manual')));
     await tester.pumpAndSettle();
     await chooseCategoryAndSave(tester);

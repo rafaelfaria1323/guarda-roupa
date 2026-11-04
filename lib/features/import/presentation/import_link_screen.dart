@@ -155,7 +155,7 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
 
   Widget _failureView(AppLocalizations l10n, ImportFailure failure) {
     final kind = switch (failure) {
-      UnsupportedStore() => 'unsupported',
+      NotPublic() => 'notPublic',
       InvalidLink() => 'invalid',
       FetchFailed(reason: 'blocked') => 'blocked',
       FetchFailed(reason: 'not_found') => 'notFound',
@@ -207,11 +207,7 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
         children: [
           Chip(
             avatar: const Icon(Icons.storefront_outlined),
-            label: Text(
-              p.storeInTesting
-                  ? l10n.importStoreTesting(p.storeName)
-                  : p.storeName,
-            ),
+            label: Text(l10n.importSite(p.storeName, p.siteStatus.name)),
           ),
         ],
       ),
@@ -273,14 +269,6 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
           ],
         ),
       ],
-      if (p.otherImages > 0)
-        Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: Text(
-            l10n.importOtherImages(p.otherImages),
-            style: theme.textTheme.bodySmall,
-          ),
-        ),
       const SizedBox(height: 16),
       Text(l10n.importConfirmLater, style: theme.textTheme.bodySmall),
       const SizedBox(height: 12),

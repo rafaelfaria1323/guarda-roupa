@@ -66,3 +66,34 @@ Deno.test('textos longos cortados e sem caracteres de controlo', () => {
   assertEquals(p.name!.length, 200);
   assertEquals(p.name!.startsWith('a b'), true);
 });
+
+Deno.test('microdata schema.org: qualquer site, com a origem dita', () => {
+  const p = parseProduct(fixture('microdata.html'), new URL('https://www.loja-nova.pt/p/1'))!;
+  assertEquals(p.name, 'Casaco de lã & caxemira');
+  assertEquals(p.brand, 'Loja Nova');
+  assertEquals(p.color, 'Camel');
+  assertEquals(p.material, '80% lã, 20% caxemira');
+  assertEquals(p.images, ['https://www.loja-nova.pt/img/casaco.jpg']);
+  assertEquals(p.sources.name, 'microdata');
+  assertEquals(p.confirm, ['category', 'colors', 'owned']);
+});
+
+Deno.test('Twitter cards e HTML simples: o nome é o título e pede confirmação', () => {
+  const p = parseProduct(fixture('twitter_html.html'), page)!;
+  assertEquals(p.name, 'Sapatilhas brancas — Sapataria');
+  assertEquals(p.description, 'Sapatilhas em pele.');
+  assertEquals(p.images, [
+    'https://cdn.sapataria.example/s.jpg',
+    'https://cdn.sapataria.example/s2.jpg',
+  ]);
+  assertEquals(p.sources, {
+    name: 'html',
+    description: 'html',
+    images: 'open-graph',
+  });
+  assertEquals(p.confirm.includes('name'), true);
+});
+
+Deno.test('só um título, sem imagem nem dados: não é um produto', () => {
+  assertEquals(parseProduct(fixture('title_only.html'), page), null);
+});

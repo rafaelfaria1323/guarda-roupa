@@ -1,49 +1,28 @@
 /**
- * Lojas que a função aceita (docs/features/importacao-de-links.md, P-12).
- *
- * `poc`: em teste. Nenhuma loja é anunciada como suportada sem um smoke com
- * links reais (tool/import/README.md) e comportamento conhecido para
- * variantes e erros.
+ * Lojas com nome conhecido (P-12). Qualquer outro site também se pode
+ * importar; estas só ganham um nome bonito. O estado de cada site vem do
+ * perfil que a base cria sozinha (`record_import`), não desta lista.
  */
-export type StoreStatus = 'poc' | 'supported';
-
 export interface Store {
   id: string;
   name: string;
   /** Domínios exatos das páginas de produto. */
   hosts: string[];
-  /** Domínios exatos de onde se podem copiar imagens. A confirmar no smoke. */
-  imageHosts: string[];
-  status: StoreStatus;
 }
 
 export const STORES: readonly Store[] = [
-  {
-    id: 'zara',
-    name: 'Zara',
-    hosts: ['www.zara.com', 'zara.com'],
-    imageHosts: ['static.zara.net'],
-    status: 'poc',
-  },
-  {
-    id: 'uniqlo',
-    name: 'Uniqlo',
-    hosts: ['www.uniqlo.com', 'uniqlo.com'],
-    imageHosts: ['image.uniqlo.com'],
-    status: 'poc',
-  },
+  { id: 'zara', name: 'Zara', hosts: ['www.zara.com', 'zara.com'] },
+  { id: 'uniqlo', name: 'Uniqlo', hosts: ['www.uniqlo.com', 'uniqlo.com'] },
   {
     id: 'pullandbear',
     name: 'Pull&Bear',
     hosts: ['www.pullandbear.com', 'pullandbear.com'],
-    imageHosts: ['static.pullandbear.net'],
-    status: 'poc',
   },
-  {
-    id: 'bershka',
-    name: 'Bershka',
-    hosts: ['www.bershka.com', 'bershka.com'],
-    imageHosts: ['static.bershka.net'],
-    status: 'poc',
-  },
+  { id: 'bershka', name: 'Bershka', hosts: ['www.bershka.com', 'bershka.com'] },
 ];
+
+/** Nome a mostrar: o da lista, ou o domínio sem `www.`. */
+export function siteName(host: string, stores = STORES): string {
+  return stores.find((s) => s.hosts.includes(host))?.name ??
+    host.replace(/^www\./, '');
+}

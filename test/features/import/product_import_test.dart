@@ -9,7 +9,7 @@ import 'package:http/testing.dart';
 
 const okBody = {
   'result': 'ok',
-  'store': {'id': 'zara', 'name': 'Zara', 'status': 'poc'},
+  'store': {'id': 'www.zara.com', 'name': 'Zara', 'status': 'works'},
   'url': 'https://www.zara.com/pt/pt/camisa-p1.html',
   'product': {
     'name': 'Camisa de linho',
@@ -20,12 +20,16 @@ const okBody = {
       'https://static.zara.net/a.jpg',
       'https://static.zara.net/b.jpg',
     ],
-    'otherImages': 1,
     'variants': [
       {'color': 'Branco', 'size': 'M', 'sku': '1'},
       {'color': 'Azul', 'size': 'M', 'image': 'https://static.zara.net/b.jpg'},
     ],
-    'sources': {'name': 'json-ld', 'brand': 'json-ld', 'images': 'open-graph'},
+    'sources': {
+      'name': 'json-ld',
+      'brand': 'microdata',
+      'description': 'html',
+      'images': 'open-graph',
+    },
     'confirm': ['category', 'colors', 'owned', 'variant'],
   },
 };
@@ -50,13 +54,21 @@ void main() {
   test('pré-visualização: campos, fontes e o que confirmar', () {
     final p = ProductPreview.fromJson(okBody)!;
     expect(p.storeName, 'Zara');
-    expect(p.storeInTesting, isTrue);
+    expect(p.siteStatus, SiteStatus.works);
     expect(p.name, 'Camisa de linho');
     expect(p.images, hasLength(2));
-    expect(p.otherImages, 1);
     expect(p.variants.last.image, 'https://static.zara.net/b.jpg');
     expect(p.sources['name'], ImportSource.jsonLd);
+    expect(p.sources['brand'], ImportSource.microdata);
+    expect(p.sources['description'], ImportSource.html);
     expect(p.sources['images'], ImportSource.openGraph);
+    expect(
+      ProductPreview.fromJson({
+        ...okBody,
+        'store': {'name': 'loja.example', 'status': 'inventado'},
+      })!.siteStatus,
+      SiteStatus.newSite,
+    );
     expect(p.confirm, contains('variant'));
     expect(ProductPreview.fromJson({'result': 'ok'}), isNull);
   });
@@ -117,8 +129,8 @@ void main() {
           Ok() => throw StateError('ok'),
         };
     expect(
-      await fail(jsonResponse({'result': 'unsupported_store'})),
-      isA<UnsupportedStore>(),
+      await fail(jsonResponse({'result': 'not_public'})),
+      isA<NotPublic>(),
     );
     expect(
       await fail(jsonResponse({'result': 'invalid_url'})),
@@ -175,8 +187,8 @@ void main() {
     expect((got as Ok).value, bytes);
 
     final refused = await importer(
-      (_) async => jsonResponse({'result': 'unsupported_store'}),
+      (_) async => jsonResponse({'result': 'image_not_offered'}, 403),
     ).image('https://evil.example/a.jpg');
-    expect((refused as Err).failure, isA<UnsupportedStore>());
+    expect((refused as Err).failure, isA<NotAllowed>());
   });
 }

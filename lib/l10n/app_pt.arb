@@ -926,17 +926,21 @@
   },
   "importTitle": "Importar de um link",
   "importUrl": "Link do produto",
-  "importUrlHelp": "Zara, Uniqlo, Pull&Bear ou Bershka (em teste)",
+  "importUrlHelp": "O link de um produto de qualquer loja online",
   "importRead": "Ler a página",
-  "importStoreTesting": "{store} · em teste",
-  "@importStoreTesting": {
+  "importSite": "{site} · {status, select, works{costuma funcionar} testing{já funcionou} failing{costuma falhar} other{site novo}}",
+  "@importSite": {
+    "description": "Estado do site, aprendido a cada importação.",
     "placeholders": {
-      "store": {
+      "site": {
+        "type": "String"
+      },
+      "status": {
         "type": "String"
       }
     }
   },
-  "importSource": "{source, select, jsonLd{dados da página} openGraph{pré-visualização da página: confirma} other{da página}}",
+  "importSource": "{source, select, jsonLd{dados da página} microdata{dados da página} openGraph{pré-visualização da página: confirma} html{título da página: confirma} other{da página}}",
   "@importSource": {
     "placeholders": {
       "source": {
@@ -947,18 +951,10 @@
   "importColor": "Cor na loja",
   "importVariant": "Qual é a tua?",
   "importImages": "Imagens a copiar",
-  "importOtherImages": "{count, plural, =1{1 imagem é de outro domínio e não se pode copiar} other{{count} imagens são de outro domínio e não se podem copiar}}",
-  "@importOtherImages": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "importConfirmLater": "A categoria e as cores escolhes a seguir, no formulário. Nada é guardado até carregares em Guardar.",
   "importUse": "Usar na peça nova",
   "importManual": "Preencher à mão",
-  "importFailure": "{kind, select, unsupported{Por agora só links da Zara, Uniqlo, Pull&Bear e Bershka.} invalid{Este link não parece válido.} blocked{A loja não deixou ler a página.} notFound{A página não existe ou já não está à venda.} failed{Não foi possível ler a página.} noMetadata{A página não tem os dados do produto.} rateLimited{Muitas importações seguidas. Tenta mais tarde.} notAllowed{A importação precisa de sessão iniciada com uma conta autorizada.} other{A importação não está disponível agora. Verifica a ligação.}}",
+  "importFailure": "{kind, select, notPublic{Este link aponta para um endereço interno e não se abre.} invalid{Este link não parece válido.} blocked{A loja não deixou ler a página.} notFound{A página não existe ou já não está à venda.} failed{Não foi possível ler a página.} noMetadata{A página não tem os dados do produto.} rateLimited{Muitas importações seguidas. Tenta mais tarde.} notAllowed{A importação precisa de sessão iniciada com uma conta autorizada.} other{A importação não está disponível agora. Verifica a ligação.}}",
   "@importFailure": {
     "placeholders": {
       "kind": {

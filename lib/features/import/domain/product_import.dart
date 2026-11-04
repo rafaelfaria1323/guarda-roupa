@@ -8,13 +8,44 @@ enum ImportSource {
   /// Dados estruturados da página (JSON-LD).
   jsonLd,
 
-  /// Pré-visualização para redes sociais (Open Graph): menos fiável.
-  openGraph;
+  /// Microdata schema.org na página.
+  microdata,
+
+  /// Pré-visualização para redes sociais (Open Graph, Twitter): menos fiável.
+  openGraph,
+
+  /// Só o HTML simples (título da página): confirmar.
+  html;
 
   static ImportSource? parse(Object? value) => switch (value) {
     'json-ld' => jsonLd,
+    'microdata' => microdata,
     'open-graph' => openGraph,
+    'html' => html,
     _ => null,
+  };
+}
+
+/// O que se sabe do site, pelo perfil que a função atualiza sozinha a cada
+/// importação (docs/features/importacao-de-links.md).
+enum SiteStatus {
+  /// Ainda sem nenhuma importação bem-sucedida.
+  newSite,
+
+  /// Já funcionou, mas poucas vezes.
+  testing,
+
+  /// Três ou mais sucessos e o último correu bem.
+  works,
+
+  /// Três falhas seguidas.
+  failing;
+
+  static SiteStatus parse(Object? value) => switch (value) {
+    'testing' => testing,
+    'works' => works,
+    'failing' => failing,
+    _ => newSite,
   };
 }
 
@@ -39,24 +70,22 @@ final class ImportVariant {
 final class ProductPreview {
   const ProductPreview({
     required this.storeName,
-    required this.storeInTesting,
     required this.url,
+    this.siteStatus = SiteStatus.newSite,
     this.name,
     this.brand,
     this.description,
     this.color,
     this.material,
     this.images = const [],
-    this.otherImages = 0,
     this.variants = const [],
     this.sources = const {},
     this.confirm = const {},
   });
 
+  /// O nome da loja, ou o domínio sem `www.`.
   final String storeName;
-
-  /// Loja ainda sem smoke com links reais: avisa que pode falhar.
-  final bool storeInTesting;
+  final SiteStatus siteStatus;
   final String url;
   final String? name;
   final String? brand;
@@ -64,11 +93,7 @@ final class ProductPreview {
   final String? color;
   final String? material;
 
-  /// Só as que a função consegue copiar.
   final List<String> images;
-
-  /// Imagens da página que não se podem copiar (outro domínio).
-  final int otherImages;
   final List<ImportVariant> variants;
   final Map<String, ImportSource> sources;
 
@@ -85,7 +110,7 @@ final class ProductPreview {
     final p = product.cast<String, Object?>();
     return ProductPreview(
       storeName: _string(store['name']) ?? '',
-      storeInTesting: store['status'] != 'supported',
+      siteStatus: SiteStatus.parse(store['status']),
       url: url,
       name: _string(p['name']),
       brand: _string(p['brand']),
@@ -93,7 +118,6 @@ final class ProductPreview {
       color: _string(p['color']),
       material: _string(p['material']),
       images: [for (final i in _list(p['images'])) ?_string(i)],
-      otherImages: p['otherImages'] is int ? p['otherImages']! as int : 0,
       variants: [
         for (final v in _list(p['variants']))
           if (v is Map) ImportVariant.fromJson(v.cast<String, Object?>()),
@@ -115,9 +139,9 @@ sealed class ImportFailure {
   const ImportFailure();
 }
 
-/// Link que não é de uma loja da lista.
-final class UnsupportedStore extends ImportFailure {
-  const UnsupportedStore();
+/// Link para um endereço interno ou local, que a função não abre.
+final class NotPublic extends ImportFailure {
+  const NotPublic();
 }
 
 final class InvalidLink extends ImportFailure {
