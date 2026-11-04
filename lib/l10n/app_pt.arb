@@ -679,5 +679,156 @@
       }
     }
   },
-  "weatherAttribution": "Dados meteorológicos: Open-Meteo.com"
+  "weatherAttribution": "Dados meteorológicos: Open-Meteo.com",
+  "suggestionsTitle": "Sugestões para hoje",
+  "suggestionsHint": "Só com peças que tens e estão disponíveis. Escolher uma sugestão não conta como uso: só conta depois de guardar em \"Vesti hoje\".",
+  "suggestionsAnyOccasion": "Qualquer ocasião",
+  "suggestionsInsufficient": "Ainda não há peças para um conjunto: junta um top e uma parte de baixo, ou uma peça única.",
+  "suggestionsNotFound": "Nenhum conjunto serve hoje com estas escolhas.",
+  "suggestionsGap": "{role}: {cause, select, none{não tens nenhuma peça} unavailable{todas indisponíveis ou arquivadas} otherOccasions{só para outras ocasiões} other{—}}",
+  "@suggestionsGap": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      },
+      "cause": {
+        "type": "String"
+      }
+    }
+  },
+  "suggestionsMissing": "Falta: {role}",
+  "@suggestionsMissing": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "suggestionsOptionalLayer": "Camada opcional: {name}",
+  "@suggestionsOptionalLayer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "suggestionsWearThis": "Vou vestir isto",
+  "suggestionsMore": "Outras sugestões",
+  "suggestionNumber": "Sugestão {n}",
+  "@suggestionNumber": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherLoading": "A obter a previsão…",
+  "weatherNone": "Sem previsão ({gap, select, unavailable{sem ligação ou o pedido falhou} outOfRange{fora do horizonte} other{—}}). As sugestões não têm em conta o tempo.",
+  "@weatherNone": {
+    "placeholders": {
+      "gap": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherSummary": "{place}: sensação {feels} °C ({min} a {max}) · chuva {rain} mm · vento até {wind} km/h",
+  "@weatherSummary": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      },
+      "feels": {
+        "type": "String"
+      },
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      },
+      "rain": {
+        "type": "String"
+      },
+      "wind": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherFetched": "{fresh, select, fresh{Previsão obtida a {when}} other{Previsão antiga, obtida a {when}}}",
+  "@weatherFetched": {
+    "placeholders": {
+      "fresh": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherRefresh": "Atualizar previsão",
+  "weatherManualSet": "Indicar o tempo à mão",
+  "weatherManual": "Tempo indicado à mão: {band}{rain, select, yes{, com chuva} other{}}",
+  "@weatherManual": {
+    "placeholders": {
+      "band": {
+        "type": "String"
+      },
+      "rain": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherManualClear": "Usar a previsão",
+  "weatherRain": "Chuva",
+  "comfortBandLabel": "{band, select, hot{Calor} mild{Ameno} cold{Frio} other{—}}",
+  "noteOccasionUnknown": "sem ocasião indicada",
+  "noteOccasionMatches": "para {occasion}",
+  "@noteOccasionMatches": {
+    "placeholders": {
+      "occasion": {
+        "type": "String"
+      }
+    }
+  },
+  "noteComfort": "{fit, select, fits{adequada ao tempo} fitsWithOuterLayer{com casaco por cima} unknown{aquecimento desconhecido} mismatch{pode não ser adequada ao tempo} other{}}",
+  "@noteComfort": {
+    "placeholders": {
+      "fit": {
+        "type": "String"
+      }
+    }
+  },
+  "noteWeatherFlag": "{kind, select, rain{chuva} other{vento}}: {ok, select, yes{adequada} no{não adequada} other{não se sabe}}",
+  "@noteWeatherFlag": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "ok": {
+        "type": "String"
+      }
+    }
+  },
+  "noteRotationExceeded": "usada a {date}, volta à rotação a {from}",
+  "@noteRotationExceeded": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "from": {
+        "type": "String"
+      }
+    }
+  },
+  "noteNeverWorn": "ainda não usada",
+  "noteRecentUses": "{count, plural, =1{usada 1 vez em 30 dias} other{usada {count} vezes em 30 dias}}",
+  "@noteRecentUses": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteWash": "lavar recomendado",
+  "noteOptionalLayer": "se quiseres"
 }

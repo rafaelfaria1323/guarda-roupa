@@ -28,12 +28,12 @@ final carePoliciesProvider = StreamProvider<CarePolicies>((ref) {
   return repo?.watchPolicies() ?? const Stream.empty();
 });
 
-final _cleaningsProvider = StreamProvider<List<CleaningEvent>>((ref) {
+final allCleaningsProvider = StreamProvider<List<CleaningEvent>>((ref) {
   final repo = ref.watch(careRepositoryProvider);
   return repo?.watchCleanings() ?? const Stream.empty();
 });
 
-final _wearsProvider = StreamProvider<List<WearEvent>>((ref) {
+final allWearsProvider = StreamProvider<List<WearEvent>>((ref) {
   final repo = ref.watch(wearRepositoryProvider);
   return repo?.watchAll() ?? const Stream.empty();
 });
@@ -47,8 +47,8 @@ final allGarmentsProvider = StreamProvider<List<Garment>>((ref) {
 /// Estado de lavagem de cada peça; `null` enquanto carrega.
 final laundryStatesProvider = Provider<Map<GarmentId, LaundryState>?>((ref) {
   final garments = ref.watch(allGarmentsProvider).value;
-  final wears = ref.watch(_wearsProvider).value;
-  final cleanings = ref.watch(_cleaningsProvider).value;
+  final wears = ref.watch(allWearsProvider).value;
+  final cleanings = ref.watch(allCleaningsProvider).value;
   final policies = ref.watch(carePoliciesProvider).value;
   if (garments == null ||
       wears == null ||
@@ -67,7 +67,7 @@ final laundryStatesProvider = Provider<Map<GarmentId, LaundryState>?>((ref) {
 /// Estado de rotação de cada peça, para hoje; `null` enquanto carrega.
 final rotationStatesProvider = Provider<Map<GarmentId, RotationState>?>((ref) {
   final garments = ref.watch(allGarmentsProvider).value;
-  final wears = ref.watch(_wearsProvider).value;
+  final wears = ref.watch(allWearsProvider).value;
   final policies = ref.watch(carePoliciesProvider).value;
   if (garments == null || wears == null || policies == null) return null;
   return RotationPolicy.evaluate(
@@ -83,7 +83,7 @@ final lastCleaningProvider = Provider.family<CleaningEvent?, GarmentId>((
   ref,
   id,
 ) {
-  final list = ref.watch(_cleaningsProvider).value ?? const [];
+  final list = ref.watch(allCleaningsProvider).value ?? const [];
   CleaningEvent? last;
   for (final c in list) {
     if (c.garmentId == id) last = c; // ordenadas por data e registo

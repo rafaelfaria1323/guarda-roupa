@@ -15,6 +15,18 @@ Dart puro em `lib/features/engine/domain/` (`DailyEngine.suggest`), sem UI nem p
 - **Conjuntos:** o i-ésimo conjunto junta a i-ésima peça de cada papel; repetidos saem. Ordem: completos, menos avisos, mais preferências, peças mais bem ordenadas, seed (FNV-1a, igual em todas as plataformas).
 - **Resultado:** peças/papéis com notas (ocasião, conforto, chuva/vento, rotatividade, uso recente, preferências, lavagem), camada opcional, papéis em falta e estado: válido, parcial (falta calçado ou casaco), nada encontrado (há peças mas nenhuma serve, com o motivo por papel: indisponível ou outra ocasião) e dados insuficientes (não há peças para nenhum modelo). Sem condições, diz que não aplicou regras de conforto.
 
+### "Sugestões para hoje" (2026-11-03)
+
+Cartão no Planeador, por baixo de "Vesti hoje":
+
+- **Tempo:** a previsão de hoje no local escolhido (sensação média, mínimo e máximo das 8 h às 20 h, chuva, vento) com a hora a que foi obtida, se é antiga e a atribuição; botão para atualizar.
+  - Sem previsão, diz porquê e sugere sem regras de conforto.
+  - Em alternativa, tempo indicado à mão (Calor, Ameno, Frio e chuva), sempre identificado como manual, até voltar à previsão. Usa 26, 18 ou 8 °C de sensação.
+- **Ocasião:** qualquer, ou uma das três.
+- **Conjuntos:** até 3 sugestões, cada uma com peças, papel e notas por peça (avisos a vermelho), o que falta, a camada opcional e as lacunas por papel. "Outras sugestões" muda a seed.
+- **Sem conjunto possível:** explica os dados insuficientes ou porque nada serve.
+- **"Vou vestir isto":** abre "Vesti hoje" com as peças já escolhidas. Só conta como uso depois de guardar (P-08). As escolhas do cartão não ficam guardadas.
+
 Ainda não: harmonia de cores, equilíbrio de padrões/texturas, acessórios, camada intermédia, conjuntos guardados como preferência, diversidade na semana.
 
 ## Objetivo
