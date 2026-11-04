@@ -104,6 +104,22 @@ jobs:
         run: supabase db push --db-url "$SUPABASE_DB_URL" --dry-run
       - if: steps.secrets.outputs.ok == 'true'
         run: supabase db push --db-url "$SUPABASE_DB_URL"
+      - if: steps.secrets.outputs.ok == 'true'
+        name: Permissões dos roles de replicação (só leitura)
+        # Sem segredos no output: só nomes de roles e de tabelas.
+        run: |
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -P pager=off -c "
+            select r.rolname as role,
+                   coalesce(string_agg(p.tablename, ', ' order by p.tablename)
+                     filter (where not has_table_privilege(r.oid,
+                       format('%I.%I', p.schemaname, p.tablename), 'select')),
+                     '-') as sem_select
+            from pg_roles r
+            cross join pg_publication_tables p
+            where p.pubname = 'powersync' and r.rolreplication
+              and r.rolcanlogin and not r.rolsuper
+              and r.rolname not like 'supabase%'
+            group by r.rolname order by r.rolname;"
 
   functions:
     name: Publicar Edge Functions
