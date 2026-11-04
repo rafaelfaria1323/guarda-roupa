@@ -21,13 +21,21 @@ import 'wear_messages.dart';
 /// Escolher as peças vestidas hoje (`eventId == null`) ou corrigir as de
 /// uma utilização já registada.
 class WearPickerScreen extends ConsumerStatefulWidget {
-  const WearPickerScreen({this.eventId, this.initial = const [], super.key});
+  const WearPickerScreen({
+    this.eventId,
+    this.initial = const [],
+    this.planEntryId,
+    super.key,
+  });
 
   final String? eventId;
 
   /// Peças já escolhidas ao abrir (ex.: uma sugestão). O utilizador
   /// confirma ou muda antes de guardar; nada conta como uso até guardar.
   final List<GarmentId> initial;
+
+  /// Entrada do plano que esta utilização confirma (só ao registar).
+  final String? planEntryId;
 
   @override
   ConsumerState<WearPickerScreen> createState() => _WearPickerScreenState();
@@ -252,6 +260,7 @@ class _WearPickerScreenState extends ConsumerState<WearPickerScreen> {
       null => await repo.recordWear(
         todayFrom(ref.read(clockProvider)),
         _selected,
+        planEntryId: widget.planEntryId,
       ),
     };
     if (!mounted) return;

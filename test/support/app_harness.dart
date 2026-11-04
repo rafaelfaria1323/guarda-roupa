@@ -57,7 +57,8 @@ Future<({FakeAuthService auth, PowerSyncDatabase db})> pumpApp(
 /// widgets: alterna entre deixar o I/O correr e avançar o relógio até não
 /// haver nada a carregar, e depois espera pelo fim das animações.
 Future<void> settle(WidgetTester tester, {int minRounds = 3}) async {
-  final loading = find.byType(CircularProgressIndicator);
+  // Também fora do ecrã: um cartão abaixo da dobra ainda a carregar conta.
+  final loading = find.byType(CircularProgressIndicator, skipOffstage: false);
   for (var i = 0; i < 100; i++) {
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 10)),

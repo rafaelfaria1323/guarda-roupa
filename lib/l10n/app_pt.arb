@@ -6,8 +6,6 @@
   "navOutfits": "Conjuntos",
   "navStyle": "Estilo",
   "settings": "Definições",
-  "plannerEmpty": "Ainda não há planeamento.",
-  "plannerEmptyHint": "O planeamento diário e semanal chega nos incrementos 5 e 6.",
   "wardrobeEmpty": "Ainda não tens peças.",
   "wardrobeEmptyHint": "Toca em «Adicionar peça» para criar a primeira. As fotografias chegam mais tarde neste incremento.",
   "outfitsEmpty": "Ainda não há conjuntos guardados.",
@@ -830,5 +828,52 @@
     }
   },
   "noteWash": "lavar recomendado",
-  "noteOptionalLayer": "se quiseres"
+  "noteOptionalLayer": "se quiseres",
+  "weekTitle": "Esta semana",
+  "weekHint": "Os próximos 7 dias. Os dias úteis começam em «Trabalho (smart casual)»; o fim de semana fica a decidir e pode ficar vazio. Um plano nunca conta como uso: só «Vesti hoje».",
+  "weekGenerate": "Planear a semana",
+  "weekGenerated": "{proposed, plural, =0{Nenhum dia novo proposto.} =1{1 dia proposto.} other{{proposed} dias propostos.}} {notFound, plural, =0{} =1{1 dia sem conjunto possível.} other{{notFound} dias sem conjunto possível.}}",
+  "@weekGenerated": {
+    "placeholders": {
+      "proposed": {
+        "type": "int"
+      },
+      "notFound": {
+        "type": "int"
+      }
+    }
+  },
+  "weekNotReady": "O guarda-roupa ainda está a carregar.",
+  "weekSaveFailed": "Não foi possível guardar o plano.",
+  "weekDay": "{date}",
+  "@weekDay": {
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "MMMEd"
+      }
+    }
+  },
+  "weekToday": "Hoje",
+  "weekOccasionUndecided": "A decidir",
+  "weekTentative": "Pode não acontecer",
+  "weekState": "{state, select, proposed{Proposto} accepted{Aceite} confirmed{Vestido} unused{Não usado} other{Por planear}}",
+  "@weekState": {
+    "placeholders": {
+      "state": {
+        "type": "String"
+      }
+    }
+  },
+  "weekNothing": "Nada planeado.",
+  "weekLeftEmpty": "Fica vazio.",
+  "weekAccept": "Aceitar",
+  "weekReopen": "Alterar",
+  "weekLeaveEmpty": "Deixar vazio",
+  "weekWearThis": "Vesti isto hoje",
+  "weekProposal": "Há uma alteração vinda de outro dispositivo:",
+  "weekProposalApply": "Aplicar",
+  "weekProposalKeep": "Manter o atual",
+  "weekRepeats": "Repete peças de outro dia desta semana.",
+  "weekNotFound": "Sem conjunto possível com as regras atuais."
 }
