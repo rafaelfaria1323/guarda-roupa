@@ -16,7 +16,7 @@ O objetivo não é maximizar o número de funcionalidades, mas reduzir a decisã
 | Dados | Mesma conta e sincronização automática entre dispositivos desde o início |
 | Execução | Sincronização ao abrir, durante utilização online e ao recuperar ligação |
 | Região inicial | Torres Vedras / região de Lisboa; cidade configurada manualmente |
-| Ocasiões | Casual, trabalho informal, jantares/saídas |
+| Ocasiões | Casual, trabalho (smart casual), jantares/saídas |
 | Calendário | Um conjunto por dia inicialmente; vários por dia posteriormente |
 | Histórico | Um toque para confirmar utilização; planeado não significa utilizado |
 | Alterações | Avisar e propor; aplicar apenas depois de confirmação |

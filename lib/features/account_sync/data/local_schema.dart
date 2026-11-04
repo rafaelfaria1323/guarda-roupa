@@ -16,6 +16,9 @@ import 'package:powersync/powersync.dart';
 /// - `inspirations`, `style_preferences` / `style_operations`: inspirações e
 ///   preferências (`apply_style_operation`); o `entity_id` identifica a
 ///   entidade.
+/// - `plan_entries` / `plan_operations`: plano semanal
+///   (`apply_plan_operation`); o `entry_id` identifica a entrada. `proposal`
+///   guarda a alteração pendente que chegou com uma versão desatualizada.
 /// - `sync_conflicts`: local-only. Resultados `merged`/`conflict`/`rejected`
 ///   que o utilizador tem de ver.
 const localSchema = Schema([
@@ -123,6 +126,25 @@ const localSchema = Schema([
   ]),
   Table.insertOnly('style_operations', [
     Column.text('entity_id'),
+    Column.text('kind'),
+    Column.text('data'),
+    Column.text('created_at'),
+  ]),
+  Table('plan_entries', [
+    Column.text('owner_id'),
+    Column.text('day'),
+    Column.text('occasion'),
+    Column.integer('tentative'),
+    Column.text('items'),
+    Column.text('status'),
+    Column.integer('version'),
+    Column.text('proposal'),
+    Column.text('created_at'),
+    Column.text('updated_at'),
+    Column.text('deleted_at'),
+  ]),
+  Table.insertOnly('plan_operations', [
+    Column.text('entry_id'),
     Column.text('kind'),
     Column.text('data'),
     Column.text('created_at'),

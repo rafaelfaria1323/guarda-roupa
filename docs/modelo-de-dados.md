@@ -27,6 +27,17 @@ Estado: desenho lógico; não é uma migração SQL pronta para executar. Data: 
 
 **Implementação atual dos conjuntos (incremento 4).** `Outfit` é a tabela `outfits` (`name` opcional, `occasions` JSON validado por `garment_occasions_valid`, `deleted_at`); `OutfitItem` e `OutfitOccasion` ficam em colunas JSON: `items = [{garment_id, role}]`, validada por `outfit_items_valid` (1–20, peças únicas, um só `main_top`/`bottom`/`one_piece`/`footwear`). A ordem da lista é a ordem de camada. Uma peça eliminada não apaga o conjunto.
 
+**Implementação atual do plano (incremento 6).** `PlanEntry` + `PlanEntryItem` são a tabela `plan_entries`, uma entrada ativa por utilizador e dia (`unique (owner_id, day) where deleted_at is null`). Não há tabela `WeekPlan`: a semana são os 7 dias a partir de uma data. Campos:
+- `day` (data de calendário) e `occasion` (`null` = “a decidir”);
+- `tentative`: o dia pode não acontecer (fim de semana, P-19);
+- `items`: como `outfits.items`, mas pode estar vazio (`plan_items_valid`);
+- `status`: `proposed` ou `accepted`. “Confirmada” e “não utilizada” não se guardam: vêm de `wear_events.plan_entry_id` e da data;
+- `version`: sobe no servidor a cada alteração aplicada;
+- `proposal`: alteração pendente (só os campos `occasion`, `tentative`, `items`, `status`) que chegou com `base_version` desatualizada, ou um segundo `create` para o mesmo dia (ADR-008);
+- `deleted_at`.
+
+O plano não entra no backup (como o `plan_entry_id` das utilizações). Escritas por `apply_plan_operation` (`create_plan_entry`, `edit_plan_entry` com `base_version`, `resolve_plan_proposal`, `delete_plan_entry`).
+
 **Implementação atual das inspirações (incremento 4).**
 - `Inspiration` é a tabela `inspirations`, com estes campos:
   - `title` e/ou `source_url`, pelo menos um dos dois, e o link só `http(s)`;

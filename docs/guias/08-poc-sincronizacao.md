@@ -69,7 +69,7 @@ O role só pode ler `garments`. Não tem acesso à allowlist nem às operações
    - Sem isto, a consola mostra `PSYNC_S2105 ... Unexpected "aud" claim value: "authenticated"`: o token do Supabase traz `aud = authenticated` e o PowerSync, por defeito, só aceita o URL da instância.
    - Se depois aparecer um erro de assinatura (`signature`, `kid`, `JWKS`), acrescentar o JWKS URI `https://zeibzbepuexeudzyrqzq.supabase.co/auth/v1/.well-known/jwks.json`.
 5. **Sync Streams**: colar o conteúdo de [`powersync/sync-streams.yaml`](../../powersync/sync-streams.yaml), validar e fazer deploy.
-   - Sempre que esse ficheiro mudar (cada tabela nova, por exemplo `user_outfits` e `user_inspirations`), é preciso voltar a colá-lo e fazer deploy. Sem isso, os dados novos ficam só no dispositivo onde foram criados.
+   - Sempre que esse ficheiro mudar (cada tabela nova, por exemplo `user_outfits`, `user_inspirations` e `user_plan_entries`), é preciso voltar a colá-lo e fazer deploy. Sem isso, os dados novos ficam só no dispositivo onde foram criados.
 6. Copiar o **URL da instância** (formato `https://<id>.powersync.journeyapps.com`) e envia-mo. É configuração pública.
 
 Se a página pedir cartão ou plano pago, parar e avisar ([custos](../custos-e-limitacoes.md)).

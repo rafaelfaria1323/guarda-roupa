@@ -381,7 +381,7 @@
       }
     }
   },
-  "occasionLabel": "{occasion, select, casual{Casual} work_casual{Trabalho informal} evening{Noite / saída} other{Desconhecida}}",
+  "occasionLabel": "{occasion, select, casual{Casual} work_casual{Trabalho (smart casual)} evening{Noite / saída} other{Desconhecida}}",
   "@occasionLabel": {
     "placeholders": {
       "occasion": {

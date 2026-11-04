@@ -76,6 +76,16 @@ final class SupabaseOperationUploader implements OperationUploader {
     if (response is Map<String, Object?>) return response;
     throw StateError('Resposta inesperada de apply_style_operation');
   }
+
+  @override
+  Future<Map<String, Object?>> applyPlan(Map<String, Object?> operation) async {
+    final response = await _client.rpc<Object?>(
+      'apply_plan_operation',
+      params: {'op': operation},
+    );
+    if (response is Map<String, Object?>) return response;
+    throw StateError('Resposta inesperada de apply_plan_operation');
+  }
 }
 
 /// Liga o PowerSync à sessão Supabase: o token da sessão autentica o

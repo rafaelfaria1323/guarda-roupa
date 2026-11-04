@@ -4,9 +4,11 @@
 # deleted_at preenchido) saem do stream e são removidas dos dispositivos.
 # O PowerSync replica sem RLS; o filtro por auth.user_id() é a autorização
 # do lado da sincronização. As escritas passam por apply_garment_operation,
-# apply_wear_operation, apply_outfit_operation e apply_style_operation.
+# apply_wear_operation, apply_outfit_operation, apply_style_operation e
+# apply_plan_operation.
 # Utilizações e limpezas desfeitas (voided_at) e conjuntos e inspirações
-# eliminados (deleted_at) saem do stream.
+# eliminados (deleted_at) saem do stream, tal como as entradas do plano
+# eliminadas.
 config:
   edition: 3
 
@@ -32,3 +34,6 @@ streams:
   user_style_preferences:
     auto_subscribe: true
     query: SELECT * FROM style_preferences WHERE owner_id = auth.user_id() AND deleted_at IS NULL
+  user_plan_entries:
+    auto_subscribe: true
+    query: SELECT * FROM plan_entries WHERE owner_id = auth.user_id() AND deleted_at IS NULL
