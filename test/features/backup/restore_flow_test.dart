@@ -63,7 +63,12 @@ void main() {
   Future<void> tapRestore(WidgetTester tester) async {
     await tester.tap(find.byTooltip('Definições'));
     await settle(tester);
-    await tester.ensureVisible(find.byKey(const Key('backup-restore')));
+    // A lista das Definições é preguiçosa: o botão pode ainda não existir.
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('backup-restore')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.pump();
     await tester.tap(find.byKey(const Key('backup-restore')));
     await settleUntil(tester, find.byType(AlertDialog));

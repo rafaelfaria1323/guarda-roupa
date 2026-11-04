@@ -144,6 +144,7 @@ Future<WeekGeneration> generateWeek(WidgetRef ref) async {
     return const WeekNotReady();
   }
   final weather = await ref.read(weekWeatherProvider.future);
+  final comfort = await ref.read(comfortThresholdsProvider.future);
   final result = WeeklyPlanner.plan(
     snapshot,
     WeekRequest(
@@ -157,6 +158,7 @@ Future<WeekGeneration> generateWeek(WidgetRef ref) async {
             include: !(d.kept && d.draft.items.isEmpty),
           ),
       ],
+      comfort: comfort,
       seed: ref.read(suggestionChoicesProvider).seed,
     ),
   );
@@ -223,18 +225,23 @@ final weekReviewProvider = Provider<Map<CalendarDay, DayReview>?>((ref) {
   if (snapshot == null || view == null) return null;
   // Sem previsão (ainda, ou de todo) revê-se o resto.
   final weather = ref.watch(weekWeatherProvider).value ?? const {};
-  final reviews = PlanReview.review(snapshot, [
-    for (final d in view)
-      ReviewDay(
-        day: d.day,
-        items: d.entry?.items ?? const [],
-        occasion: d.occasion,
-        weather: weather[d.day],
-        reviewable:
-            d.state == PlanDayState.proposed ||
-            d.state == PlanDayState.accepted,
-      ),
-  ], seed: ref.watch(suggestionChoicesProvider.select((c) => c.seed)));
+  final reviews = PlanReview.review(
+    snapshot,
+    [
+      for (final d in view)
+        ReviewDay(
+          day: d.day,
+          items: d.entry?.items ?? const [],
+          occasion: d.occasion,
+          weather: weather[d.day],
+          reviewable:
+              d.state == PlanDayState.proposed ||
+              d.state == PlanDayState.accepted,
+        ),
+    ],
+    comfort: currentComfort(ref),
+    seed: ref.watch(suggestionChoicesProvider.select((c) => c.seed)),
+  );
   return {for (final r in reviews) r.day: r};
 });
 

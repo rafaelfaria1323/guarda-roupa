@@ -26,8 +26,8 @@ enum ComfortBand {
   cold,
 }
 
-/// Limites de conforto aprovados (proposta de 2026-11-03, editáveis
-/// depois): sensação ≥ 22 °C quente, 14–22 °C ameno, < 14 °C frio; chuva ou
+/// Limites de conforto aprovados (proposta de 2026-11-03, editáveis nas
+/// Definições): sensação ≥ 22 °C quente, 14–22 °C ameno, < 14 °C frio; chuva ou
 /// vento ≥ 30 km/h preferem peças marcadas para chuva/vento.
 final class ComfortThresholds {
   const ComfortThresholds({
@@ -39,6 +39,52 @@ final class ComfortThresholds {
   final double hotFromC;
   final double coldBelowC;
   final double windyFromKmh;
+
+  /// Limites que o ecrã de edição deixa escolher.
+  static const hotRange = (min: 15.0, max: 35.0);
+  static const coldRange = (min: 0.0, max: 25.0);
+  static const windRange = (min: 10.0, max: 80.0);
+
+  /// Frio abaixo do calor, todos dentro dos limites.
+  bool get isValid =>
+      coldBelowC < hotFromC &&
+      _within(hotFromC, hotRange) &&
+      _within(coldBelowC, coldRange) &&
+      _within(windyFromKmh, windRange);
+
+  static bool _within(double v, ({double min, double max}) r) =>
+      v >= r.min && v <= r.max;
+
+  Map<String, Object?> toJson() => {
+    'hot_from_c': hotFromC,
+    'cold_below_c': coldBelowC,
+    'windy_from_kmh': windyFromKmh,
+  };
+
+  /// `null` se faltar um valor ou a combinação não for válida.
+  static ComfortThresholds? fromJson(Object? json) {
+    if (json is! Map) return null;
+    final hot = json['hot_from_c'];
+    final cold = json['cold_below_c'];
+    final wind = json['windy_from_kmh'];
+    if (hot is! num || cold is! num || wind is! num) return null;
+    final t = ComfortThresholds(
+      hotFromC: hot.toDouble(),
+      coldBelowC: cold.toDouble(),
+      windyFromKmh: wind.toDouble(),
+    );
+    return t.isValid ? t : null;
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is ComfortThresholds &&
+      other.hotFromC == hotFromC &&
+      other.coldBelowC == coldBelowC &&
+      other.windyFromKmh == windyFromKmh;
+
+  @override
+  int get hashCode => Object.hash(hotFromC, coldBelowC, windyFromKmh);
 
   ComfortBand bandFor(WeatherConditions w) {
     if (w.feelsLikeC >= hotFromC) return ComfortBand.hot;

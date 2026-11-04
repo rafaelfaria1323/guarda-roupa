@@ -986,5 +986,72 @@
         "type": "int"
       }
     }
+  },
+  "comfortTitle": "Conforto e tempo",
+  "comfortIntro": "Como a previsão escolhe o aquecimento das peças. Usa a sensação térmica. Vale para as sugestões de hoje e para a semana.",
+  "comfortHot": "Calor a partir de",
+  "comfortHotHelp": "Daqui para cima: só peças leves, sem camadas.",
+  "comfortCold": "Frio abaixo de",
+  "comfortColdHelp": "Abaixo disto: peças quentes, ou uma peça leve ou média com casaco.",
+  "comfortMild": "Entre {cold} e {hot} °C: peças médias ou leves, com camada opcional.",
+  "@comfortMild": {
+    "placeholders": {
+      "cold": {
+        "type": "int"
+      },
+      "hot": {
+        "type": "int"
+      }
+    }
+  },
+  "comfortWind": "Vento a partir de",
+  "comfortWindHelp": "Com este vento, ou com chuva, preferem-se casaco e calçado marcados para isso.",
+  "comfortDegrees": "{value} °C",
+  "@comfortDegrees": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "comfortKmh": "{value} km/h",
+  "@comfortKmh": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "comfortLess": "Diminuir: {label}",
+  "@comfortLess": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "comfortMore": "Aumentar: {label}",
+  "@comfortMore": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "comfortReset": "Repor valores de origem",
+  "comfortSaved": "Limites de conforto guardados.",
+  "comfortSummary": "Calor ≥ {hot} °C · frio < {cold} °C · vento ≥ {wind} km/h",
+  "@comfortSummary": {
+    "placeholders": {
+      "hot": {
+        "type": "int"
+      },
+      "cold": {
+        "type": "int"
+      },
+      "wind": {
+        "type": "int"
+      }
+    }
   }
 }

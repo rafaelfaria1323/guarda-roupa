@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../engine/application/suggestion_providers.dart';
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../backup/presentation/export_backup_tile.dart';
@@ -61,6 +62,20 @@ class SettingsScreen extends ConsumerWidget {
               ref.watch(weatherLocationProvider).value?.name ?? '',
             ),
             onTap: () => context.push(AppRoutes.weatherLocation),
+          ),
+          ListTile(
+            key: const Key('comfort-settings'),
+            leading: const Icon(Icons.thermostat_outlined),
+            title: Text(l10n.comfortTitle),
+            subtitle: Text(switch (ref.watch(comfortThresholdsProvider).value) {
+              final t? => l10n.comfortSummary(
+                t.hotFromC.round(),
+                t.coldBelowC.round(),
+                t.windyFromKmh.round(),
+              ),
+              null => '',
+            }),
+            onTap: () => context.push(AppRoutes.comfortSettings),
           ),
           ListTile(
             key: const Key('care-settings'),

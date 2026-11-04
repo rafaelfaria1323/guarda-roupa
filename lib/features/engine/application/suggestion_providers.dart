@@ -1,11 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../account_sync/application/providers.dart';
 import '../../care/application/care_providers.dart';
 import '../../inspirations/application/inspiration_providers.dart';
 import '../../wardrobe/domain/garment_attributes.dart';
 import '../../wear/application/wear_providers.dart';
 import '../../weather/application/weather_providers.dart';
 import '../../weather/domain/weather.dart';
+import '../data/comfort_store.dart';
 import '../domain/comfort.dart';
 import '../domain/daily_engine.dart';
 import '../domain/suggestion.dart';
@@ -111,6 +113,38 @@ class SuggestionChoicesNotifier extends Notifier<SuggestionChoices> {
   );
 }
 
+final comfortStoreProvider = Provider<ComfortStore?>((ref) {
+  final db = ref.watch(userDatabaseProvider).value;
+  return db == null ? null : ComfortStore(db);
+});
+
+/// Limites de conforto (P-17), editáveis nas Definições; os de origem
+/// enquanto não houver outros.
+final comfortThresholdsProvider =
+    AsyncNotifierProvider<ComfortThresholdsNotifier, ComfortThresholds>(
+      ComfortThresholdsNotifier.new,
+    );
+
+class ComfortThresholdsNotifier extends AsyncNotifier<ComfortThresholds> {
+  @override
+  Future<ComfortThresholds> build() async {
+    final store = ref.watch(comfortStoreProvider);
+    return store == null ? const ComfortThresholds() : store.get();
+  }
+
+  Future<void> save(ComfortThresholds value) async {
+    if (!value.isValid) return;
+    final store = ref.read(comfortStoreProvider);
+    if (store == null) return;
+    await store.set(value);
+    state = AsyncData(value);
+  }
+}
+
+/// Os limites atuais, sem esperar: os de origem enquanto carregam.
+ComfortThresholds currentComfort(Ref ref) =>
+    ref.watch(comfortThresholdsProvider).value ?? const ComfortThresholds();
+
 /// Sugestões de hoje; `null` enquanto o guarda-roupa carrega. Enquanto a
 /// previsão carrega, sugere sem ela (e diz isso).
 final todaySuggestionsProvider = Provider<SuggestionResult?>((ref) {
@@ -126,6 +160,7 @@ final todaySuggestionsProvider = Provider<SuggestionResult?>((ref) {
       day: todayFrom(ref.watch(clockProvider)),
       occasion: choices.occasion,
       weather: conditions,
+      comfort: currentComfort(ref),
       seed: choices.seed,
     ),
   );

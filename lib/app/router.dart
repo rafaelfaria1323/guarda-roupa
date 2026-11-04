@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/engine/presentation/comfort_settings_screen.dart';
 import '../features/weather/presentation/weather_location_screen.dart';
 import '../features/account_sync/application/providers.dart';
 import '../features/account_sync/domain/auth_service.dart';
@@ -39,6 +40,7 @@ abstract final class AppRoutes {
   static const settings = '/definicoes';
   static const careSettings = '/definicoes/lavagem';
   static const weatherLocation = '/definicoes/localizacao';
+  static const comfortSettings = '/definicoes/conforto';
   static const wear = '/vesti';
 
   /// "Vesti hoje" com estas peças já escolhidas (por confirmar). Com
@@ -129,6 +131,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.weatherLocation,
         builder: (context, state) => const WeatherLocationScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.comfortSettings,
+        builder: (context, state) => const ComfortSettingsScreen(),
       ),
       GoRoute(
         path: AppRoutes.wear,
