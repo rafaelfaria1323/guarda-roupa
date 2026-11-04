@@ -1,0 +1,17 @@
+{
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1.0.14"
+  },
+  "fmt": {
+    "singleQuote": true,
+    "lineWidth": 100,
+    "exclude": [
+      "fixtures/"
+    ]
+  },
+  "lint": {
+    "exclude": [
+      "fixtures/"
+    ]
+  }
+}

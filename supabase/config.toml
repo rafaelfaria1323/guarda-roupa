@@ -387,6 +387,11 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+[functions.import-product]
+# O token é validado pela base em claim_import_quota (allowlist e quota),
+# o que também funciona com as chaves de assinatura JWT novas.
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

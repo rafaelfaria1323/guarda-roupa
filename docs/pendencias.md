@@ -20,7 +20,7 @@ Uma pendência não deve desaparecer por estar descrita em Markdown. Fechar apen
 | P-09 | Perfis e desempenho | Escolher dispositivos de referência e orçamento mensurável | Gate de desempenho |
 | P-10 | Automação E2E | POC Patrol Android/Chromium; guião iPhone real, sem equivalência fictícia | Evidência por plataforma |
 | P-11 | Recuperação com cloud | Definir substituição/recuperação sem replay de eventos nem ressurreição silenciosa | Recuperação sobre conta existente |
-| P-12 | Lojas suportadas | POC com links reais autorizados, metadados, variantes e imagens | Anunciar suporte a uma loja |
+| P-12 | Lojas suportadas — **Decidido 2026-11-04:** Zara, Uniqlo, Pull&Bear e Bershka primeiro; função em Supabase Edge Functions | **Função feita, lojas em teste**; falta o fluxo na app e o [smoke](../tool/import/README.md) com links reais (corre no Mac; a cloud não chega às lojas) | Anunciar suporte a uma loja |
 | P-13 | Pinterest | Confirmar permissões/API; link não garante imagem | Importação automática de Pins |
 | P-14 | Modelo IA | Licença, operadores, tamanho, precisão e desempenho | Ativar análise visual automática |
 | P-15 | Assinatura/distribuição Android — **applicationId decidido 2026-11-03: `pt.rafaelfaria.guarda_roupa`** | Guardar chave de assinatura e comprovar atualização sem apagar dados | Distribuição estável |
@@ -59,7 +59,8 @@ Idempotência de retries e da mesma entrada de plano não deduplica magicamente 
 | P-01 | Supabase Free como backend (Auth, PostgreSQL com RLS, Storage privado) | Utilizador | 2026-11-03 | Decidido; projeto ainda não criado |
 | P-02 | Google OAuth como único método de login inicial | Utilizador | 2026-11-03 | Decidido; não configurado |
 | P-03 | PowerSync + Supabase como motor de sincronização | Utilizador | 2026-11-03 | Aprovado provisoriamente: ligado e sincronizado; testes com dois dispositivos adiados pelo utilizador (problemas tratados quando aparecerem) |
-| P-16 | Apenas o proprietário (e conta de experiência) pode usar a app | Utilizador | 2026-11-03 | Decidido; regra no servidor por implementar |
+| P-16 | Apenas o proprietário (e conta de experiência) pode usar a app | Utilizador | 2026-11-03 | Implementado no servidor: `allowed_users`, `is_allowed()` nas políticas e funções, hook “Before User Created” |
+| P-12 | Zara, Uniqlo, Pull&Bear e Bershka primeiro; Supabase Edge Functions | Utilizador | 2026-11-04 | Decidido; lojas em teste até ao smoke |
 | P-15 | `applicationId` = `pt.rafaelfaria.guarda_roupa` (fixo a partir do OAuth/primeira instalação) | Utilizador | 2026-11-03 | Decidido; assinatura release por definir |
 | P-17 | Limites de conforto (proposta: 22/14 °C, vento 30 km/h) | Utilizador | 2026-11-03 | Decidido; editável mais tarde |
 | P-18 | Localização Torres Vedras, Europe/Lisbon, sem GPS | Utilizador | 2026-11-03 | Decidido |

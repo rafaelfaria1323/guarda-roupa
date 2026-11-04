@@ -30,7 +30,8 @@ Atualizado a 2026-11-03. "Feito" quer dizer implementado, com testes automático
 | 4 — Conjuntos e estilo | Feito: conjuntos (backup v3), inspirações com link, imagem e proporções, preferências (backup v4/v5) | [conjuntos](features/conjuntos-e-ocasioes.md), [inspirações](features/inspiracoes-e-estilo.md) |
 | 5 — Motor diário | Feito na base: motor (modelos, restrições, rotatividade, preferências, conforto P-17), previsão Open-Meteo com cache e localização (P-18), "Sugestões para hoje" no Planeador. Ficam para depois: harmonia de cores, padrões/texturas no conjunto, ecrã para editar os limites de conforto | [motor](features/motor-de-combinacoes.md) |
 | 6 — Semana utilizável | Feito: dados do plano (`plan_entries`, propostas pendentes, P-19), pesquisa semanal (beam search com reservas e diversidade), ecrã “Esta semana” (aceitar, deixar vazio, “Vesti isto hoje”) e mudanças posteriores (peça suja, arquivada ou desadequada à previsão: avisa e propõe trocar só essa, aplicada após confirmação) | [planeamento](features/planeamento-semanal.md), [motor](features/motor-de-combinacoes.md) |
-| 7 a 9 | Por começar | — |
+| 7 — Entrada assistida por lojas | Em curso: função `import-product` (Supabase Edge Functions) com lista de lojas (Zara, Uniqlo, Pull&Bear, Bershka, todas em teste), proteções de rede, JSON-LD/Open Graph e quota. Falta o fluxo na app e o smoke com links reais | [importação](features/importacao-de-links.md) |
+| 8 a 9 | Por começar | — |
 
 Ações do utilizador ainda abertas: voltar a fazer deploy das Sync Streams no painel do PowerSync quando um stream novo é adicionado a `powersync/sync-streams.yaml` (os de lavandaria, conjuntos, inspirações e preferências); executar a POC em dois dispositivos.
 

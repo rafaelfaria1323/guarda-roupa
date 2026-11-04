@@ -2,6 +2,33 @@
 
 Estado: importante, mas posterior à fundação/MVP; suporte definido por loja e POC, não universal.
 
+## Implementado (2026-11-04, função; em teste)
+
+- Decisão (P-12): Zara, Uniqlo, Pull&Bear e Bershka primeiro; a função corre em **Supabase Edge Functions** (`supabase/functions/import-product`, Deno).
+- Lista fechada de lojas (`stores.ts`), todas `poc`: nenhuma é anunciada como suportada sem o [smoke](../../tool/import/README.md) com links reais.
+- Proteções de rede:
+  - só `https`, sem credenciais nem porta, e só domínios exatos da lista (não aceita IPs nem redes internas);
+  - redirecionamentos seguidos à mão (no máximo 3), cada um validado de novo e sempre dentro da mesma loja;
+  - 8 s de tempo, 2 MB por página e 5 MB por imagem; a página tem de ser HTML e a imagem JPEG, PNG ou WebP;
+  - sem cookies nem login: um bloqueio é dito como `blocked`, nunca contornado.
+- Pedido autenticado: a base valida o token, a allowlist (P-16) e a quota em `claim_import_quota()` (30 por hora, 200 por dia). Um link de outra loja é recusado antes de gastar quota.
+- Extração: JSON-LD `ProductGroup`/`Product` (também dentro de `@graph`), com Open Graph como alternativa parcial. Campos extraídos: nome, marca, descrição, cor, material, imagens absolutas `https` e variantes (cor, tamanho, SKU, imagem).
+  - Cada campo diz a origem (`json-ld` ou `open-graph`) e a resposta lista o que é preciso confirmar: categoria, cores e posse sempre; a variante quando há várias; o material quando falta.
+  - Só texto: as etiquetas são retiradas, as entidades descodificadas e os comprimentos limitados. Preço e stock ignoram-se.
+- Respostas: `ok`, `unsupported_store`, `invalid_url`, `fetch_failed` (com `timeout`, `blocked`, `not_found`, `too_large`, …), `no_metadata` e `rate_limited`. Uma página sem dados nunca dá um produto inventado.
+- Imagens: `{image}` copia uma imagem só de um domínio de imagens da própria loja, para a peça ficar com o ficheiro e não com um link temporário.
+- Testes Deno com fixtures **sintéticas** no CI (parser, regras de URL, redirecionamentos, limites, erros e quota) e testes SQL da quota. Publicação pelo workflow Supabase com o secret `SUPABASE_ACCESS_TOKEN`.
+- Por fazer: o fluxo na app (colar link, pré-visualização, escolher variante e imagem, confirmar e criar a peça) e o smoke com links reais. O ambiente de desenvolvimento na cloud não chega aos domínios das lojas, por isso o smoke corre no Mac.
+
+### Lojas
+
+| Loja | Estado | Smoke com links reais |
+|---|---|---|
+| Zara | Em teste | Por fazer |
+| Uniqlo | Em teste | Por fazer |
+| Pull&Bear | Em teste | Por fazer |
+| Bershka | Em teste | Por fazer |
+
 ## Objetivo
 
 Colar um link, por exemplo de Zara ou Uniqlo, obter dados úteis e confirmar a peça realmente possuída. As restantes lojas precisam de identificação e validação individual.
