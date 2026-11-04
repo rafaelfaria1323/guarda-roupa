@@ -120,6 +120,112 @@ abstract final class DailyEngine {
     );
   }
 
+  /// Avalia peças já escolhidas (um dia planeado) com as regras do dia:
+  /// as mesmas notas que uma sugestão teria. `null` para uma peça que já
+  /// não existe.
+  static List<SuggestedItem?> assess(
+    WardrobeSnapshot snapshot,
+    SuggestionRequest request,
+    List<OutfitItem> items,
+  ) {
+    final ctx = _Context(snapshot, request);
+    final byId = {for (final g in snapshot.garments) g.id: g};
+    return [
+      for (final i in items)
+        if (byId[i.garmentId] case final g?)
+          SuggestedItem(g, i.role, ctx._entry(g, _slotOf(i.role)).notes)
+        else
+          null,
+    ];
+  }
+
+  /// Troca só as peças em [replace], mantendo as restantes (escolhas do
+  /// utilizador). Cada substituta é a primeira do seu papel na ordem do
+  /// motor que ainda não está no conjunto, de preferência sem avisos. Sem substituta, ou numa camada
+  /// intermédia/acessório, a peça sai e o papel fica em [Replacement.dropped].
+  /// [add]: papéis a juntar (ex.: casaco que o frio passou a pedir).
+  static Replacement replace(
+    WardrobeSnapshot snapshot,
+    SuggestionRequest request,
+    List<OutfitItem> items, {
+    required Set<GarmentId> replace,
+    Set<OutfitRole> add = const {},
+  }) {
+    final ctx = _Context(snapshot, request);
+    final pools = {for (final s in _Slot.values) s: ctx.pool(s)};
+    ctx.outerAvailable = pools[_Slot.outer]!.ranked.isNotEmpty;
+    for (final p in pools.values) {
+      ctx.rank(p);
+    }
+    final taken = {
+      for (final i in items)
+        if (!replace.contains(i.garmentId)) i.garmentId,
+    };
+    final out = <OutfitItem>[];
+    final added = <OutfitItem>[];
+    final dropped = <OutfitRole>[];
+    for (final i in items) {
+      if (!replace.contains(i.garmentId)) {
+        out.add(i);
+        continue;
+      }
+      final slot = _slotOf(i.role);
+      final options = slot == null
+          ? const <_Entry>[]
+          : [
+              for (final e in pools[slot]!.ranked)
+                if (!taken.contains(e.garment.id) &&
+                    e.garment.id != i.garmentId)
+                  e,
+            ];
+      final pick = _best(options);
+      if (pick == null) {
+        dropped.add(i.role);
+        continue;
+      }
+      taken.add(pick.garment.id);
+      final item = OutfitItem(pick.garment.id, i.role);
+      out.add(item);
+      added.add(item);
+    }
+    for (final role in add) {
+      final slot = _slotOf(role);
+      final pick = slot == null
+          ? null
+          : _best([
+              for (final e in pools[slot]!.ranked)
+                if (!taken.contains(e.garment.id)) e,
+            ]);
+      if (pick == null) {
+        dropped.add(role);
+        continue;
+      }
+      taken.add(pick.garment.id);
+      final item = OutfitItem(pick.garment.id, role);
+      out.add(item);
+      added.add(item);
+    }
+    out.sort(
+      (a, b) => _Context._layer(a.role).compareTo(_Context._layer(b.role)),
+    );
+    return Replacement(items: out, added: added, dropped: dropped);
+  }
+
+  /// A primeira sem avisos (lavar recomendado não entra na ordem), senão a
+  /// primeira.
+  static _Entry? _best(List<_Entry> ranked) =>
+      ranked.where((e) => !e.notes.any(SuggestedItem.isWarning)).firstOrNull ??
+      ranked.firstOrNull;
+
+  static _Slot? _slotOf(OutfitRole role) => switch (role) {
+    OutfitRole.mainTop => _Slot.top,
+    OutfitRole.bottom => _Slot.bottom,
+    OutfitRole.onePiece => _Slot.onePiece,
+    OutfitRole.footwear => _Slot.footwear,
+    OutfitRole.outerLayer => _Slot.outer,
+    OutfitRole.midLayer || OutfitRole.accessory => null,
+  };
+
   static int _min(int a, int b) => a < b ? a : b;
   static int _max(int a, int b) => a > b ? a : b;
 }
@@ -251,7 +357,9 @@ final class _Context {
     ComfortFit.mismatch => 3,
   };
 
-  _Entry _entry(Garment g, _Slot slot) {
+  /// [slot] `null`: camada intermédia ou acessório (sem regras de conforto
+  /// nem de chuva).
+  _Entry _entry(Garment g, _Slot? slot) {
     final notes = <SuggestionNote>[];
 
     if (request.occasion case final o?) {
@@ -263,13 +371,14 @@ final class _Context {
     }
 
     ComfortFit? fit;
-    if (band case final b? when slot != _Slot.footwear && slot != _Slot.outer) {
+    if (band case final b?
+        when slot != null && slot != _Slot.footwear && slot != _Slot.outer) {
       fit = _fitOf(g.attributes.warmth, b, upperBody: slot.upperBody);
       notes.add(ComfortNote(fit, b, g.attributes.warmth));
     }
 
     var weatherTier = 0;
-    if (slot.exposed && (rain || windy)) {
+    if ((slot?.exposed ?? false) && (rain || windy)) {
       final flags = [
         if (rain) (true, g.attributes.rainOk),
         if (windy) (false, g.attributes.windOk),

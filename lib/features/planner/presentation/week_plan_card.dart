@@ -6,6 +6,8 @@ import '../../../app/router.dart';
 import '../../../core/domain/result.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../care/application/care_providers.dart';
+import '../../engine/domain/plan_review.dart';
+import '../../engine/domain/suggestion.dart';
 import '../../engine/domain/weekly_planner.dart';
 import '../../outfits/domain/outfit.dart';
 import '../../wardrobe/domain/garment.dart';
@@ -92,6 +94,53 @@ class _DayTile extends ConsumerWidget {
   final WeekDayView view;
   final DayPlan? search;
 
+  static String _issueText(
+    AppLocalizations l10n,
+    PlanIssue issue,
+    Map<GarmentId, Garment> garments,
+  ) {
+    final name = garmentLabel(l10n, garments[issue.item.garmentId]);
+    final (kind, detail) = switch (issue) {
+      GarmentGone() => ('gone', ''),
+      GarmentUnavailable(:final availability) => (
+        'unavailable',
+        l10n.availabilityLabel(availability.id).toLowerCase(),
+      ),
+      WashDue() => ('wash', ''),
+      ComfortUnsuited(:final band) => (
+        'comfort',
+        l10n.comfortBandLabel(band.name).toLowerCase(),
+      ),
+      OuterLayerNeeded() => ('outer', ''),
+      WeatherUnsuited(:final rain) => (rain ? 'rain' : 'wind', ''),
+    };
+    return l10n.weekIssue(kind, name, detail);
+  }
+
+  /// A diferença entre o dia como está e a proposta.
+  static List<String> _changeLines(
+    AppLocalizations l10n,
+    List<OutfitItem> current,
+    Replacement proposal,
+    Map<GarmentId, Garment> garments,
+  ) {
+    String name(GarmentId id) => garmentLabel(l10n, garments[id]);
+    final kept = {for (final i in proposal.items) i.garmentId};
+    final removed = [
+      for (final i in current)
+        if (!kept.contains(i.garmentId)) i,
+    ];
+    return [
+      for (final a in proposal.added)
+        if (removed.where((r) => r.role == a.role).firstOrNull case final r?)
+          '· ${l10n.weekChangeSwap(name(r.garmentId), name(a.garmentId))}'
+        else
+          '· ${l10n.weekChangeAdd(name(a.garmentId))}',
+      for (final role in proposal.dropped)
+        '· ${l10n.weekChangeDrop(l10n.outfitRoleLabel(role.id).toLowerCase())}',
+    ];
+  }
+
   Future<void> _save(
     BuildContext context,
     WidgetRef ref,
@@ -116,6 +165,8 @@ class _DayTile extends ConsumerWidget {
       for (final g in ref.watch(allGarmentsProvider).value ?? <Garment>[])
         g.id: g,
     };
+    final review = ref.watch(weekReviewProvider)?[view.day];
+    final ignored = ref.watch(ignoredDayChangesProvider);
     final entry = view.entry;
     final draft = view.draft;
     final state = view.state;
@@ -234,6 +285,57 @@ class _DayTile extends ConsumerWidget {
                     key: Key('$key-not-found'),
                     style: TextStyle(color: theme.colorScheme.error),
                   ),
+              ],
+              if (review case final r? when r.affected) ...[
+                const SizedBox(height: 4),
+                Text(
+                  l10n.weekChanged,
+                  key: Key('$key-changed'),
+                  style: TextStyle(color: theme.colorScheme.error),
+                ),
+                for (final issue in r.issues)
+                  Text(
+                    '· ${_issueText(l10n, issue, garments)}',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                if (r.proposal case final p?
+                    when editable &&
+                        !ignored.contains(dayChangeKey(view.day, p))) ...[
+                  for (final line in _changeLines(
+                    l10n,
+                    draft.items,
+                    p,
+                    garments,
+                  ))
+                    Text(line, style: theme.textTheme.bodySmall),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      if (p.added.isNotEmpty ||
+                          p.items.length != draft.items.length)
+                        TextButton(
+                          key: Key('$key-change-apply'),
+                          onPressed: () async {
+                            final result = await applyDayChange(ref, view);
+                            if (result is Err<PlanEntry, PlanFailure> &&
+                                context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(l10n.weekSaveFailed)),
+                              );
+                            }
+                          },
+                          child: Text(l10n.weekChangeApply),
+                        ),
+                      TextButton(
+                        key: Key('$key-change-ignore'),
+                        onPressed: () => ref
+                            .read(ignoredDayChangesProvider.notifier)
+                            .ignore(dayChangeKey(view.day, p)),
+                        child: Text(l10n.weekChangeIgnore),
+                      ),
+                    ],
+                  ),
+                ],
               ],
               if (entry?.proposal case final p?) ...[
                 const SizedBox(height: 4),

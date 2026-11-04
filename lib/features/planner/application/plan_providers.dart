@@ -5,6 +5,8 @@ import '../../account_sync/application/providers.dart';
 import '../../care/application/care_providers.dart';
 import '../../engine/application/suggestion_providers.dart';
 import '../../engine/domain/comfort.dart';
+import '../../engine/domain/plan_review.dart';
+import '../../engine/domain/suggestion.dart';
 import '../../engine/domain/weekly_planner.dart';
 import '../../wardrobe/domain/garment_attributes.dart';
 import '../../wear/application/wear_providers.dart';
@@ -141,7 +143,7 @@ Future<WeekGeneration> generateWeek(WidgetRef ref) async {
   if (snapshot == null || view == null || repo == null) {
     return const WeekNotReady();
   }
-  final weather = await _weekWeather(ref, [for (final d in view) d.day]);
+  final weather = await ref.read(weekWeatherProvider.future);
   final result = WeeklyPlanner.plan(
     snapshot,
     WeekRequest(
@@ -185,27 +187,92 @@ Future<WeekGeneration> generateWeek(WidgetRef ref) async {
   return WeekGenerated(proposed: proposed, notFound: notFound);
 }
 
-/// A previsão de cada dia (da cache do repositório; um pedido chega para a
-/// semana). Dias sem previsão ficam sem regras de conforto, como hoje.
-Future<Map<CalendarDay, WeatherConditions>> _weekWeather(
+/// A previsão de cada dia da semana (da cache do repositório; um pedido
+/// chega para a semana). Dias sem previsão ficam sem regras de conforto. O
+/// tempo indicado à mão só vale para hoje.
+final weekWeatherProvider = FutureProvider<Map<CalendarDay, WeatherConditions>>(
+  (ref) async {
+    final repo = ref.watch(weatherRepositoryProvider);
+    final manual = ref.watch(suggestionChoicesProvider.select((c) => c.manual));
+    final today = todayFrom(ref.watch(clockProvider));
+    final location = await ref.watch(weatherLocationProvider.future);
+    // Primeiro a de hoje: é ela que pede a previsão (um pedido chega para a
+    // semana) e os outros dias leem a cache. Pedir de novo também chega aqui.
+    await ref.watch(todayWeatherProvider.future);
+    if (repo == null) return const {};
+    final out = <CalendarDay, WeatherConditions>{};
+    for (final day in WeekPlanRules.week(today)) {
+      if (day == today && manual != null) {
+        out[day] = manual.toConditions();
+        continue;
+      }
+      if ((await repo.forDay(location, day)).weather case final w?) {
+        out[day] = w.toConditions();
+      }
+    }
+    return out;
+  },
+);
+
+/// Mudanças posteriores: dias planeados cujas peças deixaram de servir
+/// (suja, arquivada, previsão, lavagem) e a substituição proposta. Nunca se
+/// aplica sozinha. `null` enquanto carrega.
+final weekReviewProvider = Provider<Map<CalendarDay, DayReview>?>((ref) {
+  final snapshot = ref.watch(wardrobeSnapshotProvider);
+  final view = ref.watch(weekViewProvider);
+  if (snapshot == null || view == null) return null;
+  // Sem previsão (ainda, ou de todo) revê-se o resto.
+  final weather = ref.watch(weekWeatherProvider).value ?? const {};
+  final reviews = PlanReview.review(snapshot, [
+    for (final d in view)
+      ReviewDay(
+        day: d.day,
+        items: d.entry?.items ?? const [],
+        occasion: d.occasion,
+        weather: weather[d.day],
+        reviewable:
+            d.state == PlanDayState.proposed ||
+            d.state == PlanDayState.accepted,
+      ),
+  ], seed: ref.watch(suggestionChoicesProvider.select((c) => c.seed)));
+  return {for (final r in reviews) r.day: r};
+});
+
+/// Substituições que o utilizador decidiu não aplicar (nesta sessão): os
+/// avisos ficam, a proposta deixa de aparecer até mudar.
+final ignoredDayChangesProvider =
+    NotifierProvider<IgnoredDayChangesNotifier, Set<String>>(
+      IgnoredDayChangesNotifier.new,
+    );
+
+class IgnoredDayChangesNotifier extends Notifier<Set<String>> {
+  @override
+  Set<String> build() => const {};
+
+  void ignore(String key) => state = {...state, key};
+}
+
+/// Identifica uma proposta: o dia e as peças propostas.
+String dayChangeKey(CalendarDay day, Replacement proposal) =>
+    '${day.iso}:${[for (final i in proposal.items) i.garmentId.value].join(',')}';
+
+/// Aplica a substituição proposta para o dia (confirmada pelo utilizador),
+/// mantendo a ocasião e o estado.
+Future<PlanResult<PlanEntry>?> applyDayChange(
   WidgetRef ref,
-  List<CalendarDay> days,
+  WeekDayView day,
 ) async {
-  final repo = ref.read(weatherRepositoryProvider);
-  if (repo == null) return const {};
-  final location = await ref.read(weatherLocationProvider.future);
-  final manual = ref.read(suggestionChoicesProvider).manual;
-  final today = todayFrom(ref.read(clockProvider));
-  final out = <CalendarDay, WeatherConditions>{};
-  for (final day in days) {
-    // O tempo indicado à mão só vale para hoje.
-    if (day == today && manual != null) {
-      out[day] = manual.toConditions();
-      continue;
-    }
-    if ((await repo.forDay(location, day)).weather case final w?) {
-      out[day] = w.toConditions();
-    }
-  }
-  return out;
+  final repo = ref.read(planRepositoryProvider);
+  final proposal = ref.read(weekReviewProvider)?[day.day]?.proposal;
+  if (repo == null || proposal == null) return null;
+  final d = day.draft;
+  return repo.saveDay(
+    day.day,
+    PlanDraft(
+      occasion: d.occasion,
+      tentative: d.tentative,
+      items: proposal.items,
+      status: d.status,
+    ),
+  );
 }

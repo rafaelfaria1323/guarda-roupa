@@ -19,7 +19,12 @@ Estado: necessária no MVP de planeamento; um conjunto por dia inicialmente.
   - Por dia: aceitar, alterar (volta a proposto), deixar vazio (dias provisórios) e, hoje, “Vesti isto hoje”, que abre “Vesti hoje” com as peças por confirmar e liga a utilização à entrada (`plan_entry_id`). Só aí o dia passa a Vestido.
   - Repetições e dias sem conjunto possível aparecem no cartão do dia; uma proposta pendente de outro dispositivo mostra o que muda, com “Aplicar” ou “Manter o atual”.
   - Dias confirmados ou passados não se editam.
-- Por fazer: propostas de alteração quando uma peça fica suja ou indisponível, ou a previsão muda.
+- Mudanças posteriores (`PlanReview`, Dart puro): os dias propostos ou aceites são revistos sempre que o guarda-roupa, as utilizações ou a previsão mudam.
+  - Problemas por peça: arquivada ou eliminada; indisponível (a lavar, a secar, precisa de limpeza); lavagem recomendada pelas utilizações reais (P-07); aquecimento desadequado à previsão atual; calçado ou casaco que não é para a chuva ou o vento; frio que pede um casaco que o dia não tem.
+  - A rotatividade não é um problema: a repetição já foi identificada ao planear.
+  - A proposta troca **só as peças com problemas** (as outras são escolhas a preservar) pela primeira do mesmo papel na ordem do motor diário, de preferência sem avisos. As substitutas veem as reservas dos dias anteriores. No frio junta-se um casaco; sem alternativa, a proposta diz que papel fica por escolher.
+  - O cartão do dia mostra “Mudou desde o plano”, o porquê e a diferença (“Trocar X por Y”, “Juntar Z”). “Aplicar alteração” grava a troca e mantém a ocasião e o estado. “Manter o plano” esconde a proposta nesta sessão, mas os avisos ficam.
+  - Nada se reescreve sozinho. Dias confirmados ou passados não se reveem.
 
 ## Objetivo
 

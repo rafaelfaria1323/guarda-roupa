@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guarda_roupa/features/wardrobe/data/powersync_wardrobe_repository.dart';
+import 'package:guarda_roupa/features/wardrobe/domain/availability.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_category.dart';
 import 'package:guarda_roupa/features/wear/application/wear_providers.dart';
@@ -177,5 +178,50 @@ void main() {
       ),
       findsOne,
     );
+  });
+
+  testWidgets('uma peça planeada vai para lavar: avisa, propõe a troca e só '
+      'aplica depois de confirmar', (tester) async {
+    final app = await pumpApp(
+      tester,
+      overrides: [
+        clockProvider.overrideWithValue(
+          FixedClock(DateTime.utc(2026, 11, 9, 12)),
+        ),
+        httpClientProvider.overrideWithValue(
+          MockClient((_) async => http.Response('', 503)),
+        ),
+      ],
+    );
+    await seed(tester, app.db);
+    await generate(tester, '7 dias propostos.');
+    expect(day(2, 'changed'), findsNothing);
+
+    // A t-shirt de quarta vai para lavar.
+    final before = text(tester, day(2, 'items'));
+    final shirt = before.split(' · ').firstWhere((n) => n.startsWith('T'));
+    final repo = PowerSyncWardrobeRepository(db: app.db, ownerId: 'user-a');
+    await tester.runAsync(() async {
+      final row = await app.db.get('SELECT id FROM garments WHERE name = ?', [
+        shirt,
+      ]);
+      await repo.setAvailability(
+        GarmentId(row['id']! as String),
+        Availability.washing,
+      );
+    });
+    await settleUntil(tester, day(2, 'changed'));
+    expect(
+      find.textContaining('$shirt está indisponível (a lavar)'),
+      findsWidgets,
+    );
+    expect(text(tester, day(2, 'items')), before, reason: 'nada se reescreve');
+
+    await tap(tester, day(2, 'change-apply'));
+    await settleUntil(tester, day(2, 'changed'), gone: true);
+    final after = text(tester, day(2, 'items'));
+    expect(after, isNot(contains(shirt)));
+    expect(after, contains('Ténis'));
+    expect(text(tester, day(2, 'state')), 'Proposto');
   });
 }
