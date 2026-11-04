@@ -1,0 +1,136 @@
+name: PWA
+
+# Publica a PWA (build/web, de tool/web/build_pwa.sh) no Cloudflare Pages,
+# no projeto "guarda-roupa", depois de a CI da main passar, ou à mão.
+# Não corre nos PRs: a CI dos PRs continua sem builds Web.
+#
+# Credenciais em Settings > Secrets and variables > Actions (nunca no repo):
+#   CLOUDFLARE_API_TOKEN   token com Account > Cloudflare Pages > Edit
+#                          (Cloudflare > My Profile > API Tokens).
+#   CLOUDFLARE_ACCOUNT_ID  ID da conta (Cloudflare > Workers & Pages, coluna
+#                          da direita, "Account ID").
+#   SUPABASE_ACCESS_TOKEN  (já existe) para juntar o endereço da PWA às
+#                          Redirect URLs do login. Sem permissão para isso, o
+#                          job avisa e diz o que acrescentar à mão.
+# Sem os secrets do Cloudflare, o job avisa e não publica nada.
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pwa-deploy
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: 3.47.9
+  WRANGLER_VERSION: 4.152.0
+  PAGES_PROJECT: guarda-roupa
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+  SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+jobs:
+  deploy:
+    name: Publicar no Cloudflare Pages
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - id: secrets
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::warning::Secrets CLOUDFLARE_API_TOKEN/CLOUDFLARE_ACCOUNT_ID em falta: PWA não publicada."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.secrets.outputs.ok == 'true'
+        uses: actions/checkout@v4
+        with:
+          # O commit que a CI validou, não um mais recente.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - if: steps.secrets.outputs.ok == 'true'
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - if: steps.secrets.outputs.ok == 'true'
+        run: tool/web/build_pwa.sh
+      - if: steps.secrets.outputs.ok == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - if: steps.secrets.outputs.ok == 'true'
+        id: project
+        name: Projeto Pages (cria se não existir)
+        run: |
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects"
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          code=$(curl -sS -o project.json -w '%{http_code}' "${auth[@]}" "$api/$PAGES_PROJECT")
+          if [ "$code" = 404 ]; then
+            echo "A criar o projeto $PAGES_PROJECT"
+            code=$(curl -sS -o project.json -w '%{http_code}' "${auth[@]}" \
+              -H 'Content-Type: application/json' -X POST "$api" \
+              -d "{\"name\":\"$PAGES_PROJECT\",\"production_branch\":\"main\"}")
+          fi
+          if [ "$code" != 200 ]; then
+            echo "::error::Cloudflare respondeu $code: $(jq -c '.errors' project.json)"
+            exit 1
+          fi
+          echo "url=https://$(jq -r '.result.subdomain' project.json)" >> "$GITHUB_OUTPUT"
+          rm project.json
+      - if: steps.secrets.outputs.ok == 'true'
+        run: >-
+          npx --yes "wrangler@$WRANGLER_VERSION" pages deploy build/web
+          --project-name "$PAGES_PROJECT" --branch main
+          --commit-hash "$(git rev-parse HEAD)" --commit-dirty=true
+      - if: steps.secrets.outputs.ok == 'true'
+        name: Endereço da PWA nas Redirect URLs do Supabase
+        env:
+          PWA_URL: ${{ steps.project.outputs.url }}
+        # Só lê e escreve uri_allow_list; o resto da configuração do Auth
+        # (que tem segredos) nunca é mostrado.
+        run: |
+          wanted="$PWA_URL/**"
+          manual="Acrescenta $wanted em Supabase > Authentication > URL Configuration > Redirect URLs."
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "::warning::Sem SUPABASE_ACCESS_TOKEN. $manual"; exit 0
+          fi
+          ref=$(jq -r '.SUPABASE_URL' config/public.json | sed -E 's#https://([^.]+)\..*#\1#')
+          api="https://api.supabase.com/v1/projects/$ref/config/auth"
+          auth=(-H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN")
+          code=$(curl -sS -o auth.json -w '%{http_code}' "${auth[@]}" "$api")
+          if [ "$code" != 200 ]; then
+            rm -f auth.json
+            echo "::warning::Sem acesso à configuração do Auth ($code). $manual"; exit 0
+          fi
+          list=$(jq -r '.uri_allow_list // ""' auth.json)
+          rm auth.json
+          if tr ',' '\n' <<<"$list" | grep -qxF "$wanted"; then
+            echo "Já está nas Redirect URLs: $wanted"; exit 0
+          fi
+          new=$(jq -rn --arg l "$list" --arg w "$wanted" '[$l | split(",")[] | select(. != "")] + [$w] | join(",")')
+          code=$(curl -sS -o /dev/null -w '%{http_code}' "${auth[@]}" \
+            -H 'Content-Type: application/json' -X PATCH "$api" \
+            -d "$(jq -n --arg v "$new" '{uri_allow_list: $v}')")
+          if [ "$code" = 200 ]; then
+            echo "Acrescentado às Redirect URLs: $wanted"
+          else
+            echo "::warning::Não foi possível gravar as Redirect URLs ($code). $manual"
+          fi
+      - if: steps.secrets.outputs.ok == 'true'
+        name: Resumo
+        env:
+          PWA_URL: ${{ steps.project.outputs.url }}
+        run: echo "PWA publicada em $PWA_URL" | tee -a "$GITHUB_STEP_SUMMARY"

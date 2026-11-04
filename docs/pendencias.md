@@ -29,7 +29,7 @@ Uma pendência não deve desaparecer por estar descrita em Markdown. Fechar apen
 | P-15 | Assinatura/distribuição Android — **applicationId decidido 2026-11-03: `pt.rafaelfaria.guarda_roupa`** | Guardar chave de assinatura e comprovar atualização sem apagar dados | Distribuição estável |
 | P-16 | Registo — **Decidido 2026-11-03: só o proprietário** (e uma conta de experiência) | Impor a regra no servidor (Auth + RLS), não apenas na UI | Expor login publicamente |
 | P-20 | Manequim 3D dos conjuntos — **Adiado 2026-11-04** pelo utilizador ([feature](features/manequim-3d.md)) | Ao retomar: POC com moldes por categoria pintados com as cores das peças; decidir a origem dos modelos 3D | Nada no MVP |
-| P-21 | Cores, padrões e texturas no conjunto — **Proposta 2026-11-04, por rever pelo utilizador:** neutras = branco, cru, bege, caqui, castanho, cinzento, cinzento-escuro, preto, azul-marinho e ganga (fora da lista, croma OKLCH < 0,05); "tons próximos" = peças grandes com cor a menos de 30° de matiz; "um só destaque" = uma só peça com cor não neutra em ≥ 25 % da peça; dois padrões, ou duas texturas fortes (marcada, pelo), ficam a competir | **Implementado como proposta** ([motor](features/motor-de-combinacoes.md#conjunto-cores-padrões-e-texturas-2026-11-04)): as combinações só ordenam quando há uma preferência "Gosto"/"Evito" sobre elas; padrões/texturas a competir só desempatam e nunca excluem | Calibração do gosto |
+| P-21 | Cores, padrões e texturas no conjunto — **Aceite pelo utilizador 2026-11-04** (proposta do mesmo dia): neutras = branco, cru, bege, caqui, castanho, cinzento, cinzento-escuro, preto, azul-marinho e ganga (fora da lista, croma OKLCH < 0,05); "tons próximos" = peças grandes com cor a menos de 30° de matiz; "um só destaque" = uma só peça com cor não neutra em ≥ 25 % da peça; dois padrões, ou duas texturas fortes (marcada, pelo), ficam a competir | **Implementado** ([motor](features/motor-de-combinacoes.md#conjunto-cores-padrões-e-texturas-2026-11-04)): as combinações só ordenam quando há uma preferência "Gosto"/"Evito" sobre elas; padrões/texturas a competir só desempatam e nunca excluem | Calibração do gosto |
 
 ## Ações do utilizador por fazer
 
@@ -38,15 +38,16 @@ Notas para não esquecer (2026-11-04):
 1. ~~**Secret `SUPABASE_ACCESS_TOKEN`**~~ no GitHub (Settings → Secrets and variables → Actions), com um token criado no Supabase em Account → Access Tokens. **Feito a 2026-11-04:** o token precisa da permissão `edge_functions_write`. O workflow “Supabase” publica `import-product` a cada merge na `main`, e a função responde 401 sem sessão.
 2. **Experimentar links reais** das lojas que se usam (P-12): na app (a função já está publicada) ou no Mac com o [smoke](../tool/import/README.md). Lojas importantes que falhem ou tragam dados errados: mandar o resultado para afinar o parser.
 3. **Manequim 3D** (P-20): ideia guardada no roadmap; retomar mais tarde.
-4. **Rever a proposta P-21** (cores, padrões e texturas): se a lista de neutras ou a regra dos padrões não bate com o teu gosto, diz o que mudar. Para já só pesa quando há uma preferência de combinação em Estilo › Preferências.
+4. ~~**Rever a proposta P-21**~~ (cores, padrões e texturas). **Aceite a 2026-11-04.** Se, com o uso, a lista de neutras ou a regra dos padrões não bater com o teu gosto, diz o que mudar.
 5. **IA local** (P-14, POC aprovada):
    - Experimentar, no Android e na PWA, o recorte, a sugestão de categoria e as peças parecidas de uma inspiração (Definições › IA local) com fotos tuas. A PWA precisa de `tool/models/fetch_models.sh` antes da build Web. Diz se as cores, as categorias e as peças parecidas acertam, e se o tempo de espera é aceitável no telemóvel.
 
    Detalhes em [IA local](features/ia-local.md#poc-implementada-2026-11-04).
 6. ~~**Secret `POWERSYNC_ADMIN_TOKEN`**~~ no GitHub, uma vez só (2026-11-04). No PowerSync Dashboard, cria um token pessoal (Personal Access Token) e guarda-o com esse nome em Settings → Secrets and variables → Actions. Depois disso, o workflow “Supabase” faz sozinho o deploy de `powersync/sync-streams.yaml` a cada merge na `main`, e deixa de ser preciso colar as Sync Streams no painel. Sem o secret, o workflow avisa e não publica nada.
    - **Feito a 2026-11-04:** o secret existe e o deploy é automático. As permissões dos roles do PowerSync são dadas por `grant_powersync_select()` (migração `20261112000002`). O role da integração (`powersync_<id>`) não tinha SELECT em `plan_entries`, por isso o plano semanal não sincronizava entre dispositivos.
+7. **Secrets do Cloudflare** para publicar a PWA (2026-11-04): `CLOUDFLARE_API_TOKEN` (Cloudflare Pages › Edit) e `CLOUDFLARE_ACCOUNT_ID`, pelos passos do [guia 04 §1](guias/04-publicar-pwa.md#1-uma-vez-só-a-conta-e-os-secrets-tu). Depois disso, cada merge na `main` publica em `https://guarda-roupa.pages.dev`. É o que permite testar tudo no iPhone (ações 2 e 5, P-05).
 
-Também em aberto: a POC em dois dispositivos (P-03).
+Também em aberto: a POC em dois dispositivos (P-03). Com só um iPhone, o segundo dispositivo pode ser o Chrome no Mac, com a mesma conta.
 
 ## O que já não está pendente como requisito
 

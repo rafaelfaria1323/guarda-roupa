@@ -1,0 +1,24 @@
+# Cabeçalhos do Cloudflare Pages (copiado para build/web pela build).
+# Sem COOP/COEP: o COEP bloquearia as imagens das lojas nas inspirações e o
+# PowerSync/SQLite funciona sem eles (o onnxruntime corre numa só thread).
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# O index, o bootstrap e o service worker têm de ser sempre os da última versão.
+/
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+/flutter_bootstrap.js
+  Cache-Control: no-cache
+/flutter_service_worker.js
+  Cache-Control: no-cache
+/manifest.json
+  Cache-Control: no-cache
+
+# A app confirma o sha256 dos modelos; podem ficar em cache um dia.
+/models/*
+  Cache-Control: public, max-age=86400
+/ort/*
+  Cache-Control: public, max-age=86400

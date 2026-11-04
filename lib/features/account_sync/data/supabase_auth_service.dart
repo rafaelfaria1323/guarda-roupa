@@ -23,8 +23,11 @@ final class SupabaseAuthService implements AuthService {
   Future<void> signInWithGoogle() async {
     await _client.auth.signInWithOAuth(
       OAuthProvider.google,
-      // Na Web volta à própria origem; no Android, pelo deep link.
-      redirectTo: kIsWeb ? null : AppConfig.androidAuthRedirect,
+      // Na Web volta à origem de onde saiu (localhost ou Cloudflare Pages;
+      // ambas em Redirect URLs do Supabase); no Android, pelo deep link.
+      redirectTo: kIsWeb
+          ? '${Uri.base.origin}/'
+          : AppConfig.androidAuthRedirect,
       authScreenLaunchMode: kIsWeb
           ? LaunchMode.platformDefault
           : LaunchMode.externalApplication,

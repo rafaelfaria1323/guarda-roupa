@@ -2,7 +2,7 @@
 
 Quando: depois de existir um build funcional. Responsável pelos dispositivos, autorizações e guarda da chave Android: tu. O responsável pela implementação prepara assinatura, manifest, callbacks e atualizações.
 
-**Não existe um APK nem uma PWA implementada neste dossier.** Estes passos aplicam-se ao futuro repositório e à publicação do [Guia 04](04-publicar-pwa.md).
+A PWA é publicada automaticamente no Cloudflare Pages ([Guia 04](04-publicar-pwa.md)), em `https://guarda-roupa.pages.dev` (2026-11-04). O APK Android ainda é compilado à mão.
 
 ## 1. Android para desenvolvimento
 
@@ -120,7 +120,7 @@ Pré-requisitos: URL HTTPS real, primeira carga com Internet e procedimento offl
 Os nomes dos controlos variam com iOS e idioma. O guia Apple atual está em [Fontes](../fontes.md); a consulta direta ficou limitada por HTTP 429, pelo que se deve confirmar a apresentação no aparelho.
 
 1. No iPhone, abrir **Safari**.
-2. Introduzir o URL HTTPS de produção, não `localhost` do Mac.
+2. Abrir `https://guarda-roupa.pages.dev` (ou o endereço do resumo do workflow PWA), não o `localhost` do Mac.
 3. Esperar pela primeira carga completa. Se houver erro, resolver antes de instalar.
 4. Abrir **Partilhar**. Consoante a apresentação, o botão pode estar acessível pelo menu do browser.
 5. Escolher **Adicionar ao ecrã principal**; percorrer a lista de ações se necessário.
