@@ -22,7 +22,7 @@ Uma pendência não deve desaparecer por estar descrita em Markdown. Fechar apen
 | P-11 | Recuperação com cloud | Definir substituição/recuperação sem replay de eventos nem ressurreição silenciosa | Recuperação sobre conta existente |
 | P-12 | Lojas suportadas — **Decidido 2026-11-04:** qualquer site público, com perfil por domínio que se atualiza sozinho (antes: Zara, Uniqlo, Pull&Bear e Bershka); função em Supabase Edge Functions | **Função e fluxo na app feitos**; falta publicar a função (secret `SUPABASE_ACCESS_TOKEN`) e o [smoke](../tool/import/README.md) com links reais (corre no Mac; a cloud não chega às lojas) | Dizer que uma loja funciona |
 | P-13 | Pinterest | Confirmar permissões/API; link não garante imagem | Importação automática de Pins |
-| P-14 | Modelo IA — **Plano e candidatos 2026-11-04** ([IA local](features/ia-local.md#candidatos-e-plano-2026-11-04)): runtime `flutter_onnxruntime`; recorte com U²-Netp (Apache-2.0, ≈ 4,6 MB); categoria com Marqo FashionCLIP int8 (Apache-2.0, ≈ 87 MB); RMBG excluído pela licença. Cores pela foto já sugeridas sem modelo | O utilizador aprova (ou não) a POC com modelos descarregados; medir licença, tamanho, precisão e desempenho em aparelho | Ativar análise visual automática |
+| P-14 | Modelo IA — **POC aprovada pelo utilizador (2026-11-04)** ([IA local](features/ia-local.md#poc-implementada-2026-11-04)): runtime `flutter_onnxruntime`. Recorte U²-Netp (Apache-2.0, 4,6 MB) feito, descarregado a pedido, usado nas cores pela foto; verificado só com imagens sintéticas (Python e build Web no Chromium). Categoria com Marqo FashionCLIP int8 por fazer: Hugging Face bloqueado na rede do ambiente de desenvolvimento | Medir com fotos reais em Android/iPhone; acesso ao Hugging Face para a categoria | Ativar análise visual automática |
 | P-15 | Assinatura/distribuição Android — **applicationId decidido 2026-11-03: `pt.rafaelfaria.guarda_roupa`** | Guardar chave de assinatura e comprovar atualização sem apagar dados | Distribuição estável |
 | P-16 | Registo — **Decidido 2026-11-03: só o proprietário** (e uma conta de experiência) | Impor a regra no servidor (Auth + RLS), não apenas na UI | Expor login publicamente |
 | P-20 | Manequim 3D dos conjuntos — **Adiado 2026-11-04** pelo utilizador ([feature](features/manequim-3d.md)) | Ao retomar: POC com moldes por categoria pintados com as cores das peças; decidir a origem dos modelos 3D | Nada no MVP |
@@ -36,7 +36,11 @@ Notas para não esquecer (2026-11-04):
 2. **Experimentar links reais** das lojas que se usam (P-12): na app, depois de publicar a função, ou no Mac com o [smoke](../tool/import/README.md). Lojas importantes que falhem ou tragam dados errados: mandar o resultado para afinar o parser.
 3. **Manequim 3D** (P-20): ideia guardada no roadmap; retomar mais tarde.
 4. **Rever a proposta P-21** (cores, padrões e texturas): se a lista de neutras ou a regra dos padrões não bate com o teu gosto, diz o que mudar. Para já só pesa quando há uma preferência de combinação em Estilo › Preferências.
-5. **Decidir a POC de IA local** (P-14): se queres experimentar o recorte de fundo (modelo pequeno, ≈ 5 MB) e/ou a sugestão de categoria (≈ 87 MB a descarregar). O plano está em [IA local](features/ia-local.md#candidatos-e-plano-2026-11-04).
+5. **IA local** (P-14, POC aprovada):
+   - Permitir `huggingface.co` na rede do ambiente do Claude Code (menu do ambiente › Edit › Network access › Allowed domains), para a sugestão de categoria com FashionCLIP.
+   - Experimentar o recorte em Definições › IA local com fotos reais, no Android e na PWA. A PWA precisa de `tool/models/fetch_models.sh` antes da build Web. Diz se as cores sugeridas ficaram melhores.
+
+   Detalhes em [IA local](features/ia-local.md#poc-implementada-2026-11-04).
 
 Também em aberto: voltar a fazer deploy das Sync Streams no PowerSync quando um stream novo é adicionado; a POC em dois dispositivos (P-03).
 

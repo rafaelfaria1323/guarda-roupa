@@ -33,6 +33,18 @@ void main() {
     await addGarment(tester, category: 'Camisa', name: 'Azul');
     await tester.tap(find.byTooltip('Definições'));
     await settle(tester);
+    // A lista é preguiçosa: o backup fica no fim.
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('backup-export')),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byType(ListView).last,
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.pump();
     return saver;
   }
 

@@ -19,3 +19,6 @@ lib/l10n/app_localizations*.dart
 # PowerSync Web (dart run powersync:setup_web)
 web/sqlite3.wasm
 web/powersync_*.worker.js
+# IA local (tool/models/fetch_models.sh)
+web/models/
+web/ort/

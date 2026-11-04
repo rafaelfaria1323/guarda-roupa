@@ -1075,5 +1075,39 @@
   "colorsSuggestFailed": "Não consegui tirar cores desta foto. Escolhe-as à mão.",
   "colorSuggestedTag": "sugerida",
   "colorsConfirm": "Confirmar cores",
-  "colorsSuggestedHint": "Sugeridas pela foto, ainda por confirmar."
+  "colorsSuggestedHint": "Sugeridas pela foto, ainda por confirmar.",
+  "localAiTitle": "IA local",
+  "localAiSummaryOff": "Desligada: as sugestões usam o método simples",
+  "localAiSummaryOn": "Recorte do fundo ativo neste dispositivo",
+  "localAiIntro": "Os modelos correm só neste dispositivo: as fotos não saem daqui. Descarregar é opcional e pode desfazer-se; sem modelo, a app funciona na mesma e as sugestões usam o método simples.",
+  "localAiBackgroundTitle": "Recorte do fundo",
+  "localAiBackgroundBody": "Separa a peça do fundo antes de sugerir as cores, para o fundo não contar como cor da peça. As cores continuam por confirmar.",
+  "localAiModelInfo": "Modelo {name} · {size} · licença {license}",
+  "@localAiModelInfo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      },
+      "license": {
+        "type": "String"
+      }
+    }
+  },
+  "localAiDownload": "Descarregar",
+  "localAiDownloading": "A descarregar… {percent} %",
+  "@localAiDownloading": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "localAiReady": "Pronto neste dispositivo",
+  "localAiRemove": "Remover",
+  "localAiFailed": "Não foi possível descarregar (sem rede ou interrompido). Tenta de novo.",
+  "localAiDataNote": "Na Web, a primeira utilização também descarrega o motor do modelo (cerca de 11 MB).",
+  "colorsSuggestedCutout": "Cores sugeridas sem o fundo da foto: confirma ou ajusta."
 }

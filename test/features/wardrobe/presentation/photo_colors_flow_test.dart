@@ -2,9 +2,12 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guarda_roupa/features/local_ai/application/local_ai_providers.dart';
 
 import '../../../support/app_harness.dart';
+import '../../../support/fake_models.dart';
 import '../../../support/fake_photos.dart';
+import '../../../support/mask_photos.dart';
 import 'photos_flow_test.dart' show start, openGarment;
 
 final _photo = find.byType(Image);
@@ -126,5 +129,61 @@ void main() {
     final colors = (jsonDecode(row['colors'] as String) as List)
         .cast<Map<String, Object?>>();
     expect(colors.single['confirmed'], false);
+  });
+
+  testWidgets('com o modelo de recorte, o fundo não entra nas cores', (
+    tester,
+  ) async {
+    final remover = FakeBackgroundRemover(rectMask());
+    final app = await start(
+      tester,
+      overrides: [backgroundRemoverProvider.overrideWithValue(remover)],
+    );
+    app.picker.next.add(gradientPhoto());
+
+    await tester.tap(find.text('Adicionar peça'));
+    await settle(tester);
+    await tester.ensureVisible(find.byKey(const Key('photo-gallery')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('photo-gallery')));
+    await settleUntil(tester, _photo);
+
+    await scrollTo(tester, find.byKey(const Key('colors-from-photo')));
+    await tester.tap(find.byKey(const Key('colors-from-photo')));
+    await settle(tester);
+    expect(remover.calls, 1);
+    expect(
+      find.text('Cores sugeridas sem o fundo da foto: confirma ou ajusta.'),
+      findsOneWidget,
+    );
+    expect(find.text('Vermelho · sugerida'), findsOneWidget);
+    expect(find.textContaining('· sugerida'), findsOneWidget);
+  });
+
+  testWidgets('se o recorte falhar, sugere na mesma pela borda', (
+    tester,
+  ) async {
+    final remover = FakeBackgroundRemover(null)..failWith = StateError('x');
+    final app = await start(
+      tester,
+      overrides: [backgroundRemoverProvider.overrideWithValue(remover)],
+    );
+    app.picker.next.add(testPng(width: 400, height: 300));
+
+    await tester.tap(find.text('Adicionar peça'));
+    await settle(tester);
+    await tester.ensureVisible(find.byKey(const Key('photo-gallery')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('photo-gallery')));
+    await settleUntil(tester, _photo);
+
+    await scrollTo(tester, find.byKey(const Key('colors-from-photo')));
+    await tester.tap(find.byKey(const Key('colors-from-photo')));
+    await settle(tester);
+    expect(
+      find.text('Cores sugeridas pela foto: confirma ou ajusta.'),
+      findsOneWidget,
+    );
+    expect(find.text('Vermelho · sugerida'), findsOneWidget);
   });
 }
