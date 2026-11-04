@@ -90,8 +90,10 @@ class SettingsScreen extends ConsumerWidget {
             leading: const Icon(Icons.auto_awesome_outlined),
             title: Text(l10n.localAiTitle),
             subtitle: Text(
-              ref.watch(localModelProvider(LocalModels.background))
-                      is ModelReady
+              [
+                    LocalModels.background,
+                    LocalModels.category,
+                  ].any((m) => ref.watch(localModelProvider(m)) is ModelReady)
                   ? l10n.localAiSummaryOn
                   : l10n.localAiSummaryOff,
             ),

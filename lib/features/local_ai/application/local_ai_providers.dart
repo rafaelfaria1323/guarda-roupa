@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/model_store.dart';
 import '../data/onnx_background_remover.dart';
+import '../data/onnx_category_suggester.dart';
 import '../domain/background_remover.dart';
+import '../domain/category_suggester.dart';
 import '../domain/local_model.dart';
 
 final modelStoreProvider = Provider<ModelStore>((ref) => createModelStore());
@@ -77,4 +79,17 @@ final backgroundRemoverProvider = Provider<BackgroundRemover?>((ref) {
   final remover = OnnxBackgroundRemover(ref.watch(modelStoreProvider), model);
   ref.onDispose(remover.close);
   return remover;
+});
+
+/// Sugestão de categoria pela foto, ou `null` sem o modelo neste
+/// dispositivo (o botão não aparece).
+final categorySuggesterProvider = Provider<CategorySuggester?>((ref) {
+  final model = LocalModels.category;
+  final ready = ref.watch(
+    localModelProvider(model).select((s) => s is ModelReady),
+  );
+  if (!ready) return null;
+  final suggester = OnnxCategorySuggester(ref.watch(modelStoreProvider), model);
+  ref.onDispose(suggester.close);
+  return suggester;
 });

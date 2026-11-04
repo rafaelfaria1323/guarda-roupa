@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:guarda_roupa/features/local_ai/domain/background_remover.dart';
+import 'package:guarda_roupa/features/local_ai/domain/category_suggester.dart';
 import 'package:guarda_roupa/features/local_ai/domain/local_model.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/foreground_mask.dart';
+import 'package:guarda_roupa/features/wardrobe/domain/garment_category.dart';
 
 /// Modelos em memória. [pending] controla a descarga em curso: o teste
 /// envia o progresso e termina-a (ou falha-a).
@@ -45,6 +47,23 @@ final class FakeBackgroundRemover implements BackgroundRemover {
   Future<ForegroundMask?> mask(Uint8List bytes) async {
     calls++;
     if (failWith case final e?) throw e;
+    return result;
+  }
+
+  @override
+  Future<void> close() async {}
+}
+
+/// Sugestão de categoria programada.
+final class FakeCategorySuggester implements CategorySuggester {
+  FakeCategorySuggester(this.result);
+
+  final List<GarmentCategory>? result;
+  var calls = 0;
+
+  @override
+  Future<List<GarmentCategory>?> suggest(Uint8List bytes) async {
+    calls++;
     return result;
   }
 

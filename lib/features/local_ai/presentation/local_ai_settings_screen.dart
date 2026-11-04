@@ -32,6 +32,13 @@ class LocalAiSettingsScreen extends ConsumerWidget {
             title: l10n.localAiBackgroundTitle,
             body: l10n.localAiBackgroundBody,
           ),
+          const SizedBox(height: 12),
+          _ModelCard(
+            model: LocalModels.category,
+            name: 'Marqo FashionCLIP (q4)',
+            title: l10n.localAiCategoryTitle,
+            body: l10n.localAiCategoryBody,
+          ),
         ],
       ),
     );

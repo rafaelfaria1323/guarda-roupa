@@ -61,7 +61,7 @@ Ver [ADR-007](decisoes/007-testes-de-comportamento.md).
 | Necessidade | Direção |
 |---|---|
 | Importar produtos por link | Função TypeScript; Pages Functions proposta, Edge Functions como alternativa |
-| IA local | `flutter_onnxruntime` 1.9 (U²-Netp para recorte; `onnxruntime-web` 1.22 servido pela PWA); FashionCLIP por avaliar |
+| IA local | `flutter_onnxruntime` 1.9 (U²-Netp para recorte, Marqo FashionCLIP q4 para categoria; `onnxruntime-web` 1.22 servido pela PWA) |
 | Subscrições Web | Stripe Checkout/Billing e webhooks |
 | Compras nativas | `in_app_purchase`, sujeito às regras das lojas |
 
