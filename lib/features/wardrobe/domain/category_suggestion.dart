@@ -96,6 +96,15 @@ abstract final class FashionClip {
     return [for (final (c, _) in scored.take(top)) c];
   }
 
+  /// Com norma 1 (para comparar por produto interno).
+  static Float32List normalize(List<num> v) =>
+      _normalized([for (final x in v) x.toDouble()]);
+
+  /// Cosseno entre dois embeddings já normalizados; `null` se as
+  /// dimensões diferirem.
+  static double? cosine(Float32List a, Float32List b) =>
+      a.length == b.length ? _dot(a, b) : null;
+
   static double _dot(Float32List a, Float32List b) {
     var s = 0.0;
     for (var i = 0; i < a.length; i++) {

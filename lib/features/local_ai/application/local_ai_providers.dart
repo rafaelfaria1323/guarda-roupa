@@ -1,11 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../account_sync/application/providers.dart';
 import '../data/model_store.dart';
 import '../data/onnx_background_remover.dart';
 import '../data/onnx_category_suggester.dart';
+import '../data/onnx_image_embedder.dart';
 import '../domain/background_remover.dart';
 import '../domain/category_suggester.dart';
+import '../domain/image_embedder.dart';
 import '../domain/local_model.dart';
+import 'similar_garments_finder.dart';
 
 final modelStoreProvider = Provider<ModelStore>((ref) => createModelStore());
 
@@ -81,15 +85,31 @@ final backgroundRemoverProvider = Provider<BackgroundRemover?>((ref) {
   return remover;
 });
 
-/// Sugestão de categoria pela foto, ou `null` sem o modelo neste
-/// dispositivo (o botão não aparece).
-final categorySuggesterProvider = Provider<CategorySuggester?>((ref) {
+/// FashionCLIP (encoder de imagem), ou `null` sem o modelo neste
+/// dispositivo.
+final imageEmbedderProvider = Provider<ImageEmbedder?>((ref) {
   final model = LocalModels.category;
   final ready = ref.watch(
     localModelProvider(model).select((s) => s is ModelReady),
   );
   if (!ready) return null;
-  final suggester = OnnxCategorySuggester(ref.watch(modelStoreProvider), model);
-  ref.onDispose(suggester.close);
-  return suggester;
+  final embedder = OnnxImageEmbedder(ref.watch(modelStoreProvider), model);
+  ref.onDispose(embedder.close);
+  return embedder;
+});
+
+/// Sugestão de categoria pela foto, ou `null` sem o modelo neste
+/// dispositivo (o botão não aparece).
+final categorySuggesterProvider = Provider<CategorySuggester?>((ref) {
+  final embedder = ref.watch(imageEmbedderProvider);
+  return embedder == null ? null : EmbeddingCategorySuggester(embedder);
+});
+
+/// Peças parecidas com uma imagem, ou `null` sem o modelo ou sem conta.
+final similarGarmentsFinderProvider = Provider<SimilarGarmentsFinder?>((ref) {
+  final embedder = ref.watch(imageEmbedderProvider);
+  final db = ref.watch(userDatabaseProvider).value;
+  final repo = ref.watch(wardrobeRepositoryProvider);
+  if (embedder == null || db == null || repo == null) return null;
+  return SimilarGarmentsFinder(embedder, db, repo);
 });

@@ -4,11 +4,17 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/router.dart';
 import '../../../core/domain/result.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../account_sync/application/providers.dart';
+import '../../local_ai/application/local_ai_providers.dart';
+import '../../local_ai/application/similar_garments_finder.dart';
 import '../../wardrobe/application/photo_providers.dart';
 import '../../wardrobe/data/photo_processor.dart';
+import '../../wardrobe/domain/garment.dart';
 import '../../wardrobe/domain/garment_attributes.dart';
+import '../../wardrobe/domain/garment_filter.dart';
 import '../../wardrobe/domain/garment_photo.dart';
 import '../../wardrobe/domain/photo_picker.dart';
 import '../../wardrobe/domain/reference_color.dart';
@@ -55,6 +61,12 @@ class _InspirationEditorScreenState
 
   /// A versão guardada (as preferências nascem dela, não do rascunho).
   Inspiration? _saved;
+
+  /// Peças parecidas com a imagem [_similarFor] (id da foto guardada ou a
+  /// imagem pendente); outra imagem = resultado antigo deixa de aparecer.
+  SimilarGarmentsResult? _similar;
+  Object? _similarFor;
+  (int, int)? _similarProgress;
 
   bool get _editing => widget.id != null;
 
@@ -390,9 +402,115 @@ class _InspirationEditorScreenState
                 ),
               ],
             ),
+          if (preview != null)
+            if (ref.watch(similarGarmentsFinderProvider) case final finder?)
+              _similarSection(finder, saved?.image?.id ?? _pendingImage),
         ],
       ),
     );
+  }
+
+  /// Peças próprias parecidas com a imagem (FashionCLIP neste dispositivo).
+  /// Só para olhar: não muda nada na inspiração nem nas peças.
+  Widget _similarSection(SimilarGarmentsFinder finder, Object? image) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final result = _similarFor == image ? _similar : null;
+    final progress = _similarProgress;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 8),
+        if (progress != null) ...[
+          LinearProgressIndicator(
+            value: progress.$2 == 0 ? null : progress.$1 / progress.$2,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.similarGarmentsProgress(progress.$1, progress.$2),
+            style: theme.textTheme.bodySmall,
+          ),
+        ] else
+          TextButton.icon(
+            key: const Key('inspiration-similar'),
+            onPressed: _saving || _processing
+                ? null
+                : () => _findSimilar(finder, image),
+            icon: const Icon(Icons.image_search),
+            label: Text(l10n.similarGarmentsFind),
+          ),
+        if (result != null) ...[
+          Text(
+            result.items.isEmpty
+                ? l10n.similarGarmentsNone
+                : l10n.similarGarmentsHint,
+            style: theme.textTheme.bodySmall,
+          ),
+          for (final (g, _) in result.items)
+            ListTile(
+              key: Key('similar-garment-${g.id.value}'),
+              contentPadding: EdgeInsets.zero,
+              leading: GarmentPhotoView(photo: g.photos.first, size: 48),
+              title: Text(g.name ?? l10n.categoryLabel(g.category.id)),
+              subtitle: g.name == null
+                  ? null
+                  : Text(l10n.categoryLabel(g.category.id)),
+              onTap: () => context.push(AppRoutes.garment(g.id)),
+            ),
+          if (result.skipped > 0)
+            Text(
+              l10n.similarGarmentsSkipped(result.skipped),
+              style: theme.textTheme.bodySmall,
+            ),
+        ],
+      ],
+    );
+  }
+
+  Future<void> _findSimilar(SimilarGarmentsFinder finder, Object? image) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final wardrobe = ref.read(wardrobeRepositoryProvider);
+    if (wardrobe == null) return;
+    setState(() => _similarProgress = (0, 0));
+    SimilarGarmentsResult? found;
+    try {
+      final query = switch (image) {
+        final ProcessedPhoto pending => pending.thumb,
+        final String photoId => await wardrobe.photoBytes(
+          photoId,
+          PhotoVariant.thumb,
+        ),
+        _ => null,
+      };
+      if (query != null) {
+        final List<Garment> garments = await wardrobe
+            .watchGarments(const GarmentFilter())
+            .first;
+        found = await finder.find(
+          query,
+          garments,
+          onProgress: (done, total) {
+            if (mounted) setState(() => _similarProgress = (done, total));
+          },
+        );
+      }
+    } on Object {
+      found = null;
+    } finally {
+      if (mounted) setState(() => _similarProgress = null);
+    }
+    if (!mounted) return;
+    if (found == null) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l10n.similarGarmentsFailed)));
+      return;
+    }
+    setState(() {
+      _similar = found;
+      _similarFor = image;
+    });
   }
 
   /// A imagem tem de ser do utilizador ou autorizada; pergunta-se uma vez

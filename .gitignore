@@ -22,3 +22,4 @@ web/powersync_*.worker.js
 # IA local (tool/models/fetch_models.sh)
 web/models/
 web/ort/
+__pycache__/

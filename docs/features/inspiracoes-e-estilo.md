@@ -9,7 +9,8 @@ Estado: abordagem assistida confirmada; interpretação visual avançada adiada.
 - O link é só guardado e pode ser copiado. A app não abre nem analisa a página, e a interface diz isso.
 - **Imagem** (opcional, uma por inspiração): câmara ou galeria, com o mesmo processamento das fotos das peças (1600 px + miniatura, sem EXIF/GPS).
   - Antes de abrir a câmara ou a galeria, a app pede confirmação de que a imagem é do utilizador ou autorizada (uma vez por ecrã). Para referências de outras pessoas, guarda-se o link.
-  - Fica privada, no bucket `garment-photos` em `{uid}/{image_id}/main.jpg|thumb.jpg` (as mesmas políticas por pasta). A interface diz que a imagem não é analisada: as etiquetas continuam a ser só as escolhidas.
+  - Fica privada, no bucket `garment-photos` em `{uid}/{image_id}/main.jpg|thumb.jpg` (as mesmas políticas por pasta). As etiquetas continuam a ser só as escolhidas; a imagem nunca gera etiquetas.
+  - **Peças parecidas** (2026-11-04, [IA local](ia-local.md)): com o FashionCLIP neste dispositivo, "Procurar peças parecidas" compara a imagem com a capa de cada peça própria e mostra as 5 mais parecidas. É só para olhar e abrir a peça: não liga nada nem muda etiquetas.
   - Numa inspiração nova, a imagem fica pendente e é ligada ao guardar. Numa existente, ligar, trocar e retirar aplicam-se logo.
   - A miniatura aparece na lista em vez da paleta.
   - Os ficheiros sobem antes de o servidor ligar a imagem (`set_inspiration_image`, rejeitado com `missing_file` se faltarem). Trocar é `remove_inspiration_image` + `set_inspiration_image` na mesma transação. Depois de retirar ou eliminar, os ficheiros são apagados do Storage (melhor esforço) e do dispositivo. Um `remove_inspiration_image` atrasado só tira a imagem se ainda for a mesma.
