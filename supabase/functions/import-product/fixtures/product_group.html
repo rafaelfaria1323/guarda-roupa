@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta property="og:title" content="Título OG que não deve ganhar">
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "ProductGroup",
+        "name": "Camisa de linho &amp; algodão",
+        "brand": { "@type": "Brand", "name": "Loja" },
+        "description": "<p>Camisa   leve.</p>\n<b>Lavar a 30 °C</b>",
+        "material": "Linho",
+        "image": [
+          "https://static.zara.net/a.jpg",
+          { "@type": "ImageObject", "url": "/b.jpg" },
+          "http://inseguro/c.jpg"
+        ],
+        "offers": { "price": "29.95" },
+        "hasVariant": [
+          {
+            "@type": "Product",
+            "color": "Branco",
+            "size": "M",
+            "sku": "1-M",
+            "image": "https://static.zara.net/branco.jpg"
+          },
+          {
+            "@type": "Product",
+            "color": "Azul",
+            "size": "M",
+            "sku": "2-M",
+            "image": { "contentUrl": "https://static.zara.net/azul.jpg" }
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body></body>
+</html>

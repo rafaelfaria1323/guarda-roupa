@@ -38,6 +38,8 @@ Estado: desenho lógico; não é uma migração SQL pronta para executar. Data: 
 
 O plano não entra no backup (como o `plan_entry_id` das utilizações). Escritas por `apply_plan_operation` (`create_plan_entry`, `edit_plan_entry` com `base_version`, `resolve_plan_proposal`, `delete_plan_entry`).
 
+**Quota da importação por link (incremento 7).** Tabela `import_requests` (`owner_id`, `requested_at`), sem acesso dos clientes e sem dados de produto: serve só para `claim_import_quota()` limitar a função `import-product` a 30 pedidos por hora e 200 por dia. Pedidos com mais de um dia são apagados. Não sincroniza nem entra no backup.
+
 **Implementação atual das inspirações (incremento 4).**
 - `Inspiration` é a tabela `inspirations`, com estes campos:
   - `title` e/ou `source_url`, pelo menos um dos dois, e o link só `http(s)`;

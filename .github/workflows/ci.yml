@@ -32,6 +32,7 @@ jobs:
     outputs:
       app: ${{ steps.filter.outputs.app }}
       sql: ${{ steps.filter.outputs.sql }}
+      functions: ${{ steps.filter.outputs.functions }}
       matrix: ${{ steps.shards.outputs.matrix }}
       total: ${{ steps.shards.outputs.total }}
     steps:
@@ -52,6 +53,9 @@ jobs:
             sql:
               - 'supabase/**'
               - 'tool/db/**'
+              - '.github/workflows/**'
+            functions:
+              - 'supabase/functions/**'
               - '.github/workflows/**'
       - id: shards
         run: python3 tool/ci/test_shards.py
@@ -115,10 +119,29 @@ jobs:
       - uses: actions/checkout@v4
       - run: tool/db/test_migrations.sh
 
+  functions:
+    name: Edge Functions (Deno)
+    needs: changes
+    if: needs.changes.outputs.functions == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: supabase/functions/import-product
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.5.6
+      - run: deno fmt --check .
+      - run: deno lint .
+      - run: deno check *.ts
+      - run: deno test --allow-read .
+
   ci-ok:
     name: CI ok
     if: always()
-    needs: [docs, changes, analyze, test, sql]
+    needs: [docs, changes, analyze, test, sql, functions]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
