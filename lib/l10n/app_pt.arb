@@ -1069,5 +1069,11 @@
         "type": "String"
       }
     }
-  }
+  },
+  "colorsFromPhoto": "Sugerir pela foto",
+  "colorsSuggested": "Cores sugeridas pela foto: confirma ou ajusta.",
+  "colorsSuggestFailed": "Não consegui tirar cores desta foto. Escolhe-as à mão.",
+  "colorSuggestedTag": "sugerida",
+  "colorsConfirm": "Confirmar cores",
+  "colorsSuggestedHint": "Sugeridas pela foto, ainda por confirmar."
 }

@@ -4,6 +4,7 @@ import '../../inspirations/domain/style_preference.dart';
 import '../../outfits/domain/outfit.dart';
 import '../../wardrobe/domain/garment.dart';
 import '../../wardrobe/domain/garment_attributes.dart';
+import '../../wardrobe/domain/oklab.dart';
 import '../../wardrobe/domain/reference_color.dart';
 
 /// Leitura do conjunto como um todo: cores (P-21) e padrões/texturas.
@@ -122,30 +123,8 @@ abstract final class OutfitHarmony {
     return 360 - largestGap;
   }
 
-  /// sRGB → OKLCH (Björn Ottosson, 2020).
-  static ({double lightness, double chroma, double hue}) _oklch(int rgb) {
-    double lin(int c) {
-      final v = c / 255;
-      return v <= 0.04045
-          ? v / 12.92
-          : math.pow((v + 0.055) / 1.055, 2.4).toDouble();
-    }
-
-    final r = lin((rgb >> 16) & 0xFF);
-    final g = lin((rgb >> 8) & 0xFF);
-    final b = lin(rgb & 0xFF);
-    double cbrt(double x) => math.pow(x, 1 / 3).toDouble();
-    final l = cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
-    final m = cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
-    final s = cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
-    final okL = 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s;
-    final okA = 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s;
-    final okB = 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s;
-    final hue = math.atan2(okB, okA) * 180 / math.pi;
-    return (
-      lightness: okL,
-      chroma: math.sqrt(okA * okA + okB * okB),
-      hue: hue < 0 ? hue + 360 : hue,
-    );
+  static ({double chroma, double hue}) _oklch(int rgb) {
+    final c = Oklab.fromRgb(rgb);
+    return (chroma: c.chroma, hue: c.hue);
   }
 }

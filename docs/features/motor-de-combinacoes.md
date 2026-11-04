@@ -31,7 +31,7 @@ Cartão no Planeador, por baixo de "Vesti hoje":
 
 `OutfitHarmony` (`lib/features/engine/domain/outfit_harmony.dart`) lê o conjunto sem a camada opcional. Os valores são uma proposta ([P-21](../pendencias.md)), não uma "verdade de moda":
 
-- **Neutras:** branco, cru, bege, caqui, castanho, cinzento, carvão, preto, azul-marinho e ganga. Uma cor fora da lista de referência é neutra com croma OKLCH < 0,05. Conta a cor dominante de cada peça (a de maior proporção).
+- **Neutras:** branco, cru, bege, caqui, castanho, cinzento, cinzento-escuro, preto, azul-marinho e ganga. Uma cor fora da lista de referência é neutra com croma OKLCH < 0,05. Conta a cor dominante de cada peça (a de maior proporção).
 - **Base neutra:** todas as peças grandes (top, parte de baixo, peça única, camadas) com cor dominante neutra.
 - **Um só destaque:** exatamente uma peça (calçado incluído) com uma cor não neutra em pelo menos 25 % dela.
 - **Tons próximos:** duas ou mais peças grandes, todas com cor (croma ≥ 0,03, o que exclui preto, branco e cinzento) e matizes num arco de 30°.

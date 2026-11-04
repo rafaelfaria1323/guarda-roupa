@@ -10,6 +10,12 @@ Estado: implementada (2026-11-03) sem recorte; compatibilidade iPhone/HEIC é ga
 - Bytes guardados primeiro neste dispositivo (SQLite `photo_files`), depois enviados para o bucket privado antes de a foto ser ligada no servidor. Uma falha no envio deixa a operação na fila; a cópia local nunca é apagada por isso.
 - No outro dispositivo, a foto é descarregada quando é mostrada, verificada (SHA-256) e guardada para uso offline. Sem rede nem cópia, aparece um marcador.
 - Remover desliga a foto; os ficheiros são apagados depois de o servidor aceitar. Eliminar a peça faz o mesmo com todas as fotos dela.
+- **Cores pela foto** (2026-11-04, sem modelo: baseline da [IA local](ia-local.md)). No formulário, "Sugerir pela foto" aparece quando a peça tem foto. Lê a miniatura da capa, reduzida a 64 px (`photo_colors.dart`):
+  - cada píxel vai para a cor de referência mais próxima em OKLab;
+  - a cor que ocupa ≥ 60 % da moldura exterior é tratada como fundo e tira-se, desde que sobrem ≥ 15 % da imagem; senão a peça é da cor do fundo e fica;
+  - ficam até 3 cores com ≥ 10 %, em passos de 10 % a somar 100 %.
+
+  As sugestões substituem as cores atuais, com "Desfazer", e ficam marcadas "sugerida" (`confirmed: false`) até se tocar em "Confirmar cores" ou se ajustar cada uma. Guardar sem confirmar mantém-nas como sugestão. Sombras, reflexos e fundos com várias cores enganam; testado com imagens geradas, não com fotos reais.
 - O mesmo bucket e o mesmo pipeline servem a imagem opcional das inspirações ([inspirações](inspiracoes-e-estilo.md)), na mesma estrutura `{uid}/{id}/main.jpg|thumb.jpg`.
 
 Limitações conhecidas: sem recorte (`crop_your_image` adiado); sem recuperação da foto se o Android matar a atividade durante a câmara (`retrieveLostData`); fotos descarregadas e depois removidas noutro dispositivo ficam em cache local até terminar sessão.
