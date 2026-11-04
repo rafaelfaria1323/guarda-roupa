@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../inspirations/domain/style_preference.dart';
 import '../../inspirations/presentation/preference_messages.dart';
 import '../domain/comfort.dart';
 import '../domain/suggestion.dart';
@@ -33,6 +34,19 @@ String? noteText(BuildContext context, SuggestionNote note) {
     RecentUses(:final times) => l10n.noteRecentUses(times),
     WashRecommended() => l10n.noteWash,
     PreferenceMatch(:final preference) => preferenceTitle(l10n, preference),
+    ColorCombosNote(:final combos) => l10n.noteColorCombos(
+      [
+        for (final c in StyleCombo.values)
+          if (combos.contains(c)) l10n.comboLabel(c.id),
+      ].join(' · '),
+    ),
+    SurfaceMixNote(:final patterned, :final textured) => l10n.noteSurfaceMix(
+      switch ((patterned > 1, textured > 1)) {
+        (true, true) => 'both',
+        (true, false) => 'patterns',
+        _ => 'textures',
+      },
+    ),
     OptionalLayerNote() => l10n.noteOptionalLayer,
     MissingRole(:final role) => l10n.suggestionsMissing(
       l10n.outfitRoleLabel(role.id),

@@ -477,4 +477,98 @@ void main() {
       expect(firsts.length, greaterThan(1));
     });
   });
+
+  group('conjunto: cores e padrões', () {
+    final white = g('white', GarmentCategory.tShirt, rgb: 0xFFFFFF);
+    final red = g('red', GarmentCategory.tShirt, rgb: 0xC0392B);
+    final black = g('black', GarmentCategory.trousers, rgb: 0x141414);
+    final shoes = g('shoes', GarmentCategory.sneakers, rgb: 0xFFFFFF);
+
+    String top(OutfitCandidate c) => c.items
+        .firstWhere((i) => i.role == OutfitRole.mainTop)
+        .garment
+        .id
+        .value;
+
+    test('sem preferência: descreve, não ordena', () {
+      final r = run([white, black, shoes]);
+      final note = r.candidates.single.notes.whereType<ColorCombosNote>();
+      expect(note.single.combos, {StyleCombo.neutralBase});
+    });
+
+    test('combinação preferida à frente, em qualquer seed', () {
+      for (var seed = 0; seed < 6; seed++) {
+        final like = run(
+          [red, white, black, shoes],
+          seed: seed,
+          preferences: [
+            pref(
+              PreferenceSubject.combo,
+              'neutral_base',
+              PreferenceStance.like,
+            ),
+          ],
+        );
+        expect(like.candidates.map(top), ['white', 'red'], reason: '$seed');
+        expect(
+          like.candidates.first.notes.whereType<PreferenceMatch>(),
+          hasLength(1),
+        );
+        // Já está na preferência: não se repete como descrição.
+        expect(
+          like.candidates.first.notes.whereType<ColorCombosNote>(),
+          isEmpty,
+        );
+
+        final avoid = run(
+          [white, red, black, shoes],
+          seed: seed,
+          preferences: [
+            pref(
+              PreferenceSubject.combo,
+              'single_accent',
+              PreferenceStance.avoid,
+            ),
+          ],
+        );
+        expect(avoid.candidates.map(top), ['white', 'red'], reason: '$seed');
+      }
+    });
+
+    test('cor por indicar: a combinação não conta', () {
+      final r = run(
+        [tee, jeans, sneakers],
+        preferences: [
+          pref(PreferenceSubject.combo, 'neutral_base', PreferenceStance.like),
+        ],
+      );
+      expect(r.candidates.single.notes.whereType<PreferenceMatch>(), isEmpty);
+      expect(r.candidates.single.notes.whereType<ColorCombosNote>(), isEmpty);
+    });
+
+    test('dois padrões: atrás, com nota, nunca excluído', () {
+      final striped = g(
+        'striped',
+        GarmentCategory.tShirt,
+        pattern: GarmentPattern.stripes,
+      );
+      final plain = g(
+        'plain',
+        GarmentCategory.tShirt,
+        pattern: GarmentPattern.plain,
+      );
+      final checked = g(
+        'checked',
+        GarmentCategory.trousers,
+        pattern: GarmentPattern.checks,
+      );
+      for (var seed = 0; seed < 6; seed++) {
+        final r = run([striped, plain, checked, sneakers], seed: seed);
+        expect(r.candidates.map(top), ['plain', 'striped'], reason: '$seed');
+        final mix = r.candidates.last.notes.whereType<SurfaceMixNote>().single;
+        expect(mix.patterned, 2);
+        expect(r.candidates.first.notes.whereType<SurfaceMixNote>(), isEmpty);
+      }
+    });
+  });
 }

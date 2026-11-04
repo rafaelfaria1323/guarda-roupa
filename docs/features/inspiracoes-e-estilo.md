@@ -25,12 +25,12 @@ Estado: abordagem assistida confirmada; interpretação visual avançada adiada.
   - Só pode haver uma preferência ativa para o mesmo assunto, valor e contexto. A app explica quando já existe.
   - Ao editar, o assunto e a origem ficam; mudam o valor, a posição e o contexto.
   - Numa inspiração guardada, **Criar preferências** propõe um "Gosto" por etiqueta (cores, formalidade, padrões e texturas), no contexto das ocasiões dela. O utilizador escolhe quais quer; as repetidas são ignoradas. A preferência guarda a inspiração de origem e fica se a inspiração for eliminada.
-  - Não é posse: não cria, não esconde nem altera peças. No motor (incremento 5) será só uma componente da pontuação de peças que existem.
+  - Não é posse: não cria, não esconde nem altera peças. No motor é só uma componente da ordem de peças que existem: cor, padrão e textura em cada peça, combinação de cor no conjunto ([motor](motor-de-combinacoes.md#conjunto-cores-padrões-e-texturas-2026-11-04)).
 - Dados:
   - a tabela `inspirations` é escrita por `apply_style_operation` (`create_inspiration`, `edit_inspiration` campo a campo, `delete_inspiration`, `set_inspiration_image`, `remove_inspiration_image`) e sincronizada pelo stream `user_inspirations`;
   - a tabela `style_preferences` é escrita pela mesma função (`create_preference`, `edit_preference`, `delete_preference`) e sincronizada pelo stream `user_style_preferences`;
   - as duas partilham a fila local `style_operations`.
-- Por fazer: uso no motor (incremento 5).
+- Por fazer no motor: preferências de formalidade.
 - Backup: inspirações (com proporções, desde a v4, e imagem, desde a v5) e preferências entram e são recuperadas com ids novos ([backups](backups-e-recuperacao.md)).
 
 ## Objetivo

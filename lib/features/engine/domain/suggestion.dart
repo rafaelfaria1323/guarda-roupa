@@ -144,6 +144,21 @@ final class NoWeather extends SuggestionNote {
   const NoWeather();
 }
 
+/// Combinações de cor que o conjunto cumpre (P-21), só descritas: as que
+/// o utilizador prefere ou evita aparecem como [PreferenceMatch].
+final class ColorCombosNote extends SuggestionNote {
+  const ColorCombosNote(this.combos);
+  final Set<StyleCombo> combos;
+}
+
+/// Mais de um padrão, ou mais de uma textura forte: ficam a competir. Só
+/// põe o conjunto atrás de outro igual em tudo o resto.
+final class SurfaceMixNote extends SuggestionNote {
+  const SurfaceMixNote({required this.patterned, required this.textured});
+  final int patterned;
+  final int textured;
+}
+
 /// Ameno: pode juntar-se esta camada, se quiser.
 final class OptionalLayerNote extends SuggestionNote {
   const OptionalLayerNote();

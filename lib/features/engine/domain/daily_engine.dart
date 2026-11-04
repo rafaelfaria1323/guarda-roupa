@@ -6,6 +6,7 @@ import '../../wardrobe/domain/garment.dart';
 import '../../wardrobe/domain/garment_attributes.dart';
 import '../../wardrobe/domain/garment_category.dart';
 import 'comfort.dart';
+import 'outfit_harmony.dart';
 import 'suggestion.dart';
 
 /// Motor diário (docs/features/motor-de-combinacoes.md): regras
@@ -21,6 +22,9 @@ import 'suggestion.dart';
 /// - **Ordem de cada papel:** conforto, chuva/vento (casaco e calçado),
 ///   rotatividade (elegíveis primeiro, P-06), preferências (gosto − evito),
 ///   menos usadas, usadas há mais tempo, seed.
+/// - **Conjunto:** combinações de cor preferidas/evitadas (P-21) somam às
+///   preferências; padrões ou texturas fortes repetidos só desempatam
+///   ([OutfitHarmony]).
 /// - **Lavagem** (P-07) só gera aviso.
 abstract final class DailyEngine {
   static SuggestionResult suggest(
@@ -444,8 +448,8 @@ final class _Context {
     };
   }
 
-  /// Cor, padrão e textura aplicam-se a cada peça. Formalidade e
-  /// combinações de cor são do conjunto e ainda não entram.
+  /// Cor, padrão e textura aplicam-se a cada peça. As combinações de cor
+  /// são do conjunto ([compose]); a formalidade ainda não entra.
   static bool _matches(StylePreference p, Garment g) => switch (p.subject) {
     PreferenceSubject.color => g.colors.any((c) => '${c.rgb}' == p.value),
     PreferenceSubject.pattern => g.attributes.pattern?.id == p.value,
@@ -486,6 +490,37 @@ final class _Context {
     }
 
     items.sort((a, b) => _layer(a.$2).compareTo(_layer(b.$2)));
+
+    final combos = OutfitHarmony.combos([
+      for (final (e, role) in items) (e.garment, role),
+    ]);
+    var comboPreference = 0;
+    final matched = <StyleCombo>{};
+    if (combos != null) {
+      for (final p in preferences) {
+        if (p.subject != PreferenceSubject.combo) continue;
+        final combo = StyleCombo.fromId(p.value);
+        if (combo == null || !combos.contains(combo)) continue;
+        matched.add(combo);
+        notes.add(PreferenceMatch(p));
+        comboPreference += p.stance == PreferenceStance.like ? 1 : -1;
+      }
+      final described = combos.difference(matched);
+      if (described.isNotEmpty) notes.add(ColorCombosNote(described));
+    }
+    final surface = OutfitHarmony.surface([
+      for (final (e, _) in items) e.garment,
+    ]);
+    final load = OutfitHarmony.load(surface);
+    if (load > 0) {
+      notes.add(
+        SurfaceMixNote(
+          patterned: surface.patterned,
+          textured: surface.textured,
+        ),
+      );
+    }
+
     final suggested = [
       for (final (e, role) in items) SuggestedItem(e.garment, role, e.notes),
     ];
@@ -502,6 +537,8 @@ final class _Context {
       ),
       entries: [for (final (e, _) in items) e],
       seed: request.seed,
+      comboPreference: comboPreference,
+      load: load,
     );
   }
 
@@ -516,12 +553,20 @@ final class _Context {
 }
 
 final class _Draft {
-  _Draft(this.candidate, {required List<_Entry> entries, required int seed})
-    : key = (entries.map((e) => e.garment.id.value).toList()..sort()).join(','),
-      missing = candidate.notes.whereType<MissingRole>().length,
-      warnings = candidate.items.fold(0, (sum, i) => sum + i.warnings.length),
-      preference = entries.fold(0, (sum, e) => sum + e.preference),
-      positions = entries.fold(0, (sum, e) => sum + e.position) {
+  _Draft(
+    this.candidate, {
+    required List<_Entry> entries,
+    required int seed,
+    required int comboPreference,
+    required this.load,
+  }) : key = (entries.map((e) => e.garment.id.value).toList()..sort()).join(
+         ',',
+       ),
+       missing = candidate.notes.whereType<MissingRole>().length,
+       warnings = candidate.items.fold(0, (sum, i) => sum + i.warnings.length),
+       preference =
+           entries.fold(0, (sum, e) => sum + e.preference) + comboPreference,
+       positions = entries.fold(0, (sum, e) => sum + e.position) {
     tiebreak = _seedKey(seed, key);
   }
 
@@ -533,11 +578,15 @@ final class _Draft {
   final int warnings;
   final int preference;
 
+  /// Padrões e texturas fortes a competir ([OutfitHarmony.load]).
+  final int load;
+
   /// Soma das posições de cada peça na ordem do seu papel.
   final int positions;
   late final int tiebreak;
 
-  /// Completos primeiro, menos avisos, mais preferências, peças mais bem
+  /// Completos primeiro, menos avisos, mais preferências (das peças e do
+  /// conjunto), menos padrões/texturas a competir, peças mais bem
   /// ordenadas, seed.
   static int compare(_Draft a, _Draft b) {
     var c = a.missing.compareTo(b.missing);
@@ -545,6 +594,8 @@ final class _Draft {
     c = a.warnings.compareTo(b.warnings);
     if (c != 0) return c;
     c = b.preference.compareTo(a.preference);
+    if (c != 0) return c;
+    c = a.load.compareTo(b.load);
     if (c != 0) return c;
     c = a.positions.compareTo(b.positions);
     if (c != 0) return c;

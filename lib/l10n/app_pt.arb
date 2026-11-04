@@ -1053,5 +1053,21 @@
         "type": "int"
       }
     }
+  },
+  "noteColorCombos": "Cores: {combos}",
+  "@noteColorCombos": {
+    "placeholders": {
+      "combos": {
+        "type": "String"
+      }
+    }
+  },
+  "noteSurfaceMix": "{kind, select, patterns{Mais de um padrão: podem competir} textures{Mais de uma textura forte: podem competir} both{Padrões e texturas fortes repetidos: podem competir} other{Podem competir}}",
+  "@noteSurfaceMix": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      }
+    }
   }
 }
