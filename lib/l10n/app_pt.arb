@@ -875,5 +875,49 @@
   "weekProposalApply": "Aplicar",
   "weekProposalKeep": "Manter o atual",
   "weekRepeats": "Repete peças de outro dia desta semana.",
-  "weekNotFound": "Sem conjunto possível com as regras atuais."
+  "weekNotFound": "Sem conjunto possível com as regras atuais.",
+  "weekChanged": "Mudou desde o plano:",
+  "weekIssue": "{kind, select, gone{{garment} já não está no guarda-roupa} unavailable{{garment} está indisponível ({detail})} wash{{garment} pede lavagem} comfort{{garment} não é para o tempo previsto ({detail})} outer{Frio previsto: {garment} pede um casaco por cima} rain{{garment} não é para chuva} other{{garment} não é para vento}}",
+  "@weekIssue": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "garment": {
+        "type": "String"
+      },
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "weekChangeSwap": "Trocar {from} por {to}",
+  "@weekChangeSwap": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "weekChangeAdd": "Juntar {garment}",
+  "@weekChangeAdd": {
+    "placeholders": {
+      "garment": {
+        "type": "String"
+      }
+    }
+  },
+  "weekChangeDrop": "Sem alternativa: {role} fica por escolher",
+  "@weekChangeDrop": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "weekChangeApply": "Aplicar alteração",
+  "weekChangeIgnore": "Manter o plano"
 }

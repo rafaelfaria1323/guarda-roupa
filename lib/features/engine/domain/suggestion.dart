@@ -226,3 +226,21 @@ final class SuggestionResult {
   /// Notas gerais (ex.: sem previsão).
   final List<SuggestionNote> notes;
 }
+
+/// Resultado de [DailyEngine.replace].
+final class Replacement {
+  const Replacement({
+    required this.items,
+    this.added = const [],
+    this.dropped = const [],
+  });
+
+  /// O conjunto novo, pela ordem das camadas.
+  final List<OutfitItem> items;
+
+  /// Peças que entraram.
+  final List<OutfitItem> added;
+
+  /// Papéis que ficaram sem peça.
+  final List<OutfitRole> dropped;
+}
