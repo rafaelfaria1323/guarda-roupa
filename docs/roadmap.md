@@ -36,7 +36,7 @@ Atualizado a 2026-11-04. "Feito" quer dizer implementado, com testes automático
 | 9 — Produto comercial | Por começar | — |
 | Manequim 3D | Adiado (P-20): ideia e opções registadas, POC proposta | [manequim 3D](features/manequim-3d.md) |
 
-Ações do utilizador ainda abertas (lista em [pendências](pendencias.md#ações-do-utilizador-por-fazer)): criar o secret `SUPABASE_ACCESS_TOKEN` para publicar a importação; experimentar links reais de lojas; criar o secret `POWERSYNC_ADMIN_TOKEN`, uma vez, para o deploy das Sync Streams passar a ser automático; executar a POC em dois dispositivos; rever a proposta de cores (P-21); IA local (P-14): experimentar o recorte, a categoria e as peças parecidas no telemóvel com fotos reais.
+Ações do utilizador ainda abertas (lista em [pendências](pendencias.md#ações-do-utilizador-por-fazer)): criar o secret `SUPABASE_ACCESS_TOKEN` para publicar a importação; experimentar links reais de lojas; executar a POC em dois dispositivos; rever a proposta de cores (P-21); IA local (P-14): experimentar o recorte, a categoria e as peças parecidas no telemóvel com fotos reais.
 
 ## MVP versus incremento
 

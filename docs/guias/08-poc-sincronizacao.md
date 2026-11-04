@@ -54,7 +54,11 @@ grant usage on schema public to powersync_role;
 grant select on public.garments to powersync_role;
 ```
 
-Aqui o role só recebe `garments`. As outras tabelas sincronizadas (utilizações, limpezas, políticas, conjuntos, inspirações, preferências e plano) recebem SELECT pela migração `20261112000001_powersync_grants.sql`, aplicada pelo workflow “Supabase”. O role nunca tem acesso à allowlist nem às operações. O teste `supabase/tests/powersync_test.sql` confirma que o role lê todas as tabelas da publicação `powersync`, e só essas.
+Aqui o role só recebe `garments`. As outras tabelas sincronizadas recebem SELECT pela função `grant_powersync_select()` (migração `20261112000002`), aplicada pelo workflow “Supabase”. A função serve todos os roles de replicação cujo nome começa por `powersync`. Na base real, o PowerSync liga-se com um role criado pela integração (`powersync_<id>`), e não só com este. Os roles nunca têm acesso à allowlist nem às operações.
+
+- Uma migração que acrescente uma tabela à publicação chama `grant_powersync_select()` no fim.
+- O teste `supabase/tests/powersync_test.sql` confirma que os roles leem todas as tabelas da publicação, e só essas.
+- O deploy mostra, depois das migrações, as tabelas em que cada role de replicação não tem SELECT.
 
 ## 5. Criar a instância PowerSync (plano Free)
 
