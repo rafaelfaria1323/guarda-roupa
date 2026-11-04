@@ -40,6 +40,12 @@ abstract final class AppRoutes {
   static const careSettings = '/definicoes/lavagem';
   static const weatherLocation = '/definicoes/localizacao';
   static const wear = '/vesti';
+
+  /// "Vesti hoje" com estas peças já escolhidas (por confirmar).
+  static String wearWith(Iterable<String> garmentIds) => Uri(
+    path: wear,
+    queryParameters: {'pecas': garmentIds.join(',')},
+  ).toString();
   static String correctWear(String eventId) => '/vesti/$eventId';
 }
 
@@ -124,7 +130,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.wear,
-        builder: (context, state) => const WearPickerScreen(),
+        builder: (context, state) => WearPickerScreen(
+          initial: [
+            for (final id in (state.uri.queryParameters['pecas'] ?? '').split(
+              ',',
+            ))
+              if (id.isNotEmpty) GarmentId(id),
+          ],
+        ),
       ),
       GoRoute(
         path: '/vesti/:id',

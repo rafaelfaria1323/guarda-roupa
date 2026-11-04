@@ -1,0 +1,45 @@
+import 'package:flutter/material.dart';
+
+import '../../../l10n/app_localizations.dart';
+import '../../inspirations/presentation/preference_messages.dart';
+import '../domain/comfort.dart';
+import '../domain/suggestion.dart';
+
+/// Texto curto de uma nota (`null` = não vale a pena mostrar).
+String? noteText(BuildContext context, SuggestionNote note) {
+  final l10n = AppLocalizations.of(context);
+  final material = MaterialLocalizations.of(context);
+  String date(DateTime d) => material.formatShortDate(d);
+  return switch (note) {
+    OccasionUnknown() => l10n.noteOccasionUnknown,
+    OccasionMatches(:final occasion) => l10n.noteOccasionMatches(
+      l10n.occasionLabel(occasion.id),
+    ),
+    ComfortNote(:final fit) => l10n.noteComfort(fit.name),
+    WeatherFlagNote(:final rain, :final ok) => l10n.noteWeatherFlag(
+      rain ? 'rain' : 'wind',
+      switch (ok) {
+        true => 'yes',
+        false => 'no',
+        null => 'unknown',
+      },
+    ),
+    RotationExceeded(:final lastWornOn, :final eligibleFrom) =>
+      l10n.noteRotationExceeded(
+        date(lastWornOn.toLocalDateTime()),
+        date(eligibleFrom.toLocalDateTime()),
+      ),
+    NeverWorn() => l10n.noteNeverWorn,
+    RecentUses(:final times) => l10n.noteRecentUses(times),
+    WashRecommended() => l10n.noteWash,
+    PreferenceMatch(:final preference) => preferenceTitle(l10n, preference),
+    OptionalLayerNote() => l10n.noteOptionalLayer,
+    MissingRole(:final role) => l10n.suggestionsMissing(
+      l10n.outfitRoleLabel(role.id),
+    ),
+    NoWeather() => null,
+  };
+}
+
+String comfortBandText(AppLocalizations l10n, ComfortBand band) =>
+    l10n.comfortBandLabel(band.name);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/widgets/empty_state.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../engine/presentation/today_suggestions_card.dart';
 import '../../wear/presentation/today_wear_card.dart';
 
 class PlannerScreen extends StatelessWidget {
@@ -14,6 +15,8 @@ class PlannerScreen extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       children: [
         const TodayWearCard(),
+        const SizedBox(height: 8),
+        const TodaySuggestionsCard(),
         EmptyState(
           icon: Icons.calendar_today_outlined,
           message: l10n.plannerEmpty,

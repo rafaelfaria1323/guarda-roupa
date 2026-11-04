@@ -11,7 +11,7 @@ void main() {
 
     expect(find.byType(NavigationBar), findsOneWidget);
     expect(find.byType(NavigationRail), findsNothing);
-    expect(find.text('Ainda não há planeamento.'), findsOneWidget);
+    expect(find.text('Sugestões para hoje'), findsOneWidget);
   });
 
   testWidgets('muda de separador e mantém o título coerente', (tester) async {
@@ -53,6 +53,6 @@ void main() {
 
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
-    expect(find.text('Ainda não há planeamento.'), findsOneWidget);
+    expect(find.text('Sugestões para hoje'), findsOneWidget);
   });
 }
