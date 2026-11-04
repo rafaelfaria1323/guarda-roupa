@@ -1,5 +1,4 @@
-import { checkImage, checkPage } from './url_guard.ts';
-import type { Store } from './stores.ts';
+import { checkPublic, type Resolver } from './url_guard.ts';
 
 export const LIMITS = {
   timeoutMs: 8000,
@@ -28,39 +27,36 @@ type FetchFn = (input: URL, init: RequestInit) => Promise<Response>;
 
 /**
  * Pede uma página de produto. Redirecionamentos seguidos à mão, cada um
- * validado de novo (o destino tem de ser a mesma loja). Tempo e bytes
+ * validado de novo (tem de continuar a ser um site público). Tempo e bytes
  * limitados. Sem cookies nem credenciais: não se contorna login nem
  * anti-bot, e um bloqueio é dito como tal.
  */
 export function fetchPage(
   url: URL,
-  store: Store,
   fetchFn: FetchFn = fetch,
+  resolve?: Resolver,
 ): Promise<Fetched> {
   return fetchLimited(url, {
     fetchFn,
+    resolve,
     maxBytes: LIMITS.maxPageBytes,
     accept: 'text/html,application/xhtml+xml',
-    allowed: (next) => {
-      const check = checkPage(next.href);
-      return check.ok && check.store.id === store.id ? check.url : null;
-    },
     typeOk: (t) => t.includes('html'),
     wrongType: 'not_html',
   });
 }
 
-/** Copia uma imagem de um domínio de imagens da loja. */
+/** Copia uma imagem já autorizada (`import_image_allowed`). */
 export function fetchImage(
   url: URL,
-  store: Store,
   fetchFn: FetchFn = fetch,
+  resolve?: Resolver,
 ): Promise<Fetched> {
   return fetchLimited(url, {
     fetchFn,
+    resolve,
     maxBytes: LIMITS.maxImageBytes,
     accept: 'image/jpeg,image/png,image/webp',
-    allowed: (next) => checkImage(next.href, store),
     typeOk: (t) => /^image\/(jpeg|png|webp)/.test(t),
     wrongType: 'not_image',
   });
@@ -72,7 +68,7 @@ async function fetchLimited(
     fetchFn: FetchFn;
     maxBytes: number;
     accept: string;
-    allowed: (url: URL) => URL | null;
+    resolve?: Resolver;
     typeOk: (contentType: string) => boolean;
     wrongType: FetchFailure;
   },
@@ -97,11 +93,11 @@ async function fetchLimited(
         }
         const location = res.headers.get('location');
         const next = location == null ? null : safeUrl(location, url);
-        const allowed = next == null ? null : o.allowed(next);
-        if (allowed == null) {
+        const check = next == null ? null : await checkPublic(next.href, o.resolve);
+        if (check == null || !check.ok) {
           return { ok: false, reason: 'redirect_not_allowed' };
         }
-        url = allowed;
+        url = check.url;
         continue;
       }
       if (!res.ok) {

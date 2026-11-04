@@ -47,7 +47,7 @@ PWA fechada não executa sync contínua garantida no iPhone. Isto é compatível
 
 ## Importação e conteúdo de terceiros
 
-Lojas podem omitir metadados, alterar páginas ou bloquear pedidos. Um backend remove a limitação CORS do browser, não concede permissão nem torna todos os sites acessíveis.
+Lojas podem omitir metadados, alterar páginas ou bloquear pedidos. Um backend remove a limitação CORS do browser, não concede permissão nem torna todos os sites acessíveis. A importação aceita qualquer site, mas os que bloqueiam pedidos automáticos continuam a falhar (o perfil do domínio mostra “costuma falhar”); não se contorna anti-bot.
 
 Um link Pinterest pode ser apenas um bookmark. Acesso à imagem/API e direitos de utilização são questões separadas. Uma imagem carregada por alguém não prova automaticamente que pode ser redistribuída comercialmente.
 

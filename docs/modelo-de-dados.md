@@ -40,6 +40,8 @@ O plano não entra no backup (como o `plan_entry_id` das utilizações). Escrita
 
 **Quota da importação por link (incremento 7).** Tabela `import_requests` (`owner_id`, `requested_at`), sem acesso dos clientes e sem dados de produto: serve só para `claim_import_quota()` limitar a função `import-product` a 30 pedidos por hora e 200 por dia. Pedidos com mais de um dia são apagados. Não sincroniza nem entra no backup.
 
+**Perfis de sites e imagens autorizadas (importação de qualquer site).** `import_domains` (`host`, `ok_count`, `fail_count`, `consecutive_failures`, `last_result`, `last_source`, `first_seen`, `last_seen`) é global e criada sozinha por `record_import()` a cada importação; o estado (`new`, `testing`, `works`, `failing`) sai de `import_domain_status()`. Não tem links, produtos nem utilizadores. `import_image_grants` (`owner_id`, `url_hash` = md5 do URL, `expires_at` a 1 dia) diz que imagens a função pode copiar para cada utilizador (`import_image_allowed()`). Sem acesso direto dos clientes, não sincroniza nem entra no backup.
+
 **Implementação atual das inspirações (incremento 4).**
 - `Inspiration` é a tabela `inspirations`, com estes campos:
   - `title` e/ou `source_url`, pelo menos um dos dois, e o link só `http(s)`;

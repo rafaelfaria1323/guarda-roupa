@@ -1,10 +1,12 @@
 /**
- * Dados de produto a partir de uma página (JSON-LD `Product`/`ProductGroup`,
- * com Open Graph como alternativa parcial). Só texto: nada do HTML é
- * executado nem devolvido como HTML. Preço e stock não interessam.
+ * Dados de produto a partir de qualquer página, por ordem de confiança:
+ * JSON-LD `Product`/`ProductGroup`, microdata schema.org `Product`, Open
+ * Graph e Twitter cards, e por fim o HTML simples (título, descrição,
+ * `image_src`). Só texto: nada do HTML é executado nem devolvido como HTML.
+ * Preço e stock não interessam.
  */
 
-export type Source = 'json-ld' | 'open-graph';
+export type Source = 'json-ld' | 'microdata' | 'open-graph' | 'html';
 
 export interface Variant {
   color?: string;
@@ -34,6 +36,7 @@ export function parseProduct(
   pageUrl: URL,
 ): ProductPreview | null {
   const ld = jsonLdProduct(html);
+  const md = microdata(html);
   const og = openGraph(html);
   const out: ProductPreview = {
     images: [],
@@ -76,17 +79,43 @@ export function parseProduct(
       }
     }
   }
-  set('name', og.meta['og:title'], 'open-graph', MAX.name);
-  set('brand', og.meta['product:brand'], 'open-graph');
-  set('description', og.meta['og:description'], 'open-graph', MAX.text);
-  set('color', og.meta['product:color'], 'open-graph');
+  if (md != null) {
+    set('name', md.fields.name, 'microdata', MAX.name);
+    set('brand', md.fields.brand, 'microdata');
+    set('description', md.fields.description, 'microdata', MAX.text);
+    set('color', md.fields.color, 'microdata');
+    set('material', md.fields.material, 'microdata');
+    addImages(out, md.images, pageUrl, 'microdata');
+  }
+  const meta = og.meta;
+  set('name', meta['og:title'] ?? meta['twitter:title'], 'open-graph', MAX.name);
+  set('brand', meta['product:brand'] ?? meta['og:brand'], 'open-graph');
+  set(
+    'description',
+    meta['og:description'] ?? meta['twitter:description'],
+    'open-graph',
+    MAX.text,
+  );
+  set('color', meta['product:color'], 'open-graph');
+  set('material', meta['product:material'], 'open-graph');
   addImages(out, og.images, pageUrl, 'open-graph');
+
+  // HTML simples: só conta como produto com uma imagem, nunca só o título.
+  const structured = ld != null || md != null;
+  const fallback = htmlFallback(html);
+  addImages(out, fallback.images, pageUrl, 'html');
+  const productPage = (meta['og:type'] ?? '').toLowerCase().includes('product');
+  if (!structured && !productPage && out.images.length === 0) return null;
+  set('name', fallback.title, 'html', MAX.name);
+  set('description', fallback.description, 'html', MAX.text);
 
   if (out.name == null && out.images.length === 0) return null;
 
   // A categoria, as cores e a posse confirmam-se sempre; a variante quando
   // a página tem várias (várias cores não dizem qual é a tua).
   out.confirm = ['category', 'colors', 'owned'];
+  // Sem dados estruturados, até o nome pode ser o título da página.
+  if (out.sources.name === 'html') out.confirm.push('name');
   const colors = new Set(out.variants.map((v) => v.color).filter(Boolean));
   if (colors.size > 1 || out.variants.length > 1) out.confirm.push('variant');
   if (out.material == null) out.confirm.push('material');
@@ -141,13 +170,75 @@ function openGraph(html: string): OpenGraph {
     const key = (attrs.property ?? attrs.name ?? '').toLowerCase();
     const content = attrs.content;
     if (key === '' || content == null) continue;
-    if (key === 'og:image' || key === 'og:image:secure_url') {
+    if (
+      key === 'og:image' || key === 'og:image:secure_url' ||
+      key === 'twitter:image' || key === 'twitter:image:src'
+    ) {
       out.images.push(content);
     } else if (out.meta[key] == null) {
       out.meta[key] = content;
     }
   }
   return out;
+}
+
+interface Microdata {
+  fields: Record<string, string>;
+  images: string[];
+}
+
+const MICRODATA_FIELDS = ['name', 'brand', 'description', 'color', 'material'];
+
+/** schema.org `Product` em microdata (`itemprop`), lido de forma simples. */
+function microdata(html: string): Microdata | null {
+  if (!/itemtype\s*=\s*["']?https?:\/\/schema\.org\/Product\b/i.test(html)) {
+    return null;
+  }
+  const out: Microdata = { fields: {}, images: [] };
+  for (const m of html.matchAll(/<[a-z][a-z0-9]*\b[^>]*\bitemprop\s*=[^>]*>/gi)) {
+    const attrs = attributes(m[0]);
+    const prop = attrs.itemprop?.trim();
+    if (prop === 'image') {
+      const src = attrs.content ?? attrs.src ?? attrs.href;
+      if (src != null) out.images.push(src);
+    } else if (prop != null && MICRODATA_FIELDS.includes(prop) && out.fields[prop] == null) {
+      const inner = html.slice(m.index! + m[0].length).match(/^([^<]*)/)?.[1];
+      const value = attrs.content ?? decodeEntities(inner ?? '');
+      if (value.trim() !== '') out.fields[prop] = value;
+    }
+  }
+  const any = Object.keys(out.fields).length > 0 || out.images.length > 0;
+  return any ? out : null;
+}
+
+interface HtmlFallback {
+  title?: string;
+  description?: string;
+  images: string[];
+}
+
+function htmlFallback(html: string): HtmlFallback {
+  const title = html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i)?.[1];
+  let description: string | undefined;
+  for (const m of html.matchAll(/<meta\b[^>]*>/gi)) {
+    const attrs = attributes(m[0]);
+    if ((attrs.name ?? '').toLowerCase() === 'description') {
+      description = attrs.content;
+      break;
+    }
+  }
+  const images: string[] = [];
+  for (const m of html.matchAll(/<link\b[^>]*>/gi)) {
+    const attrs = attributes(m[0]);
+    if ((attrs.rel ?? '').toLowerCase() === 'image_src' && attrs.href != null) {
+      images.push(attrs.href);
+    }
+  }
+  return {
+    title: title == null ? undefined : decodeEntities(title),
+    description,
+    images,
+  };
 }
 
 function attributes(tag: string): Record<string, string> {
@@ -227,7 +318,38 @@ const NAMED: Record<string, string> = {
   quot: '"',
   apos: "'",
   nbsp: ' ',
+  ccedil: 'ç',
+  Ccedil: 'Ç',
+  euro: '€',
+  deg: '°',
+  hellip: '…',
+  ndash: '–',
+  mdash: '—',
+  lsquo: '‘',
+  rsquo: '’',
+  ldquo: '“',
+  rdquo: '”',
+  laquo: '«',
+  raquo: '»',
+  reg: '®',
+  trade: '™',
+  copy: '©',
 };
+
+// Vogais acentuadas (á, ã, Ê, ü, ...), por nome HTML.
+const ACCENTS: Record<string, string> = {
+  acute: '\u0301',
+  grave: '\u0300',
+  circ: '\u0302',
+  tilde: '\u0303',
+  uml: '\u0308',
+};
+for (const v of 'aeiouyAEIOUYnN') {
+  for (const [name, mark] of Object.entries(ACCENTS)) {
+    const c = `${v}${mark}`.normalize('NFC');
+    if (c.length === 1) NAMED[`${v}${name}`] = c;
+  }
+}
 
 function decodeEntities(s: string): string {
   return s.replace(/&(#x[0-9a-f]+|#[0-9]+|[a-z]+);/gi, (all, e: string) => {
@@ -239,7 +361,7 @@ function decodeEntities(s: string): string {
         ? String.fromCodePoint(code)
         : all;
     }
-    return NAMED[e.toLowerCase()] ?? all;
+    return NAMED[e] ?? NAMED[e.toLowerCase()] ?? all;
   });
 }
 
