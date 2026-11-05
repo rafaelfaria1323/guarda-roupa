@@ -20,7 +20,7 @@ Não há estimativas de calendário sem conhecer disponibilidade e resultados da
 
 ## Estado da implementação
 
-Atualizado a 2026-11-04. "Feito" quer dizer implementado, com testes automáticos (Dart e SQL) e migrações aplicadas. Não quer dizer validado em aparelho: os gates de dispositivo e os percursos do [Plano E2E](plano-e2e.md) continuam pendentes ([pendências](pendencias.md)).
+Atualizado a 2026-11-05. "Feito" quer dizer implementado, com testes automáticos (Dart e SQL) e migrações aplicadas. Não quer dizer validado em aparelho: os gates de dispositivo e os percursos do [Plano E2E](plano-e2e.md) continuam pendentes ([pendências](pendencias.md)).
 
 | Incremento | Estado | Onde está descrito |
 |---|---|---|
@@ -33,7 +33,7 @@ Atualizado a 2026-11-04. "Feito" quer dizer implementado, com testes automático
 | 6 — Semana utilizável | Feito: dados do plano (`plan_entries`, propostas pendentes, P-19), pesquisa semanal (beam search com reservas e diversidade), ecrã “Esta semana” (aceitar, deixar vazio, “Vesti isto hoje”) e mudanças posteriores (peça suja, arquivada ou desadequada à previsão: avisa e propõe trocar só essa, aplicada após confirmação) | [planeamento](features/planeamento-semanal.md), [motor](features/motor-de-combinacoes.md) |
 | 7 — Entrada assistida por lojas | Em curso: função `import-product` (Supabase Edge Functions) para **qualquer site público** (JSON-LD, microdata, Open Graph/Twitter, HTML simples), com proteções de rede, quota, imagens só as oferecidas e perfil por domínio que se atualiza sozinho (“site novo” → “costuma funcionar” / “costuma falhar”). Fluxo na app: colar link, pré-visualização com origem dos campos, variante e imagens, formulário pré-preenchido com categoria e cores por confirmar, erros com alternativa manual. Função publicada; falta o smoke com links reais | [importação](features/importacao-de-links.md) |
 | 8 — IA local | Em curso (POC aprovada, P-14): cores sugeridas pela foto; recorte de fundo com U²-Netp, usado nas cores; sugestão de categoria com FashionCLIP q4 (90 % top-1 em fotos reais) e peças parecidas com uma inspiração (o mesmo modelo). Os modelos são descarregados a pedido (Definições › IA local). Falta medir em aparelho | [IA local](features/ia-local.md), [fotografias](features/fotografias-e-ficheiros.md) |
-| Visual "fio" (P-22) | Em curso: nome, ícone, logótipo e tema v2 (cores, DM Sans/Fraunces, botões em pílula) aplicados; separadores Hoje/Armário; ecrãs Hoje (saudação, sugestão em flat-lay, semana como fio) e Armário (prateleiras por tipo, estado só quando foge ao normal) redesenhados. Falta a Peça | [design](design-e-fluxos.md) |
+| Visual "fio" (P-22) | Feito: nome, ícone, logótipo e tema v2 (cores, DM Sans/Fraunces, botões em pílula) aplicados; separadores Hoje/Armário; ecrãs Hoje (saudação, sugestão em flat-lay, semana como fio), Armário (prateleiras por tipo, estado só quando foge ao normal) e Peça (modo de ver antes de editar: uso, onde está, últimas vezes, "Vou vestir hoje") redesenhados | [design](design-e-fluxos.md) |
 | 9 — Produto comercial | Por começar | — |
 | Manequim 3D | Adiado (P-20): ideia e opções registadas, POC proposta | [manequim 3D](features/manequim-3d.md) |
 

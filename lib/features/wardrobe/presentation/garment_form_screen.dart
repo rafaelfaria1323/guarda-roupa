@@ -238,7 +238,8 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
     if (confirmed != true || !mounted) return;
     await _run(
       () => repo.deleteGarment(garment.id),
-      onOk: (_) => context.pop(),
+      // A ficha (modo de ver) também deixa de existir: volta ao Armário.
+      onOk: (_) => context.go(AppRoutes.wardrobe),
     );
   }
 
@@ -574,16 +575,17 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
                     () => repo.duplicateGarment(garment.id),
                     done: l10n.garmentDuplicated,
                     onOk: (copy) =>
-                        context.pushReplacement(AppRoutes.garment(copy.id)),
+                        context.pushReplacement(AppRoutes.editGarment(copy.id)),
                   ),
                   child: Text(l10n.garmentDuplicate),
                 ),
                 PopupMenuItem(
                   value: garment.isArchived
                       ? () => _run(() => repo.unarchiveGarment(garment.id))
+                      // Arquivada sai do Armário: volta à lista.
                       : () => _run(
                           () => repo.archiveGarment(garment.id),
-                          onOk: (_) => context.pop(),
+                          onOk: (_) => context.go(AppRoutes.wardrobe),
                         ),
                   child: Text(
                     garment.isArchived

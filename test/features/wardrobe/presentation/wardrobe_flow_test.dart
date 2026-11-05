@@ -18,6 +18,20 @@ Finder inList(String text) => find.descendant(
   matching: find.text(text),
 );
 
+/// Abre a ficha de uma peça (modo de ver) e passa a editar.
+Future<void> openEdit(WidgetTester tester, Finder garment) async {
+  await tester.tap(garment);
+  await settle(tester);
+  await tester.tap(find.byKey(const Key('garment-edit')));
+  await settle(tester);
+}
+
+/// Sai da ficha da peça (modo de ver) de volta ao Armário.
+Future<void> closeDetail(WidgetTester tester) async {
+  await tester.tap(find.byType(BackButton));
+  await settle(tester);
+}
+
 Future<void> openWardrobe(WidgetTester tester) async {
   await tester.tap(find.byIcon(Icons.checkroom_outlined));
   await settle(tester);
@@ -93,8 +107,7 @@ void main() {
     await addGarment(tester, category: 'Camisa', name: 'Riscas');
 
     // Editar o nome.
-    await tester.tap(find.text('Branca'));
-    await settle(tester);
+    await openEdit(tester, find.text('Branca'));
     await tester.enterText(
       find.byKey(const Key('garment-name')),
       'Branca básica',
@@ -116,6 +129,7 @@ void main() {
       find.byKey(const Key('garment-save')),
       gone: true,
     );
+    await closeDetail(tester);
 
     expect(find.text('Branca básica'), findsOneWidget);
     expect(inList('A lavar'), findsOneWidget);
@@ -129,8 +143,7 @@ void main() {
     await settle(tester);
 
     // Arquivar tira da lista; o filtro "Arquivadas" mostra-a.
-    await tester.tap(find.text('Riscas'));
-    await settle(tester);
+    await openEdit(tester, find.text('Riscas'));
     await tester.tap(find.byType(PopupMenuButton<void Function()>));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Arquivar'));
@@ -154,8 +167,7 @@ void main() {
     await openWardrobe(tester);
     await addGarment(tester, category: 'Polo', name: 'Polo verde');
 
-    await tester.tap(find.text('Polo verde'));
-    await settle(tester);
+    await openEdit(tester, find.text('Polo verde'));
     await tester.tap(find.byType(PopupMenuButton<void Function()>));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Duplicar'));
@@ -164,6 +176,7 @@ void main() {
     expect(find.text('Editar peça'), findsOneWidget);
     await tester.tap(find.byType(BackButton));
     await settle(tester);
+    await closeDetail(tester);
 
     expect(find.text('Polo verde'), findsNWidgets(2));
   });
@@ -294,8 +307,7 @@ void main() {
     final app = await pumpApp(tester);
     await openWardrobe(tester);
     await addGarment(tester, category: 'Saia', name: 'Plissada');
-    await tester.tap(find.text('Plissada'));
-    await settle(tester);
+    await openEdit(tester, find.text('Plissada'));
 
     await tester.tap(find.byType(PopupMenuButton<void Function()>));
     await tester.pumpAndSettle();
@@ -383,8 +395,7 @@ void main() {
     expect(inList('Branca'), findsNothing);
 
     // Ao reabrir, os detalhes vêm abertos e preenchidos.
-    await tester.tap(inList('Grossa'));
-    await settle(tester);
+    await openEdit(tester, inList('Grossa'));
     await tester.scrollUntilVisible(
       find.byKey(const Key('garment-material')),
       300,

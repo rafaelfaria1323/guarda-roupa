@@ -89,7 +89,7 @@ Idempotência de retries e da mesma entrada de plano não deduplica magicamente 
 | P-17 | Limites de conforto (proposta: 22/14 °C, vento 30 km/h) | Utilizador | 2026-11-03 | Decidido; editável nas Definições (2026-11-04) |
 | P-18 | Localização Torres Vedras, Europe/Lisbon, sem GPS | Utilizador | 2026-11-03 | Decidido |
 | P-19 | 7 dias; úteis em trabalho (smart casual), fim de semana a decidir e provisório | Utilizador | 2026-11-04 | Decidido |
-| P-22 | Nome **fio**, logótipo "f" de fio e visual v2 (diário pessoal, não loja) | Utilizador | 2026-11-05 | Tema, nome, ícone e ecrãs Hoje e Armário aplicados; Peça por redesenhar ([design](design-e-fluxos.md)) |
+| P-22 | Nome **fio**, logótipo "f" de fio e visual v2 (diário pessoal, não loja) | Utilizador | 2026-11-05 | Aplicado: tema, nome, ícone e ecrãs Hoje, Armário e Peça ([design](design-e-fluxos.md)). Outros ecrãs herdam o tema |
 | P-04 | ADR-008: ordem conservadora de disponibilidade, edições de plano concorrentes como proposta, logout com pendências bloqueado | Utilizador | 2026-11-03 | Decidido; validação na POC |
 
 ## Registo futuro de fecho

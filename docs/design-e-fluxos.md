@@ -1,6 +1,6 @@
 # Design e fluxos
 
-Estado: **visual "fio" v2 aprovado pelo utilizador a 2026-11-05** ([proposta com os ecrãs](https://claude.ai/artifact/CP7pHDPqsatzGsJzPn3Tqr), privada). Tema e ecrãs Hoje e Armário aplicados na app; a Peça é redesenhada a seguir (ver [roadmap](roadmap.md)).
+Estado: **visual "fio" v2 aprovado pelo utilizador a 2026-11-05** ([proposta com os ecrãs](https://claude.ai/artifact/CP7pHDPqsatzGsJzPn3Tqr), privada). Tema e ecrãs Hoje, Armário e Peça aplicados na app (ver [roadmap](roadmap.md)).
 
 ## Nome e logótipo
 
@@ -57,6 +57,19 @@ Os textos longos de ajuda (o que conta como uso, as regras da semana) saíram do
 4. **Com pesquisa ou filtros:** as mesmas peças em grelha.
 5. Cada peça mostra o nome e, só quando foge ao normal, um ponto e uma palavra: a laranja para "A lavar", "A secar" e "Lavar recomendado"; a cinzento para outras disponibilidades e "Arquivada". "Disponível" não se escreve.
 6. Botão "Adicionar peça" em pílula índigo, com o texto à vista (mais claro do que só "+").
+
+## Ecrã Peça (v2, aplicado)
+
+Tocar numa peça abre a ficha em **modo de ver** (`GarmentDetailScreen`, `/guarda-roupa/peca/:id`); mudar os dados é em "Editar" (`/guarda-roupa/peca/:id/editar`, o formulário de sempre). De cima para baixo:
+
+1. A peça recortada em grande, ligeiramente rodada, e "Editar" na barra.
+2. Nome (ou o tipo, sem nome) e, por baixo, tipo · marca · "Arquivada".
+3. Uma frase sobre o uso: "Usada 3 vezes, a última há 6 dias." e, com regra de lavagem, "Mais 2 usos e pede lavagem." ou "Pede lavagem." a laranja.
+4. "Onde está": a disponibilidade em chips, que muda logo ao tocar (sem passar pelo formulário).
+5. "Últimas vezes": as últimas 5 utilizações como um fio (data e com que peças foi).
+6. "Vou vestir hoje": abre o registo de utilização com a peça já escolhida (não aparece em peças arquivadas).
+
+Guardar no formulário volta à ficha; duplicar abre o formulário da cópia; arquivar e eliminar voltam ao Armário.
 
 ## Navegação
 

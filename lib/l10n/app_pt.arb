@@ -1191,5 +1191,46 @@
         "type": "String"
       }
     }
-  }
+  },
+  "garmentEditAction": "Editar",
+  "garmentUseSentence": "{count, plural, =0{Ainda não foi usada.} =1{Usada 1 vez, {last}.} other{Usada {count} vezes, a última {last}.}}",
+  "@garmentUseSentence": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "last": {
+        "type": "String"
+      }
+    }
+  },
+  "relativeDay": "{days, plural, =0{hoje} =1{ontem} other{há {days} dias}}",
+  "@relativeDay": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "laundryUsesLeft": "{left, plural, =1{Mais 1 uso e pede lavagem.} other{Mais {left} usos e pede lavagem.}}",
+  "@laundryUsesLeft": {
+    "placeholders": {
+      "left": {
+        "type": "int"
+      }
+    }
+  },
+  "laundryDueNow": "Já pede lavagem.",
+  "garmentWhere": "Onde está",
+  "garmentLastTimes": "Últimas vezes",
+  "garmentWornWith": "com {names}",
+  "@garmentWornWith": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "garmentWornAlone": "só esta peça registada",
+  "garmentWearToday": "Vou vestir hoje"
 }

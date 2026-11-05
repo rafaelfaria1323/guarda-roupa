@@ -106,7 +106,8 @@ void main() {
 
     await tester.tap(find.text('Vermelha'));
     await settle(tester);
-    expect(find.byKey(const Key('garment-name')), findsOne);
+    // Abre a ficha da peça (modo de ver).
+    expect(find.byKey(const Key('garment-edit')), findsOne);
     expect(find.text('Vermelha'), findsWidgets);
   });
 
