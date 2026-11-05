@@ -22,7 +22,12 @@ Finder pick(String text) => find.descendant(
 );
 
 Future<void> openToday(WidgetTester tester) async {
-  await tester.tap(find.text('Planeador'));
+  await tester.tap(
+    find.descendant(
+      of: find.byType(NavigationBar),
+      matching: find.text('Hoje'),
+    ),
+  );
   await settle(tester);
 }
 

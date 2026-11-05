@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/fio_mark.dart';
 import '../../../l10n/app_localizations.dart';
 import '../application/providers.dart';
 
@@ -49,15 +50,11 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.checkroom,
-                  size: 64,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(height: 24),
+                const FioWordmark(size: 56),
+                const SizedBox(height: 32),
                 Text(
                   l10n.signInTitle,
-                  style: theme.textTheme.headlineSmall,
+                  style: theme.textTheme.headlineMedium,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),

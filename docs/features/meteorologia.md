@@ -40,7 +40,7 @@ Os limites ficam neste dispositivo (`local_settings`, chave `comfort_thresholds`
 - **Atribuição:** "Dados meteorológicos: Open-Meteo.com" no ecrã da localização; também aparece onde a previsão for mostrada.
 - **Testes:** usam um cliente HTTP falso e nunca vão à rede.
 
-Mostrada e usada em "Sugestões para hoje" no Planeador, com contexto manual identificado ([motor](motor-de-combinacoes.md)). Ainda não: o aviso quando uma previsão nova muda um plano aceite.
+Mostrada e usada em "Sugestões para hoje" em Hoje (antes Planeador), com contexto manual identificado ([motor](motor-de-combinacoes.md)). Ainda não: o aviso quando uma previsão nova muda um plano aceite.
 
 ## Contexto inicial
 

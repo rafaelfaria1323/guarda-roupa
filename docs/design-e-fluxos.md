@@ -1,27 +1,42 @@
 # Design e fluxos
 
-Estado: proposta de UX, sem mockups ou ficheiro Figma criado. Data: 2026-10-31.
+Estado: **visual "fio" v2 aprovado pelo utilizador a 2026-11-05** ([proposta com os ecrãs](https://claude.ai/artifact/CP7pHDPqsatzGsJzPn3Tqr), privada). Tema aplicado na app; os ecrãs Hoje, Armário e Peça são redesenhados um a um (ver [roadmap](roadmap.md)).
+
+## Nome e logótipo
+
+- **Nome: fio** (escolhido a 2026-11-05 entre trama, Cabide, fio e Roupeiro). Escreve-se sempre em minúsculas. O fio que se cruza no tecido e liga as peças ao plano da semana.
+- **Logótipo:** um fio que desenha um "f", com um ponto. Em código: `FioMark` e `FioWordmark` (`lib/app/fio_mark.dart`). Ícone: traço branco sobre índigo, gerado em `web/icons/` (incluindo `apple-touch-icon.png`, 180 px), `web/favicon.png` e `android/.../mipmap-*/ic_launcher.png`.
+- O pacote Dart (`guarda_roupa`), o `applicationId` (P-15) e o repositório mantêm o nome antigo: mudá-los partiria o login Android e os dados instalados.
 
 ## Direção visual
 
-Minimalismo editorial: fotografias como protagonistas, hierarquia tipográfica clara, poucas ações simultâneas e espaço entre elementos.
+**Diário pessoal, não loja.** As fotos dão a cor; a interface fica calma. A v1 (fundo neutro, botões pretos, grelha de cartões) foi recusada por parecer uma loja.
 
-Usar Material 3 personalizado. Candidatos de tokens, ainda sujeitos a contraste e aprovação:
+- Peças recortadas e pousadas sobre o fundo, com sombra suave, em vez de cartões de produto.
+- Frases em vez de números soltos ("Vestiste-os 12 vezes, a última há 6 dias").
+- Um botão principal por ecrã (índigo, em pílula); ações secundárias como texto sublinhado.
+- Estados de lavandaria como um ponto e uma palavra ("a lavar"), não como cartões.
 
-| Token | Proposta |
-|---|---|
-| Fundo | `#F6F4EF` |
-| Superfície | `#FFFFFF` |
-| Texto principal | `#202521` |
-| Destaque | `#61745B` |
-| Separador | `#DFE3DC` |
+Tokens (`lib/app/theme.dart`, `AppColors`):
 
-Não depender só da cor para comunicar estados. Começar com fontes de sistema; uma fonte incluída como asset só entra após verificar licença e orçamento de download.
+| Token | Valor | Uso |
+|---|---|---|
+| Fundo (papel) | `#F3F0EA` | Ecrãs |
+| Superfície | `#FFFFFF` | Cartões, campos, barra de navegação |
+| Superfície discreta | `#EAE6DE` | Fundos secundários |
+| Texto principal | `#1E1F24` | Texto, etiquetas selecionadas |
+| Texto secundário | `#5C5E66` | Metadados |
+| Destaque (índigo, o fio) | `#3446C9` | Botão principal, separador ativo, logótipo |
+| Destaque suave | `#ECEEF9` / texto `#26349A` | Indicador do separador, etiquetas |
+| Contorno / separador | `#D5D0C6` / `#E4DFD5` | Pílulas por selecionar, divisões |
+| Lavandaria | `#D9822B` / texto `#8A4B12` | "a lavar", "a secar" |
 
-## Navegação proposta
+Letra: **DM Sans** no texto e na interface; **Fraunces** (serifada) só em títulos grandes. Ambas OFL, incluídas como assets estáticos em `assets/fonts/` (geradas com `tool/fonts/instance_fonts.py`). Não depender só da cor para comunicar estados.
 
-- **Planeador:** hoje, semana e confirmação de utilização.
-- **Guarda-roupa:** catálogo, filtros e acesso à lavandaria.
+## Navegação
+
+- **Hoje:** saudação, tempo, sugestão do dia, "Vesti hoje" e a semana.
+- **Armário:** peças por tipo, pesquisa, estados de lavandaria.
 - **Conjuntos:** composições guardadas e ocasiões.
 - **Estilo:** inspirações e preferências.
 

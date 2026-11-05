@@ -17,7 +17,7 @@ Dart puro em `lib/features/engine/domain/` (`DailyEngine.suggest`), sem UI nem p
 
 ### "Sugestões para hoje" (2026-11-03)
 
-Cartão no Planeador, por baixo de "Vesti hoje":
+Cartão em Hoje (antes Planeador), por baixo de "Vesti hoje":
 
 - **Tempo:** a previsão de hoje no local escolhido (sensação média, mínimo e máximo das 8 h às 20 h, chuva, vento) com a hora a que foi obtida, se é antiga e a atribuição; botão para atualizar.
   - Sem previsão, diz porquê e sugere sem regras de conforto.
