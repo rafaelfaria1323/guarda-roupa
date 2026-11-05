@@ -1,5 +1,5 @@
 import { assertEquals } from '@std/assert';
-import { type Deps, handle, type Quota, type Recorded } from './handler.ts';
+import { type Deps, handle, type InboxResult, type Quota, type Recorded } from './handler.ts';
 import { LIMITS } from './fetch_limited.ts';
 
 const fixture = (name: string) =>
@@ -348,4 +348,101 @@ Deno.test('página partilhada com link interno: recusada', async () => {
   );
   assertEquals((await res.json()).result, 'not_public');
   assertEquals(log.claims, 0);
+});
+
+// Atalho que envia logo para o fio: chave no cabeçalho, sem sessão.
+function inboxDeps(result: InboxResult | 'throw' = 'ok') {
+  const { d, log } = deps(() => {
+    throw new Error('a loja não pode ser pedida');
+  });
+  const sent: {
+    key: string;
+    apiKey: string | null;
+    url: string;
+    preview: unknown;
+    images: string[];
+  }[] = [];
+  d.submitInbox = (key, apiKey, e) => {
+    if (result === 'throw') return Promise.reject(new Error('rede'));
+    sent.push({ key, apiKey, ...e });
+    return Promise.resolve(result);
+  };
+  return { d, log, sent };
+}
+
+const toInbox = (body: unknown, key = 'fio_chave_de_teste_1234567890', query = '?apikey=pub') =>
+  new Request(`https://fn/import-product${query}`, {
+    method: 'POST',
+    headers: { 'x-fio-key': key, 'content-type': 'text/plain' },
+    body: typeof body === 'string' ? body : JSON.stringify(body),
+  });
+
+const zaraShortcut = {
+  fio: 1,
+  url: 'https://www.zara.com/pt/pt/casaco-p05479600.html',
+  ...sharedZara,
+};
+
+Deno.test('atalho direto: fica na caixa, sem pedir a loja nem quota com sessão', async () => {
+  const { d, log, sent } = inboxDeps();
+  const res = await handle(toInbox(zaraShortcut), d);
+  assertEquals(res.status, 200);
+  assertEquals((await res.text()).startsWith('Enviada para o fio: '), true);
+  assertEquals(log.fetched, []);
+  assertEquals(log.claims, 0);
+  assertEquals(sent.length, 1);
+  assertEquals(sent[0].key, 'fio_chave_de_teste_1234567890');
+  assertEquals(sent[0].apiKey, 'pub');
+  assertEquals(sent[0].url, zaraShortcut.url);
+  const preview = sent[0].preview as Record<string, unknown>;
+  assertEquals(preview.result, 'ok');
+  assertEquals(preview.via, 'shared');
+  assertEquals((preview.store as Record<string, unknown>).name, 'Zara');
+  assertEquals(sent[0].images.length > 0, true);
+});
+
+Deno.test('atalho direto: apikey no cabeçalho vale mais que no link', async () => {
+  const { d, sent } = inboxDeps();
+  const req = toInbox(zaraShortcut);
+  req.headers.set('apikey', 'hdr');
+  await handle(req, d);
+  assertEquals(sent[0].apiKey, 'hdr');
+});
+
+Deno.test('atalho direto: corpo errado ou sem produto', async () => {
+  const { d, sent } = inboxDeps();
+  assertEquals((await handle(toInbox('não é json'), d)).status, 400);
+  assertEquals((await handle(toInbox({ ...zaraShortcut, fio: 2 }), d)).status, 400);
+  assertEquals((await handle(toInbox({ fio: 1, ld: [], meta: [] }), d)).status, 400);
+  assertEquals(
+    (await handle(toInbox({ fio: 1, url: zaraShortcut.url, ld: 'x', meta: [] }), d)).status,
+    400,
+  );
+  assertEquals(
+    (await handle(toInbox({ ...zaraShortcut, url: 'https://localhost/a' }), d)).status,
+    400,
+  );
+  const empty = await handle(
+    toInbox({ fio: 1, url: zaraShortcut.url, title: 'ZARA', ld: [], meta: [] }),
+    d,
+  );
+  assertEquals(empty.status, 422);
+  assertEquals(sent.length, 0);
+});
+
+Deno.test('atalho direto: cada resposta da base tem a sua mensagem', async () => {
+  const cases: [InboxResult | 'throw', number][] = [
+    ['invalid_key', 401],
+    ['forbidden', 403],
+    ['rate_limited', 429],
+    ['full', 409],
+    ['throw', 503],
+  ];
+  for (const [result, status] of cases) {
+    const { d } = inboxDeps(result);
+    const res = await handle(toInbox(zaraShortcut), d);
+    assertEquals(res.status, status, result);
+    assertEquals(res.headers.get('content-type'), 'text/plain; charset=utf-8');
+    assertEquals((await res.text()).length > 0, true);
+  }
 });

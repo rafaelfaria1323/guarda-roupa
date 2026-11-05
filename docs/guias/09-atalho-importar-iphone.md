@@ -1,8 +1,17 @@
 # Atalho do iPhone: importar de lojas que bloqueiam
 
-Algumas lojas (Zara, Massimo Dutti) bloqueiam a leitura automática dos links ([estado por loja](../features/importacao-de-links.md#estado-por-loja-uso-real)). Com este atalho, és tu a abrir a peça no Safari. O atalho copia os dados que a página já mostra e o fio lê-os. Não se contorna nada: a loja não recebe pedidos do fio.
+Algumas lojas (Zara, Massimo Dutti) bloqueiam a leitura automática dos links ([estado por loja](../features/importacao-de-links.md#estado-por-loja-uso-real)). Com este atalho, és tu a abrir a peça no Safari. O atalho manda para o fio os dados que a página já mostra. Não se contorna nada: a loja não recebe pedidos do fio.
 
-Só é preciso criar o atalho uma vez (cerca de 3 minutos).
+A peça fica à espera no fio durante 7 dias, em **Enviadas pelo atalho**. O Armário avisa quando há alguma.
+
+Só é preciso criar o atalho uma vez (cerca de 5 minutos).
+
+## Antes: a chave do atalho
+
+1. No fio: **Adicionar peça → Importar de um link →** ícone do iPhone, no canto (**Atalho do iPhone**).
+2. Toca em **Criar chave**. Aparecem a **chave** e o **endereço**. A chave só se mostra agora: deixa este ecrã aberto até acabares o atalho (ou cria outra mais tarde).
+
+A chave só serve para pôr peças na tua caixa. Se o iPhone se perder, toca em **Desligar** ou **Nova chave**.
 
 ## Criar o atalho
 
@@ -28,16 +37,23 @@ Só é preciso criar o atalho uma vez (cerca de 3 minutos).
    completion(JSON.stringify({ fio: 1, url: location.href, title: document.title, ld, meta }));
    ```
 
-5. Adiciona **Copiar para a área de transferência** (*Copy to Clipboard*). Deve ficar com "Resultado do JavaScript".
-6. (Opcional) Adiciona **Mostrar notificação** (*Show Notification*) com o texto "Copiado. Abre o fio e carrega em Colar do atalho."
+5. Adiciona **Obter conteúdo do URL** (*Get Contents of URL*):
+   - no URL, cola o **endereço** do fio;
+   - toca na seta (**>**) e escolhe **Método: POST**;
+   - em **Cabeçalhos** (*Headers*), adiciona `x-fio-key` com a **chave** como valor;
+   - em **Corpo do pedido** (*Request Body*), escolhe **Ficheiro** (*File*) e, como ficheiro, **Resultado do JavaScript** (*JavaScript Result*).
+6. Adiciona **Mostrar notificação** (*Show Notification*) e põe como texto o **Conteúdo do URL** (*Contents of URL*). É aí que o fio responde, por exemplo "Enviada para o fio: CASACO EM PELE."
+
+### Sem chave: copiar e colar
+
+Em vez dos passos 5 e 6, adiciona **Copiar para a área de transferência** (*Copy to Clipboard*) com o "Resultado do JavaScript". Depois, no fio: **Adicionar peça → Importar de um link → Colar do atalho**. Também funciona colar o texto no campo do link e carregar em "Ler a página".
 
 ## Usar
 
 1. No Safari, abre a página **de uma peça** (não uma lista nem a página inicial).
-2. **Partilhar → Importar para o fio**. Na primeira vez, o iPhone pergunta se o atalho pode aceder ao site: **Permitir**.
-3. No fio: **Adicionar peça → Importar de um link → Colar do atalho**. Aparece a pré-visualização habitual: escolhe a variante e as fotos e confirma no formulário.
-
-Também funciona colar o texto no campo do link e carregar em "Ler a página".
+2. **Partilhar → Importar para o fio**. Na primeira vez, o iPhone pergunta se o atalho pode aceder ao site e ao fio: **Permitir**.
+3. Aparece a notificação "Enviada para o fio".
+4. No fio, o Armário mostra **N peças enviadas pelo atalho**. Toca, escolhe a peça, a variante e as fotos e confirma no formulário. Podes mandar várias seguidas e tratar delas depois.
 
 ## Se não funcionar
 
@@ -46,7 +62,10 @@ Também funciona colar o texto no campo do link e carregar em "Ler a página".
 | O atalho não aparece em Partilhar | Confirmar o passo 3 ("Mostrar na folha de partilha" e "Páginas web do Safari") |
 | Erro "não é permitido executar scripts" | Passo 1 |
 | Erro "a entrada não é uma página web" | No passo 4, "Página web" tem de ser a Entrada do atalho |
+| "A chave do atalho não é válida" | A chave foi trocada ou desligada. Cria uma nova no fio e põe-na no cabeçalho `x-fio-key` |
+| "Já tens 20 peças por importar" | Usa ou descarta algumas em Enviadas pelo atalho |
+| "O atalho não mandou a página" | No passo 5, o corpo tem de ser Ficheiro com o Resultado do JavaScript |
 | O fio diz "O que está copiado não veio do atalho" | Correr o atalho outra vez na página da peça. Outra cópia pelo meio apaga a do atalho |
 | O fio diz "A página não tem os dados do produto" | A loja mudou a página; mandar o link para afinar |
 
-O texto copiado só tem dados da página do produto: o link, o título, os dados estruturados e as meta tags. Não tem cookies nem nada da tua conta na loja.
+O que o atalho manda só tem dados da página do produto: o link, o título, os dados estruturados e as meta tags. Não tem cookies nem nada da tua conta na loja. O fio guarda a pré-visualização na caixa até a usares ou descartares (no máximo 7 dias); da chave só guarda uma impressão digital (hash).

@@ -57,7 +57,9 @@ Decisão do utilizador (2026-11-04): aceitar **qualquer link** de loja, não só
 
 Para as lojas que bloqueiam (Zara, Massimo Dutti), há um atalho do iPhone, "Importar para o fio" ([guia](../guias/09-atalho-importar-iphone.md)), criado com o utilizador a 2026-11-05. O script de teste leu os dados da Zara; o fluxo completo na app falta confirmar no iPhone.
 
-- **Como funciona:** o utilizador abre a peça no Safari e partilha-a com o atalho. O atalho corre um script na página já aberta e copia um JSON com `fio: 1`, o link, o título, os blocos JSON-LD e as meta tags `og:`/`twitter:`/`product:`. No fio, "Colar do atalho" (ou colar no campo do link) envia `{url, page}` à função.
+- **Como funciona:** o utilizador abre a peça no Safari e partilha-a com o atalho. O atalho corre um script na página já aberta, que produz um JSON com `fio: 1`, o link, o título, os blocos JSON-LD e as meta tags `og:`/`twitter:`/`product:`. Há dois modos:
+  - **Envia logo para o fio (por omissão):** o atalho faz POST do JSON à função com a chave pessoal no cabeçalho `x-fio-key` e mostra a resposta numa notificação. A peça fica na caixa **Enviadas pelo atalho** (ver abaixo).
+  - **Copiar e colar:** o atalho copia o JSON e, no fio, "Colar do atalho" (ou colar no campo do link) envia `{url, page}` à função com a sessão.
 - **Não se contorna nada:** a página foi aberta pelo browser do utilizador e a função não pede nada à loja. Confirmado com a Zara: o Safari mostra o `ProductGroup` completo em JSON-LD e o Open Graph.
 - **Na função** (`shared_page.ts`):
   - o `page` é validado: até 10 blocos JSON-LD e 200 kB, até 80 meta tags e o título limitado;
@@ -66,6 +68,16 @@ Para as lojas que bloqueiam (Zara, Massimo Dutti), há um atalho do iPhone, "Imp
 - **Imagens:** `record_import` com o resultado `shared` autoriza as imagens oferecidas (que se copiam depois como sempre; as da Zara, em `static.zara.net`, copiam-se sem bloqueio). **Não mexe nas contagens do domínio**, porque o perfil diz se o *link* funciona sozinho. A etiqueta da pré-visualização diz "Zara · pelo atalho".
 - **Limite conhecido:** como os dados vêm do cliente, uma conta da allowlist podia oferecer a si própria imagens de qualquer site público. É o mesmo limite de `record_import` descrito acima: as regras de rede, a quota e a allowlist (só o proprietário) mantêm-se.
 - **Só iPhone:** no Android ficaria para um browser dentro da app, que não está feito.
+
+#### Caixa "Enviadas pelo atalho"
+
+O atalho não tem sessão, por isso autentica-se com uma **chave pessoal** criada na app (Importar de um link → Atalho do iPhone). A chave (`fio_` + 244 bits aleatórios) só se mostra quando é criada; a base guarda o SHA-256. "Nova chave" substitui a anterior e "Desligar" apaga-a.
+
+- **Pedido:** `POST /functions/v1/import-product?apikey=<chave publicável>` com `x-fio-key` e o JSON do script. A `apikey` vai no link porque é configuração pública e o atalho não tem outra forma de a ter.
+- **Na função:** valida o JSON (as mesmas regras do `page`), passa o link pelas regras de rede, lê o produto do HTML remontado e entrega a pré-visualização a `submit_import_inbox()` como anónimo. Responde em **texto simples em português**, para a notificação do atalho: "Enviada para o fio: …", chave inválida (401), sem acesso (403), quota (429), caixa cheia (409), página sem produto (422).
+- **Na base** (`submit_import_inbox`): a chave identifica o dono; vale a allowlist dele e **a mesma quota** das importações com sessão (30/hora, 200/dia). No máximo 20 peças à espera; cada uma expira ao fim de 7 dias. As imagens oferecidas ficam autorizadas enquanto a peça espera.
+- **Na app:** o Armário mostra "N peças enviadas pelo atalho do iPhone"; tocar abre a peça nova com a importação aberta. As peças da caixa aparecem no topo de Importar de um link; tocar mostra a pré-visualização (sem novo pedido), "Usar na peça nova" ou "Preencher à mão" tiram-na da caixa e o caixote descarta-a.
+- **Riscos:** quem tiver a chave só consegue pôr peças na caixa do dono, dentro da quota e do limite de 20; não lê nada. Uma chave perdida desliga-se na app.
 
 ### Estado por loja (uso real)
 

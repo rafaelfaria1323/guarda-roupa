@@ -245,6 +245,69 @@ abstract interface class ProductImporter {
 
   /// Copia uma imagem de [ProductPreview.images].
   Future<Result<Uint8List, ImportFailure>> image(String url);
+
+  /// As peças que o atalho do iPhone mandou e esperam na caixa "Por
+  /// importar", da mais recente para a mais antiga.
+  Future<Result<List<InboxItem>, ImportFailure>> inbox();
+
+  /// Tira uma peça da caixa (usada ou descartada).
+  Future<Result<void, ImportFailure>> discardInbox(String id);
+
+  /// Há uma chave do atalho ativa?
+  Future<Result<ShortcutKeyStatus, ImportFailure>> shortcutKeyStatus();
+
+  /// Nova chave do atalho (a anterior deixa de servir). Só se vê agora.
+  Future<Result<String, ImportFailure>> createShortcutKey();
+
+  /// Desliga o atalho: a chave deixa de servir.
+  Future<Result<void, ImportFailure>> revokeShortcutKey();
+
+  /// O endereço para onde o atalho manda a página.
+  String get shortcutEndpoint;
+}
+
+/// Uma peça mandada pelo atalho, já lida, à espera na caixa.
+final class InboxItem {
+  const InboxItem({
+    required this.id,
+    required this.preview,
+    required this.createdAt,
+  });
+
+  final String id;
+  final ProductPreview preview;
+  final DateTime createdAt;
+
+  /// `null` se a linha não tiver a forma esperada.
+  static InboxItem? fromJson(Map<String, Object?> json) {
+    final id = json['id'];
+    final preview = json['preview'];
+    final created = DateTime.tryParse('${json['created_at']}');
+    if (id is! String || preview is! Map || created == null) return null;
+    final p = ProductPreview.fromJson(preview.cast<String, Object?>());
+    if (p == null) return null;
+    return InboxItem(id: id, preview: p, createdAt: created);
+  }
+}
+
+/// O estado da chave do atalho, sem a chave (só o hash fica guardado).
+final class ShortcutKeyStatus {
+  const ShortcutKeyStatus({
+    required this.active,
+    this.createdAt,
+    this.lastUsedAt,
+  });
+
+  final bool active;
+  final DateTime? createdAt;
+  final DateTime? lastUsedAt;
+
+  static ShortcutKeyStatus fromJson(Map<String, Object?> json) =>
+      ShortcutKeyStatus(
+        active: json['active'] == true,
+        createdAt: DateTime.tryParse('${json['created_at']}'),
+        lastUsedAt: DateTime.tryParse('${json['last_used_at']}'),
+      );
 }
 
 /// O que segue para o formulário da peça, já escolhido pelo utilizador.

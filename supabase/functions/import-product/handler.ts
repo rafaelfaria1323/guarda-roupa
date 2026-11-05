@@ -8,6 +8,9 @@ import { checkPublic, type Resolver } from './url_guard.ts';
 /** `ok`, ou porque não se pode usar agora. */
 export type Quota = 'ok' | 'forbidden' | 'rate_limited' | 'unauthorized';
 
+/** Resposta de `submit_import_inbox`. */
+export type InboxResult = 'ok' | 'invalid_key' | 'forbidden' | 'rate_limited' | 'full';
+
 /** Estado do site, a partir do perfil que a base atualiza sozinha. */
 export type SiteStatus = 'new' | 'testing' | 'works' | 'failing';
 
@@ -35,6 +38,15 @@ export interface Deps {
     apiKey: string | null,
     url: string,
   ) => Promise<boolean>;
+  /**
+   * Entrega na caixa "Por importar" do dono da chave (`submit_import_inbox`),
+   * como anónimo: a chave do atalho é a autenticação.
+   */
+  submitInbox?: (
+    key: string,
+    apiKey: string | null,
+    entry: { url: string; preview: unknown; images: string[] },
+  ) => Promise<InboxResult>;
   fetchFn?: (input: URL, init: RequestInit) => Promise<Response>;
   resolve?: Resolver;
 }
@@ -64,6 +76,9 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
   if (req.method !== 'POST') {
     return json({ result: 'error', reason: 'method' }, 405);
   }
+
+  const inboxKey = req.headers.get('x-fio-key');
+  if (inboxKey != null) return await toInbox(req, inboxKey, deps);
 
   const authorization = req.headers.get('authorization') ?? '';
   if (!authorization.toLowerCase().startsWith('bearer ')) {
@@ -221,4 +236,76 @@ async function fromShared(
   };
   if (product == null) return json({ result: 'no_metadata', store, url: url.href });
   return json({ result: 'ok', store, url: url.href, product, via: 'shared' });
+}
+
+/** Resposta para a notificação do atalho: texto simples, em português. */
+function say(text: string, status = 200): Response {
+  return new Response(text, {
+    status,
+    headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' },
+  });
+}
+
+/**
+ * O atalho do iPhone manda a página aberta no Safari, com a chave pessoal
+ * no cabeçalho `x-fio-key` (sem sessão). A pré-visualização fica na caixa
+ * "Por importar" do dono; a app trata do resto. A `apikey` pública do
+ * projeto pode vir no link (`?apikey=`), porque o atalho não tem outra.
+ */
+async function toInbox(req: Request, key: string, deps: Deps): Promise<Response> {
+  if (req.method !== 'POST') return say('Usa o atalho a partir do Safari.', 405);
+  if (deps.submitInbox == null) return say('O fio não está disponível agora.', 503);
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return say('O atalho não mandou a página. Corre-o a partir do Safari.', 400);
+  }
+  const fields = typeof body === 'object' && body != null ? body as Record<string, unknown> : {};
+  const page = readSharedPage(fields);
+  if (fields.fio !== 1 || typeof fields.url !== 'string' || page == null) {
+    return say('O atalho não mandou a página. Confirma o script no atalho.', 400);
+  }
+  const check = await checkPublic(fields.url, deps.resolve);
+  if (!check.ok) return say('Este link não se pode importar.', 400);
+
+  const product = parseProduct(sharedPageHtml(page), check.url);
+  if (product == null) {
+    return say('A página não tem os dados do produto. Abre a página de uma peça.', 422);
+  }
+  const preview = {
+    result: 'ok',
+    store: {
+      id: check.url.hostname,
+      name: siteName(check.url.hostname),
+      status: 'new',
+      okCount: 0,
+    },
+    url: check.url.href,
+    product,
+    via: 'shared',
+  };
+  const apiKey = req.headers.get('apikey') ?? new URL(req.url).searchParams.get('apikey');
+  let result: InboxResult;
+  try {
+    result = await deps.submitInbox(key, apiKey, {
+      url: check.url.href,
+      preview,
+      images: offeredImages(product),
+    });
+  } catch {
+    return say('O fio não está disponível agora. Tenta daqui a pouco.', 503);
+  }
+  switch (result) {
+    case 'ok':
+      return say(`Enviada para o fio: ${product.name ?? siteName(check.url.hostname)}.`);
+    case 'invalid_key':
+      return say('A chave do atalho não é válida. Cria uma nova no fio.', 401);
+    case 'forbidden':
+      return say('Esta conta não tem acesso ao fio.', 403);
+    case 'rate_limited':
+      return say('Muitas importações seguidas. Tenta mais tarde.', 429);
+    case 'full':
+      return say('Já tens 20 peças por importar. Trata delas no fio primeiro.', 409);
+  }
 }

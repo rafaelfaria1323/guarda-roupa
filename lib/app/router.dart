@@ -30,6 +30,9 @@ abstract final class AppRoutes {
   static const planner = '/planeador';
   static const wardrobe = '/guarda-roupa';
   static const newGarment = '/guarda-roupa/nova';
+
+  /// Peça nova a partir das enviadas pelo atalho do iPhone.
+  static const newGarmentFromShortcut = '$newGarment?atalho=1';
   static String garment(GarmentId id) => '/guarda-roupa/peca/${id.value}';
   static String editGarment(GarmentId id) =>
       '/guarda-roupa/peca/${id.value}/editar';
@@ -95,7 +98,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Formulários fora do shell: ocupam o ecrã inteiro, com botão de voltar.
       GoRoute(
         path: AppRoutes.newGarment,
-        builder: (context, state) => const GarmentFormScreen(),
+        builder: (context, state) => GarmentFormScreen(
+          openImport: state.uri.queryParameters['atalho'] == '1',
+        ),
       ),
       GoRoute(
         path: '/guarda-roupa/peca/:id',

@@ -64,6 +64,43 @@ final class FakeImporter implements ProductImporter {
     images.add(url);
     return Ok(testPng());
   }
+
+  final inboxItems = <InboxItem>[];
+  final discarded = <String>[];
+  ShortcutKeyStatus keyStatus = const ShortcutKeyStatus(active: false);
+  var keysCreated = 0;
+
+  @override
+  Future<Result<List<InboxItem>, ImportFailure>> inbox() async =>
+      Ok([...inboxItems]);
+
+  @override
+  Future<Result<void, ImportFailure>> discardInbox(String id) async {
+    discarded.add(id);
+    inboxItems.removeWhere((i) => i.id == id);
+    return const Ok(null);
+  }
+
+  @override
+  Future<Result<ShortcutKeyStatus, ImportFailure>> shortcutKeyStatus() async =>
+      Ok(keyStatus);
+
+  @override
+  Future<Result<String, ImportFailure>> createShortcutKey() async {
+    keysCreated++;
+    keyStatus = ShortcutKeyStatus(active: true, createdAt: DateTime(2026));
+    return Ok('fio_chave$keysCreated');
+  }
+
+  @override
+  Future<Result<void, ImportFailure>> revokeShortcutKey() async {
+    keyStatus = const ShortcutKeyStatus(active: false);
+    return const Ok(null);
+  }
+
+  @override
+  String get shortcutEndpoint =>
+      'https://x.supabase.co/functions/v1/import-product?apikey=pub';
 }
 
 Future<Map<String, Object?>> created(
@@ -263,6 +300,118 @@ void main() {
     expect(importer.previews, isEmpty);
     expect(importer.shared.single.url, url);
     expect(find.text('Camisa de linho'), findsOneWidget);
+  });
+
+  testWidgets('atalho direto: aviso no Armário, abre a caixa e usa a peça', (
+    tester,
+  ) async {
+    final importer = FakeImporter()
+      ..inboxItems.add(
+        InboxItem(id: 'i1', preview: sample, createdAt: DateTime(2026)),
+      );
+    final app = await pumpApp(
+      tester,
+      overrides: [productImporterProvider.overrideWithValue(importer)],
+    );
+    await openWardrobe(tester);
+    expect(find.text('1 peça enviada pelo atalho do iPhone'), findsOneWidget);
+
+    // O aviso abre a peça nova já com a importação aberta.
+    await tester.tap(find.byKey(const Key('wardrobe-inbox')));
+    await settle(tester);
+    expect(find.byType(ImportLinkScreen), findsOneWidget);
+    expect(find.text('1 peça enviada pelo atalho'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('import-inbox-i1')));
+    await tester.pumpAndSettle();
+    expect(importer.previews, isEmpty, reason: 'já vem lida');
+    expect(find.text('Zara · site novo'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('import-use')),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byType(ImportLinkScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.ensureVisible(find.byKey(const Key('import-use')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('import-use')));
+    await settleUntil(tester, find.byKey(const Key('garment-save')));
+    await settle(tester);
+    expect(importer.discarded, ['i1']);
+
+    await chooseCategoryAndSave(tester);
+    final payload = await created(tester, app.db);
+    expect(payload['name'], 'Camisa de linho');
+    expect(
+      find.byKey(const Key('wardrobe-inbox')),
+      findsNothing,
+      reason: 'a caixa ficou vazia',
+    );
+  });
+
+  testWidgets('atalho direto: descartar tira a peça da caixa', (tester) async {
+    final importer = FakeImporter()
+      ..inboxItems.addAll([
+        InboxItem(id: 'i1', preview: sample, createdAt: DateTime(2026)),
+        InboxItem(id: 'i2', preview: sample, createdAt: DateTime(2026)),
+      ]);
+    await pumpApp(
+      tester,
+      overrides: [productImporterProvider.overrideWithValue(importer)],
+    );
+    await openWardrobe(tester);
+    await tester.tap(find.text('Adicionar peça'));
+    await settle(tester);
+    await tester.tap(find.byKey(const Key('garment-import')));
+    await tester.pumpAndSettle();
+    expect(find.text('2 peças enviadas pelo atalho'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('import-inbox-discard-i2')));
+    await tester.pumpAndSettle();
+    expect(importer.discarded, ['i2']);
+    expect(find.text('1 peça enviada pelo atalho'), findsOneWidget);
+  });
+
+  testWidgets('chave do atalho: criar, mostrar uma vez, trocar e desligar', (
+    tester,
+  ) async {
+    final importer = FakeImporter();
+    await pumpApp(
+      tester,
+      overrides: [productImporterProvider.overrideWithValue(importer)],
+    );
+    await openWardrobe(tester);
+    await tester.tap(find.text('Adicionar peça'));
+    await settle(tester);
+    await tester.tap(find.byKey(const Key('garment-import')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('import-shortcut-setup')));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Desligado. Cria uma chave para o atalho.'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const Key('shortcut-create')));
+    await tester.pumpAndSettle();
+    expect(find.text('fio_chave1'), findsOneWidget);
+    expect(find.text(importer.shortcutEndpoint), findsOneWidget);
+    expect(find.text('Ligado. Ainda não foi usado.'), findsOneWidget);
+
+    // Trocar pede confirmação: a chave anterior deixa de servir.
+    await tester.tap(find.byKey(const Key('shortcut-create')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('shortcut-replace-confirm')));
+    await tester.pumpAndSettle();
+    expect(find.text('fio_chave2'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('shortcut-revoke')));
+    await tester.pumpAndSettle();
+    expect(find.text('fio_chave2'), findsNothing);
+    expect(importer.keyStatus.active, isFalse);
   });
 
   testWidgets('sem Supabase configurado, o botão não aparece', (tester) async {
