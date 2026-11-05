@@ -156,10 +156,18 @@ ThemeData buildAppTheme() {
       backgroundColor: Colors.transparent,
       selectedColor: AppColors.onSurface,
       checkmarkColor: Colors.white,
+      // A cor segue o estado: em FilterChip o rótulo selecionado não usa
+      // secondaryLabelStyle e ficaria preto sobre preto.
       labelStyle: text.labelMedium!.copyWith(
         fontSize: 14,
         fontWeight: FontWeight.w600,
-        color: AppColors.onSurface,
+        color: WidgetStateColor.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? Colors.white
+              : states.contains(WidgetState.disabled)
+              ? AppColors.onSurfaceMuted
+              : AppColors.onSurface,
+        ),
       ),
       secondaryLabelStyle: text.labelMedium!.copyWith(
         fontSize: 14,

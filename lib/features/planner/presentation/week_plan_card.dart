@@ -17,6 +17,7 @@ import '../../wear/presentation/today_wear_card.dart';
 import '../application/plan_providers.dart';
 import '../domain/plan_entry.dart';
 import '../domain/plan_repository.dart';
+import 'week_thread.dart';
 
 /// "Esta semana" (incremento 6, P-19): um cartão por dia com a ocasião, se
 /// é provisório, as peças e o estado. Planear a semana só propõe; aceitar
@@ -57,32 +58,37 @@ class _WeekPlanCardState extends ConsumerState<WeekPlanCard> {
     final search = ref.watch(lastWeekSearchProvider);
     final searched = {for (final d in search?.days ?? <DayPlan>[]) d.day: d};
 
-    return Card(
+    final today = todayFrom(ref.watch(clockProvider));
+    final garments = {
+      for (final g in ref.watch(allGarmentsProvider).value ?? <Garment>[])
+        g.id: g,
+    };
+
+    return Column(
       key: const Key('week-plan'),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            Text(l10n.weekTitle, style: theme.textTheme.titleMedium),
-            const SizedBox(height: 4),
-            Text(l10n.weekHint, style: theme.textTheme.bodySmall),
-            const SizedBox(height: 8),
-            FilledButton.tonalIcon(
+            Expanded(
+              child: Text(l10n.weekTitle, style: theme.textTheme.titleLarge),
+            ),
+            TextButton(
               key: const Key('week-generate'),
               onPressed: _busy || view == null ? null : _generate,
-              icon: const Icon(Icons.auto_awesome_outlined),
-              label: Text(l10n.weekGenerate),
+              child: Text(l10n.weekGenerate),
             ),
-            const SizedBox(height: 8),
-            if (view == null)
-              const Center(child: CircularProgressIndicator())
-            else
-              for (final (i, d) in view.indexed)
-                _DayTile(index: i, view: d, search: searched[d.day]),
           ],
         ),
-      ),
+        if (view == null)
+          const Center(child: CircularProgressIndicator())
+        else ...[
+          WeekThread(days: view, today: today, garments: garments),
+          const SizedBox(height: 8),
+          for (final (i, d) in view.indexed)
+            _DayTile(index: i, view: d, search: searched[d.day]),
+        ],
+      ],
     );
   }
 }
@@ -194,11 +200,11 @@ class _DayTile extends ConsumerWidget {
       padding: const EdgeInsets.only(top: 8),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          border: Border.all(color: theme.colorScheme.outlineVariant),
-          borderRadius: BorderRadius.circular(12),
+          color: theme.colorScheme.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

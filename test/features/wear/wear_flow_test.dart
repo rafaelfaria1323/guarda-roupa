@@ -14,7 +14,7 @@ Finder keyStarting(String prefix) => find.byWidgetPredicate(
 );
 
 Finder chip(String text) =>
-    find.descendant(of: find.byType(Chip), matching: find.text(text));
+    find.descendant(of: keyStarting('wear-event-'), matching: find.text(text));
 
 Finder pick(String text) => find.descendant(
   of: find.byType(CheckboxListTile),
@@ -29,6 +29,17 @@ Future<void> openToday(WidgetTester tester) async {
     ),
   );
   await settle(tester);
+  await showWearToday(tester);
+}
+
+/// "Vesti hoje" fica por baixo da sugestão do dia.
+Future<void> showWearToday(WidgetTester tester) async {
+  await tester.scrollUntilVisible(
+    find.byKey(const Key('wear-today')),
+    200,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.pumpAndSettle();
 }
 
 Future<void> save(WidgetTester tester) async {
@@ -99,6 +110,16 @@ void main() {
 
     // Corrigir: afinal foi a ganga.
     await openToday(tester);
+    await tester.scrollUntilVisible(
+      keyStarting('wear-correct-'),
+      100,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await Scrollable.ensureVisible(
+      tester.element(keyStarting('wear-correct-')),
+      alignment: 0.3,
+    );
+    await tester.pumpAndSettle();
     await tester.tap(keyStarting('wear-correct-'));
     await settle(tester);
     expect(find.text('Corrigir utilização'), findsOne);
@@ -110,6 +131,16 @@ void main() {
     expect(chip('Branca'), findsNothing);
 
     // Desfazer.
+    await tester.scrollUntilVisible(
+      keyStarting('wear-undo-'),
+      100,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await Scrollable.ensureVisible(
+      tester.element(keyStarting('wear-undo-')),
+      alignment: 0.3,
+    );
+    await tester.pumpAndSettle();
     await tester.tap(keyStarting('wear-undo-'));
     await settleUntil(
       tester,

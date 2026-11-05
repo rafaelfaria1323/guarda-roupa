@@ -20,7 +20,7 @@ Uma pendência não deve desaparecer por estar descrita em Markdown. Fechar apen
 | P-09 | Perfis e desempenho | Escolher dispositivos de referência e orçamento mensurável | Gate de desempenho |
 | P-10 | Automação E2E | POC Patrol Android/Chromium; guião iPhone real, sem equivalência fictícia | Evidência por plataforma |
 | P-11 | Recuperação com cloud | Definir substituição/recuperação sem replay de eventos nem ressurreição silenciosa | Recuperação sobre conta existente |
-| P-12 | Lojas suportadas — **Decidido 2026-11-04:** qualquer site público, com perfil por domínio que se atualiza sozinho (antes: Zara, Uniqlo, Pull&Bear e Bershka); função em Supabase Edge Functions | **Função e fluxo na app feitos; função publicada a 2026-11-04**; falta o [smoke](../tool/import/README.md) com links reais (corre no Mac; a cloud não chega às lojas) | Dizer que uma loja funciona |
+| P-12 | Lojas suportadas — **Decidido 2026-11-04:** qualquer site público, com perfil por domínio que se atualiza sozinho (antes: Zara, Uniqlo, Pull&Bear e Bershka); função em Supabase Edge Functions | **Função e fluxo na app feitos; função publicada a 2026-11-04**; falta o [smoke](../tool/import/README.md) com links reais (corre no Mac; a cloud não chega às lojas). **Teste do utilizador a 2026-11-05 na PWA:** Uniqlo importa; **Zara e Massimo Dutti falham** (ambas Inditex; provável bloqueio a pedidos automáticos ou página montada por JavaScript), por investigar | Dizer que uma loja funciona |
 | P-13 | Pinterest | Confirmar permissões/API; link não garante imagem | Importação automática de Pins |
 | P-14 | Modelo IA — **POC aprovada pelo utilizador (2026-11-04)** ([IA local](features/ia-local.md#poc-implementada-2026-11-04)): runtime `flutter_onnxruntime`. Feitos os dois, descarregados a pedido em Definições › IA local:
 - recorte U²-Netp (Apache-2.0, 4,6 MB), usado nas cores pela foto; verificado só com imagens sintéticas;
@@ -89,7 +89,7 @@ Idempotência de retries e da mesma entrada de plano não deduplica magicamente 
 | P-17 | Limites de conforto (proposta: 22/14 °C, vento 30 km/h) | Utilizador | 2026-11-03 | Decidido; editável nas Definições (2026-11-04) |
 | P-18 | Localização Torres Vedras, Europe/Lisbon, sem GPS | Utilizador | 2026-11-03 | Decidido |
 | P-19 | 7 dias; úteis em trabalho (smart casual), fim de semana a decidir e provisório | Utilizador | 2026-11-04 | Decidido |
-| P-22 | Nome **fio**, logótipo "f" de fio e visual v2 (diário pessoal, não loja) | Utilizador | 2026-11-05 | Tema, nome e ícone aplicados; ecrãs Hoje, Armário e Peça por redesenhar ([design](design-e-fluxos.md)) |
+| P-22 | Nome **fio**, logótipo "f" de fio e visual v2 (diário pessoal, não loja) | Utilizador | 2026-11-05 | Tema, nome, ícone e ecrã Hoje aplicados; Armário e Peça por redesenhar ([design](design-e-fluxos.md)) |
 | P-04 | ADR-008: ordem conservadora de disponibilidade, edições de plano concorrentes como proposta, logout com pendências bloqueado | Utilizador | 2026-11-03 | Decidido; validação na POC |
 
 ## Registo futuro de fecho

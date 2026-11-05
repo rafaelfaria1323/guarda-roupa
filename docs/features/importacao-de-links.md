@@ -52,6 +52,14 @@ Decisão do utilizador (2026-11-04): aceitar **qualquer link** de loja, não só
 - **Por fazer**: o smoke com links reais ([tool/import/README.md](../../tool/import/README.md)). O ambiente de desenvolvimento na cloud não chega aos sites das lojas, por isso corre no Mac. Sites que bloqueiam pedidos automáticos (anti-bot) vão continuar a falhar: o perfil mostra-o como “costuma falhar” e fica a introdução manual.
 - **Próximo passo possível**: usar as correções do utilizador (categoria escolhida, nome editado) para sugerir a categoria da próxima peça do mesmo site. Fica para depois: precisa de mais dados reais.
 
+### Estado por loja (uso real)
+
+| Loja | Resultado | Data | Notas |
+|---|---|---|---|
+| Uniqlo | Importa | 2026-11-05 | Testado pelo utilizador na PWA (iPhone) |
+| Zara | Falha | 2026-11-05 | Inditex; por investigar (provável bloqueio a pedidos automáticos ou dados só via JavaScript/API interna) |
+| Massimo Dutti | Falha | 2026-11-05 | Inditex, mesma plataforma da Zara; a correção deve servir às duas |
+
 ## Objetivo
 
 Colar o link de um produto de qualquer loja, obter dados úteis e confirmar a peça realmente possuída. Cada site vai sendo conhecido pelo uso (perfil por domínio); nenhum é prometido como suportado.

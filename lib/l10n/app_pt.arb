@@ -502,7 +502,7 @@
     }
   },
   "close": "Fechar",
-  "wearTodayTitle": "Hoje",
+  "wearTodayTitle": "Hoje vestiste",
   "wearDay": "{date}",
   "@wearDay": {
     "placeholders": {
@@ -679,7 +679,6 @@
   },
   "weatherAttribution": "Dados meteorológicos: Open-Meteo.com",
   "suggestionsTitle": "Sugestões para hoje",
-  "suggestionsHint": "Só com peças que tens e estão disponíveis. Escolher uma sugestão não conta como uso: só conta depois de guardar em \"Vesti hoje\".",
   "suggestionsAnyOccasion": "Qualquer ocasião",
   "suggestionsInsufficient": "Ainda não há peças para um conjunto: junta um top e uma parte de baixo, ou uma peça única.",
   "suggestionsNotFound": "Nenhum conjunto serve hoje com estas escolhas.",
@@ -712,14 +711,6 @@
   },
   "suggestionsWearThis": "Vou vestir isto",
   "suggestionsMore": "Outras sugestões",
-  "suggestionNumber": "Sugestão {n}",
-  "@suggestionNumber": {
-    "placeholders": {
-      "n": {
-        "type": "String"
-      }
-    }
-  },
   "weatherLoading": "A obter a previsão…",
   "weatherNone": "Sem previsão ({gap, select, unavailable{sem ligação ou o pedido falhou} outOfRange{fora do horizonte} other{—}}). As sugestões não têm em conta o tempo.",
   "@weatherNone": {
@@ -829,8 +820,7 @@
   },
   "noteWash": "lavar recomendado",
   "noteOptionalLayer": "se quiseres",
-  "weekTitle": "Esta semana",
-  "weekHint": "Os próximos 7 dias. Os dias úteis começam em «Trabalho (smart casual)»; o fim de semana fica a decidir e pode ficar vazio. Um plano nunca conta como uso: só «Vesti hoje».",
+  "weekTitle": "A tua semana",
   "weekGenerate": "Planear a semana",
   "weekGenerated": "{proposed, plural, =0{Nenhum dia novo proposto.} =1{1 dia proposto.} other{{proposed} dias propostos.}} {notFound, plural, =0{} =1{1 dia sem conjunto possível.} other{{notFound} dias sem conjunto possível.}}",
   "@weekGenerated": {
@@ -1137,5 +1127,44 @@
       }
     }
   },
-  "similarGarmentsFailed": "Não foi possível analisar a imagem. As peças não mudaram."
+  "similarGarmentsFailed": "Não foi possível analisar a imagem. As peças não mudaram.",
+  "todayGreeting": "{part, select, morning{Bom dia.} afternoon{Boa tarde.} other{Boa noite.}}",
+  "@todayGreeting": {
+    "description": "Saudação no topo de Hoje, conforme a hora.",
+    "placeholders": {
+      "part": {
+        "type": "String"
+      }
+    }
+  },
+  "suggestionsShowAnother": "Mostrar outro",
+  "suggestionsWhy": "Porquê este",
+  "suggestionsWhyHide": "Esconder detalhes",
+  "suggestionOf": "Sugestão {n} de {total}",
+  "@suggestionOf": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "weekdayShort": "{d, select, 1{seg} 2{ter} 3{qua} 4{qui} 5{sex} 6{sáb} other{dom}}",
+  "@weekdayShort": {
+    "placeholders": {
+      "d": {
+        "type": "String"
+      }
+    }
+  },
+  "weekThreadLabel": "Semana: {planned} de 7 dias com peças escolhidas",
+  "@weekThreadLabel": {
+    "placeholders": {
+      "planned": {
+        "type": "int"
+      }
+    }
+  }
 }

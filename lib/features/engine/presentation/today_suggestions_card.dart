@@ -3,9 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
+import '../../../app/theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../wardrobe/domain/garment_attributes.dart';
-import '../../wardrobe/presentation/garment_photo_view.dart';
+import '../../wardrobe/presentation/garment_cutout.dart';
 import '../../wear/presentation/today_wear_card.dart';
 import '../../weather/domain/weather.dart';
 import '../application/suggestion_providers.dart';
@@ -27,46 +28,47 @@ class TodaySuggestionsCard extends ConsumerWidget {
     final choices = ref.watch(suggestionChoicesProvider);
     final notifier = ref.read(suggestionChoicesProvider.notifier);
 
-    return Card(
+    return Column(
       key: const Key('today-suggestions'),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.suggestionsTitle, style: theme.textTheme.titleMedium),
-            const SizedBox(height: 4),
-            Text(l10n.suggestionsHint, style: theme.textTheme.bodySmall),
-            const SizedBox(height: 12),
-            const _WeatherLine(),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 4,
-              children: [
-                ChoiceChip(
-                  key: const Key('suggestions-occasion-any'),
-                  label: Text(l10n.suggestionsAnyOccasion),
-                  selected: choices.occasion == null,
-                  onSelected: (_) => notifier.occasion(null),
-                ),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _WeatherLine(),
+        const SizedBox(height: 22),
+        Text(l10n.suggestionsTitle, style: theme.textTheme.titleLarge),
+        const SizedBox(height: 8),
+        // Uma só linha que desliza: a ocasião não deve ocupar o ecrã.
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          clipBehavior: Clip.none,
+          child: Row(
+            children: [
+              for (final (o, key, label) in [
+                (null, 'any', l10n.suggestionsAnyOccasion),
                 for (final o in Occasion.values)
-                  ChoiceChip(
-                    key: Key('suggestions-occasion-${o.id}'),
-                    label: Text(l10n.occasionLabel(o.id)),
+                  (o, o.id, l10n.occasionLabel(o.id)),
+              ])
+                Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: ChoiceChip(
+                    key: Key('suggestions-occasion-$key'),
+                    showCheckmark: false,
+                    label: Text(label),
                     selected: choices.occasion == o,
                     onSelected: (_) => notifier.occasion(o),
                   ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (result == null)
-              const Center(child: CircularProgressIndicator())
-            else
-              _Result(result: result),
-          ],
+                ),
+            ],
+          ),
         ),
-      ),
+        const SizedBox(height: 8),
+        if (result == null)
+          const Padding(
+            padding: EdgeInsets.all(24),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else
+          _Result(result: result),
+      ],
     );
   }
 }
@@ -82,6 +84,13 @@ class _WeatherLine extends ConsumerWidget {
     final choices = ref.watch(suggestionChoicesProvider);
     final notifier = ref.read(suggestionChoicesProvider.notifier);
     final manual = choices.manual;
+    final lead = theme.textTheme.bodyLarge?.copyWith(
+      height: 1.45,
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+    final small = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
 
     if (manual != null) {
       return Column(
@@ -93,6 +102,7 @@ class _WeatherLine extends ConsumerWidget {
               manual.rain ? 'yes' : 'no',
             ),
             key: const Key('weather-manual'),
+            style: lead,
           ),
           const SizedBox(height: 4),
           Wrap(
@@ -126,16 +136,15 @@ class _WeatherLine extends ConsumerWidget {
     }
 
     final report = ref.watch(todayWeatherProvider);
-    final manualButton = TextButton.icon(
+    final manualButton = TextButton(
       key: const Key('weather-manual-set'),
       onPressed: () => notifier.manual(const ManualWeather(ComfortBand.mild)),
-      icon: const Icon(Icons.edit_outlined),
-      label: Text(l10n.weatherManualSet),
+      child: Text(l10n.weatherManualSet),
     );
     final refreshButton = IconButton(
       key: const Key('weather-refresh'),
       tooltip: l10n.weatherRefresh,
-      icon: const Icon(Icons.refresh),
+      icon: const Icon(Icons.refresh, size: 20),
       onPressed: () => refreshTodayWeather(ref),
     );
 
@@ -149,7 +158,7 @@ class _WeatherLine extends ConsumerWidget {
             dimension: 16,
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
-          Text(l10n.weatherLoading),
+          Text(l10n.weatherLoading, style: lead),
           manualButton,
         ],
       );
@@ -162,6 +171,7 @@ class _WeatherLine extends ConsumerWidget {
           Text(
             l10n.weatherNone(value.gap!.name),
             key: const Key('weather-none'),
+            style: lead,
           ),
           Wrap(
             crossAxisAlignment: WrapCrossAlignment.center,
@@ -188,14 +198,16 @@ class _WeatherLine extends ConsumerWidget {
             n(weather.windMaxKmh),
           ),
           key: const Key('weather-summary'),
+          style: lead,
         ),
+        const SizedBox(height: 2),
         Text(
           '${l10n.weatherFetched(value.freshness!.name, when)} · '
           '${l10n.weatherAttribution}',
           key: const Key('weather-fetched'),
-          style: theme.textTheme.bodySmall?.copyWith(
+          style: small?.copyWith(
             color: value.freshness == ForecastFreshness.stale
-                ? theme.colorScheme.error
+                ? AppColors.onCareSoft
                 : null,
           ),
         ),
@@ -208,45 +220,98 @@ class _WeatherLine extends ConsumerWidget {
   }
 }
 
-class _Result extends ConsumerWidget {
+/// Mostra uma sugestão de cada vez; "Mostrar outro" passa à seguinte e,
+/// no fim, pede ao motor um novo lote.
+class _Result extends ConsumerStatefulWidget {
   const _Result({required this.result});
 
   final SuggestionResult result;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_Result> createState() => _ResultState();
+}
+
+class _ResultState extends ConsumerState<_Result> {
+  var _shown = 0;
+
+  @override
+  void didUpdateWidget(_Result old) {
+    super.didUpdateWidget(old);
+    if (_shown >= widget.result.candidates.length) _shown = 0;
+  }
+
+  void _next() {
+    if (_shown + 1 < widget.result.candidates.length) {
+      setState(() => _shown++);
+    } else {
+      setState(() => _shown = 0);
+      ref.read(suggestionChoicesProvider.notifier).reshuffle();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final result = widget.result;
+    final muted = theme.textTheme.bodyMedium?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
     final gaps = [
       for (final g in result.gaps)
         Text(
           l10n.suggestionsGap(l10n.outfitRoleLabel(g.role.id), g.cause.name),
+          style: muted,
         ),
     ];
     return switch (result.status) {
-      SuggestionStatus.insufficientData => Text(
-        l10n.suggestionsInsufficient,
-        key: const Key('suggestions-insufficient'),
+      SuggestionStatus.insufficientData => Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Text(
+          l10n.suggestionsInsufficient,
+          key: const Key('suggestions-insufficient'),
+          style: muted,
+        ),
       ),
       SuggestionStatus.notFound => Column(
         key: const Key('suggestions-not-found'),
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [Text(l10n.suggestionsNotFound), ...gaps],
+        children: [
+          Text(l10n.suggestionsNotFound, style: muted),
+          ...gaps,
+        ],
       ),
       SuggestionStatus.valid || SuggestionStatus.partial => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final (i, c) in result.candidates.indexed)
-            _CandidateTile(index: i, candidate: c),
+          _CandidateView(
+            index: _shown,
+            total: result.candidates.length,
+            candidate: result.candidates[_shown],
+          ),
           ...gaps,
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              key: const Key('suggestions-more'),
-              onPressed: () =>
-                  ref.read(suggestionChoicesProvider.notifier).reshuffle(),
-              icon: const Icon(Icons.shuffle),
-              label: Text(l10n.suggestionsMore),
-            ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              FilledButton(
+                key: Key('suggestion-$_shown-wear'),
+                onPressed: () => context.push(
+                  AppRoutes.wearWith([
+                    for (final i in result.candidates[_shown].items)
+                      i.garment.id.value,
+                  ]),
+                ),
+                child: Text(l10n.suggestionsWearThis),
+              ),
+              TextButton(
+                key: const Key('suggestions-more'),
+                onPressed: _next,
+                child: Text(l10n.suggestionsShowAnother),
+              ),
+            ],
           ),
         ],
       ),
@@ -254,114 +319,162 @@ class _Result extends ConsumerWidget {
   }
 }
 
-class _CandidateTile extends StatelessWidget {
-  const _CandidateTile({required this.index, required this.candidate});
+/// A sugestão como um flat-lay: as peças pousadas no papel, os nomes numa
+/// frase e as razões escondidas até se pedirem (os avisos ficam à vista).
+class _CandidateView extends StatefulWidget {
+  const _CandidateView({
+    required this.index,
+    required this.total,
+    required this.candidate,
+  });
 
   final int index;
+  final int total;
   final OutfitCandidate candidate;
+
+  @override
+  State<_CandidateView> createState() => _CandidateViewState();
+}
+
+class _CandidateViewState extends State<_CandidateView> {
+  var _why = false;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final candidate = widget.candidate;
+    final index = widget.index;
     final layer = candidate.optionalLayer;
-    return Padding(
+    final items = [...candidate.items, ?layer];
+    final small = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+      height: 1.45,
+    );
+    const warn = TextStyle(color: AppColors.onCareSoft);
+
+    final warnings = <Widget>[
+      for (final note in candidate.notes)
+        if (note is MissingRole)
+          if (noteText(context, note) case final text?)
+            Text(text, style: small?.merge(warn)),
+      for (final item in items)
+        for (final n in item.notes.where(SuggestedItem.isWarning))
+          if (noteText(context, n) case final text?)
+            Text(
+              '${garmentLabel(l10n, item.garment)}: $text',
+              style: small?.merge(warn),
+            ),
+    ];
+    final reasons = <Widget>[
+      for (final note in candidate.notes)
+        if (note is! MissingRole)
+          if (noteText(context, note) case final text?)
+            Text(text, style: small),
+      for (final item in items)
+        if ([
+              for (final n in item.notes)
+                if (!SuggestedItem.isWarning(n)) ?noteText(context, n),
+            ]
+            case final texts when texts.isNotEmpty)
+          Text(
+            '${garmentLabel(l10n, item.garment)} '
+            '(${l10n.outfitRoleLabel(item.role.id).toLowerCase()}): '
+            '${texts.join(' · ')}',
+            style: small,
+          ),
+    ];
+
+    return Column(
       key: Key('suggestion-$index'),
-      padding: const EdgeInsets.only(bottom: 12),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          border: Border.all(color: theme.colorScheme.outlineVariant),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  l10n.suggestionNumber('${index + 1}'),
-                  style: theme.textTheme.titleSmall,
-                ),
-              ),
-              for (final item in candidate.items) _ItemRow(item: item),
-              for (final note in candidate.notes)
-                if (noteText(context, note) case final text?)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      text,
-                      // Só o papel em falta é um problema; o resto explica.
-                      style: note is MissingRole
-                          ? TextStyle(color: theme.colorScheme.error)
-                          : theme.textTheme.bodySmall,
-                    ),
-                  ),
-              if (layer != null)
-                _ItemRow(
-                  item: layer,
-                  title: l10n.suggestionsOptionalLayer(
-                    garmentLabel(l10n, layer.garment),
-                  ),
-                ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: TextButton.icon(
-                  key: Key('suggestion-$index-wear'),
-                  onPressed: () => context.push(
-                    AppRoutes.wearWith([
-                      for (final i in candidate.items) i.garment.id.value,
-                    ]),
-                  ),
-                  icon: const Icon(Icons.check),
-                  label: Text(l10n.suggestionsWearThis),
-                ),
-              ),
-            ],
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _FlatLay(items: items),
+        Text(
+          l10n.suggestionOf('${index + 1}', '${widget.total}'),
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
-      ),
+        const SizedBox(height: 2),
+        Text(
+          [for (final i in candidate.items) garmentLabel(l10n, i.garment)]
+              .join(', '),
+          style: theme.textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        if (layer != null)
+          Text(
+            l10n.suggestionsOptionalLayer(garmentLabel(l10n, layer.garment)),
+            style: small,
+          ),
+        ...warnings,
+        if (reasons.isNotEmpty) ...[
+          if (_why) ...[const SizedBox(height: 4), ...reasons],
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              key: Key('suggestion-$index-why'),
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                minimumSize: const Size(0, 36),
+              ),
+              onPressed: () => setState(() => _why = !_why),
+              child: Text(_why ? l10n.suggestionsWhyHide : l10n.suggestionsWhy),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
 
-class _ItemRow extends StatelessWidget {
-  const _ItemRow({required this.item, this.title});
+/// Até quatro peças em posições fixas e ligeiramente rodadas; a ordem do
+/// motor (parte de cima, de baixo, calçado, camada) decide o lugar.
+class _FlatLay extends StatelessWidget {
+  const _FlatLay({required this.items});
 
-  final SuggestedItem item;
-  final String? title;
+  final List<SuggestedItem> items;
+
+  // (x, y, tamanho, rotação) em frações da largura.
+  static const _slots = [
+    (0.04, 0.04, 0.42, -0.10),
+    (0.50, 0.02, 0.40, 0.08),
+    (0.30, 0.40, 0.34, -0.04),
+    (0.70, 0.46, 0.27, 0.12),
+    (0.02, 0.50, 0.26, 0.06),
+  ];
 
   @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final notes = <InlineSpan>[];
-    for (final n in item.notes) {
-      final text = noteText(context, n);
-      if (text == null) continue;
-      notes.add(
-        TextSpan(
-          text: ' · $text',
-          style: SuggestedItem.isWarning(n)
-              ? TextStyle(color: theme.colorScheme.error)
-              : null,
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final w = constraints.maxWidth.clamp(0, 420).toDouble();
+      final shown = items.take(_slots.length).toList();
+      return SizedBox(
+        width: w,
+        height: w * 0.80,
+        child: Stack(
+          children: [
+            for (final (i, item) in shown.indexed)
+              Positioned(
+                left: w * _slots[i].$1,
+                top: w * _slots[i].$2,
+                child: Semantics(
+                  label: garmentLabel(
+                    AppLocalizations.of(context),
+                    item.garment,
+                  ),
+                  child: GarmentCutout(
+                    garment: item.garment,
+                    size: w * _slots[i].$3,
+                    angle: _slots[i].$4,
+                  ),
+                ),
+              ),
+          ],
         ),
       );
-    }
-    final photos = item.garment.photos;
-    return ListTile(
-      dense: true,
-      leading: SizedBox.square(
-        dimension: 40,
-        child: photos.isEmpty
-            ? const Icon(Icons.image_not_supported_outlined)
-            : GarmentPhotoView(photo: photos.first, size: 40),
-      ),
-      title: Text(title ?? garmentLabel(l10n, item.garment)),
-      subtitle: Text.rich(
-        TextSpan(text: l10n.outfitRoleLabel(item.role.id), children: notes),
-      ),
-    );
-  }
+    },
+  );
 }
