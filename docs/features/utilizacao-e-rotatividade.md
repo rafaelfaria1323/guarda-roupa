@@ -4,7 +4,7 @@ Estado: registo de utilizações e `RotationPolicy` implementados (incremento 3)
 
 ## Implementado
 
-- **“Vesti hoje”** no ecrã Planeador: escolhe-se as peças vestidas e guarda-se. Pode haver mais de um registo no mesmo dia (mudar de roupa). Cada registo pode ser **corrigido** (trocar as peças: desfaz e regista outro, numa transação) ou **desfeito**.
+- **“Vesti hoje”** no ecrã Hoje: escolhe-se as peças vestidas e guarda-se. Pode haver mais de um registo no mesmo dia (mudar de roupa). Cada registo pode ser **corrigido** (trocar as peças: desfaz e regista outro, numa transação) ou **desfeito**.
 - Só dias de hoje ou passados: planear não é usar. Peças arquivadas podem ser registadas (registo tardio); eliminadas não.
 - Na ficha da peça: número de utilizações e as datas mais recentes.
 - Dados: tabela `wear_events` (`worn_on` como data de calendário, `garment_ids`, `plan_entry_id`, `voided_at`) e operações `record_wear`/`void_wear` por `apply_wear_operation`, idempotentes por `op_id`. A mesma entrada de plano confirmada em dois dispositivos dá uma única utilização (`merged`); desfazer e voltar a confirmar é permitido.

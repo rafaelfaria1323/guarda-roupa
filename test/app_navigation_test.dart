@@ -21,10 +21,7 @@ void main() {
     await settle(tester);
     expect(find.text('Ainda não tens peças.'), findsOneWidget);
     expect(
-      find.descendant(
-        of: find.byType(AppBar),
-        matching: find.text('Guarda-roupa'),
-      ),
+      find.descendant(of: find.byType(AppBar), matching: find.text('Armário')),
       findsOneWidget,
     );
 

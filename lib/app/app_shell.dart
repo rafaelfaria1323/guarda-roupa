@@ -24,7 +24,7 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final destinations = [
-      (Icons.calendar_today_outlined, Icons.calendar_today, l10n.navPlanner),
+      (Icons.wb_sunny_outlined, Icons.wb_sunny, l10n.navPlanner),
       (Icons.checkroom_outlined, Icons.checkroom, l10n.navWardrobe),
       (Icons.style_outlined, Icons.style, l10n.navOutfits),
       (Icons.auto_awesome_outlined, Icons.auto_awesome, l10n.navStyle),
