@@ -31,6 +31,7 @@ Decisão do utilizador (2026-11-04): aceitar **qualquer link** de loja, não só
   - `failing` (3 falhas seguidas): “costuma falhar”.
   O perfil não guarda links, produtos nem utilizadores. Se a base não responder, a importação segue como “site novo”.
 - **Imagens**: `{image}` só copia uma imagem que a função ofereceu a esse utilizador numa pré-visualização há menos de um dia (`import_image_grants`, guardada como hash). Qualquer outra dá `image_not_offered`. Assim aceitar qualquer site não abre um proxy de imagens. Limite conhecido: `record_import` corre como o utilizador, por isso uma conta da allowlist que chamasse a RPC à mão conseguiria autorizar imagens a si própria. Mesmo assim continuam as regras de rede e a quota, e a allowlist é só o proprietário (P-16).
+- **Pedidos**: `{url}` (a função lê a página), `{url, page}` (página partilhada pelo [atalho do iPhone](#atalho-do-iphone)) e `{image}`.
 - **Respostas**: `ok`, `invalid_url`, `not_public`, `fetch_failed` (com `timeout`, `blocked`, `not_found`, `too_large`, `redirect_not_allowed`, …), `no_metadata`, `rate_limited` e `image_not_offered`. Uma página sem dados nunca dá um produto inventado.
 - **Na app** (`lib/features/import/`): “Importar de um link” no formulário de peça nova, só com Supabase configurado.
   - Lê a página com a sessão do utilizador (`SupabaseProductImporter`, via `http`: as imagens vêm em binário). Sem sessão não faz pedidos.
@@ -52,13 +53,27 @@ Decisão do utilizador (2026-11-04): aceitar **qualquer link** de loja, não só
 - **Por fazer**: o smoke com links reais ([tool/import/README.md](../../tool/import/README.md)). Corre no Mac ou no ambiente na cloud (desde 2026-11-05 a cloud já chega às lojas). Sites que bloqueiam pedidos automáticos (anti-bot, como a Zara e a Massimo Dutti) vão continuar a falhar: a app diz que a loja bloqueia, o perfil mostra-o como “costuma falhar” e fica a introdução manual.
 - **Próximo passo possível**: usar as correções do utilizador (categoria escolhida, nome editado) para sugerir a categoria da próxima peça do mesmo site. Fica para depois: precisa de mais dados reais.
 
+### Atalho do iPhone
+
+Para as lojas que bloqueiam (Zara, Massimo Dutti), há um atalho do iPhone, "Importar para o fio" ([guia](../guias/09-atalho-importar-iphone.md)), criado com o utilizador a 2026-11-05. O script de teste leu os dados da Zara; o fluxo completo na app falta confirmar no iPhone.
+
+- **Como funciona:** o utilizador abre a peça no Safari e partilha-a com o atalho. O atalho corre um script na página já aberta e copia um JSON com `fio: 1`, o link, o título, os blocos JSON-LD e as meta tags `og:`/`twitter:`/`product:`. No fio, "Colar do atalho" (ou colar no campo do link) envia `{url, page}` à função.
+- **Não se contorna nada:** a página foi aberta pelo browser do utilizador e a função não pede nada à loja. Confirmado com a Zara: o Safari mostra o `ProductGroup` completo em JSON-LD e o Open Graph.
+- **Na função** (`shared_page.ts`):
+  - o `page` é validado: até 10 blocos JSON-LD e 200 kB, até 80 meta tags e o título limitado;
+  - é remontado como HTML mínimo e passa pelo parser de sempre;
+  - o link continua a passar pelas regras de rede e a importação gasta quota como as outras.
+- **Imagens:** `record_import` com o resultado `shared` autoriza as imagens oferecidas (que se copiam depois como sempre; as da Zara, em `static.zara.net`, copiam-se sem bloqueio). **Não mexe nas contagens do domínio**, porque o perfil diz se o *link* funciona sozinho. A etiqueta da pré-visualização diz "Zara · pelo atalho".
+- **Limite conhecido:** como os dados vêm do cliente, uma conta da allowlist podia oferecer a si própria imagens de qualquer site público. É o mesmo limite de `record_import` descrito acima: as regras de rede, a quota e a allowlist (só o proprietário) mantêm-se.
+- **Só iPhone:** no Android ficaria para um browser dentro da app, que não está feito.
+
 ### Estado por loja (uso real)
 
 | Loja | Resultado | Data | Notas |
 |---|---|---|---|
 | Uniqlo | Importa | 2026-11-05 | Testado pelo utilizador na PWA (iPhone) |
-| Zara | Bloqueada | 2026-11-05 | Akamai Bot Manager: responde 200 com um desafio JavaScript (`bm-verify`) em vez do produto, a qualquer pedido sem browser. Não se contorna; a app diz "Esta loja bloqueia leituras automáticas" e segue para "Preencher à mão" |
-| Massimo Dutti | Bloqueada | 2026-11-05 | O mesmo desafio Akamai da Zara (Inditex). Pull&Bear e Bershka, também Inditex, devem ter o mesmo comportamento |
+| Zara | Bloqueada | 2026-11-05 | Akamai Bot Manager: responde 200 com um desafio JavaScript (`bm-verify`) em vez do produto, a qualquer pedido sem browser. Não se contorna; a app diz "Esta loja bloqueia leituras automáticas" e segue para "Preencher à mão". **No iPhone importa pelo [atalho](#atalho-do-iphone)** |
+| Massimo Dutti | Bloqueada | 2026-11-05 | O mesmo desafio Akamai da Zara (Inditex). Pull&Bear e Bershka, também Inditex, devem ter o mesmo comportamento. No iPhone, pelo atalho |
 
 **Desafios anti-bot (2026-11-05).** Antes, uma página de desafio passava por "página sem dados" (`no_metadata`), o que enganava. Agora, se a página não tem produto e traz as marcas de um desafio conhecido (Akamai `bm-verify`, Cloudflare "Just a moment...", DataDome, PerimeterX), a resposta é `fetch_failed` com `blocked` (`challenge.ts`). Só se olha para isso quando não há produto, porque algumas páginas normais carregam os scripts destes serviços. Resolver o desafio (correr o JavaScript, imitar um browser) seria contornar o anti-bot, o que está fora das regras desta funcionalidade.
 

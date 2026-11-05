@@ -1,6 +1,5 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/domain/result.dart';
 import '../../../l10n/app_localizations.dart';
@@ -29,6 +28,9 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
   final _url = TextEditingController();
   bool _busy = false;
   ImportFailure? _failure;
+
+  /// O que estava copiado não veio do atalho do iPhone.
+  bool _notShared = false;
   ProductPreview? _preview;
   ImportVariant? _variant;
   final _images = <String>{};
@@ -39,18 +41,40 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
     super.dispose();
   }
 
-  Future<void> _read() async {
+  /// Lê o texto copiado pelo atalho "Importar para o fio".
+  Future<void> _pasteShared() async {
+    final text = (await Clipboard.getData(Clipboard.kTextPlain))?.text ?? '';
+    if (!mounted) return;
+    final page = SharedPage.parse(text);
+    if (page == null) {
+      setState(() {
+        _notShared = true;
+        _failure = null;
+        _preview = null;
+      });
+      return;
+    }
+    await _read(shared: page);
+  }
+
+  Future<void> _read({SharedPage? shared}) async {
+    // Colar no campo o texto do atalho também serve.
+    final page = shared ?? SharedPage.parse(_url.text);
+    if (page != null) _url.text = page.url;
     final url = _url.text.trim();
     if (url.isEmpty) return;
     FocusScope.of(context).unfocus();
     setState(() {
       _busy = true;
+      _notShared = false;
       _failure = null;
       _preview = null;
       _variant = null;
       _images.clear();
     });
-    final result = await widget.importer.preview(url);
+    final result = page != null
+        ? await widget.importer.previewShared(page)
+        : await widget.importer.preview(url);
     if (!mounted) return;
     setState(() {
       _busy = false;
@@ -132,18 +156,29 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
             onSubmitted: (_) => _read(),
           ),
           const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: FilledButton.tonalIcon(
-              key: const Key('import-read'),
-              onPressed: _busy ? null : _read,
-              icon: const Icon(Icons.travel_explore),
-              label: Text(l10n.importRead),
-            ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              FilledButton.tonalIcon(
+                key: const Key('import-read'),
+                onPressed: _busy ? null : _read,
+                icon: const Icon(Icons.travel_explore),
+                label: Text(l10n.importRead),
+              ),
+              OutlinedButton.icon(
+                key: const Key('import-paste-shared'),
+                onPressed: _busy ? null : _pasteShared,
+                icon: const Icon(Icons.content_paste),
+                label: Text(l10n.importPasteShared),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           if (_busy)
             const Center(child: CircularProgressIndicator())
+          else if (_notShared)
+            Text(l10n.importSharedInvalid, key: const Key('import-not-shared'))
           else if (failure != null)
             _failureView(l10n, failure)
           else if (preview != null)
@@ -170,6 +205,14 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(l10n.importFailure(kind)),
+        if (kind == 'blocked') ...[
+          const SizedBox(height: 8),
+          Text(
+            l10n.importBlockedShortcut,
+            key: const Key('import-blocked-shortcut'),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
         const SizedBox(height: 12),
         OutlinedButton(
           key: const Key('import-manual'),
@@ -207,7 +250,11 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
         children: [
           Chip(
             avatar: const Icon(Icons.storefront_outlined),
-            label: Text(l10n.importSite(p.storeName, p.siteStatus.name)),
+            label: Text(
+              p.viaShortcut
+                  ? l10n.importSiteShared(p.storeName)
+                  : l10n.importSite(p.storeName, p.siteStatus.name),
+            ),
           ),
         ],
       ),

@@ -122,6 +122,55 @@ void main() {
     });
   });
 
+  test('atalho do iPhone: lê só o texto que ele copia', () {
+    final page = SharedPage.parse(
+      ' {"fio":1,"url":"https://www.zara.com/pt/pt/c-p1.html","title":"CASACO",'
+      '"ld":["{}",3],"meta":[["og:title","CASACO"],["x"]]} ',
+    )!;
+    expect(page.url, 'https://www.zara.com/pt/pt/c-p1.html');
+    expect(page.ld, ['{}']);
+    expect(page.meta, [('og:title', 'CASACO')]);
+    expect(page.toJson(), {
+      'title': 'CASACO',
+      'ld': ['{}'],
+      'meta': [
+        ['og:title', 'CASACO'],
+      ],
+    });
+    expect(SharedPage.parse('https://www.zara.com/pt/pt/c-p1.html'), isNull);
+    expect(SharedPage.parse('{"url":"https://a.example"}'), isNull);
+    expect(SharedPage.parse('{"fio":1}'), isNull);
+    expect(SharedPage.parse('{não é json'), isNull);
+  });
+
+  test('cliente: página partilhada vai com o link e os dados', () async {
+    late http.Request sent;
+    final result =
+        await importer((r) async {
+          sent = r;
+          return jsonResponse({...okBody, 'via': 'shared'});
+        }).previewShared(
+          const SharedPage(
+            url: 'https://www.zara.com/pt/pt/c-p1.html',
+            ld: ['{}'],
+            meta: [('og:title', 'CASACO')],
+          ),
+        );
+    expect(
+      (result as Ok<ProductPreview, ImportFailure>).value.viaShortcut,
+      true,
+    );
+    expect(jsonDecode(sent.body), {
+      'url': 'https://www.zara.com/pt/pt/c-p1.html',
+      'page': {
+        'ld': ['{}'],
+        'meta': [
+          ['og:title', 'CASACO'],
+        ],
+      },
+    });
+  });
+
   test('cliente: respostas da função viram falhas tipadas', () async {
     Future<ImportFailure> fail(http.Response r) async =>
         switch (await importer((_) async => r).preview('https://x')) {

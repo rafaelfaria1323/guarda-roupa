@@ -1,6 +1,7 @@
 import { isBotChallenge } from './challenge.ts';
 import { fetchImage, fetchPage } from './fetch_limited.ts';
-import { parseProduct, type Source } from './parse.ts';
+import { parseProduct, type ProductPreview, type Source } from './parse.ts';
+import { readSharedPage, type SharedPage, sharedPageHtml } from './shared_page.ts';
 import { siteName } from './stores.ts';
 import { checkPublic, type Resolver } from './url_guard.ts';
 
@@ -83,6 +84,13 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
     return json({ result: 'error', reason: 'invalid_request' }, 400);
   }
 
+  // Página partilhada pelo atalho: só com o link da página.
+  let shared: SharedPage | null = null;
+  if (fields.page !== undefined) {
+    shared = typeof page === 'string' ? readSharedPage(fields.page) : null;
+    if (shared == null) return json({ result: 'error', reason: 'invalid_request' }, 400);
+  }
+
   // Validar antes de gastar quota: um link inválido ou interno não conta.
   const raw = (typeof page === 'string' ? page : image) as string;
   const check = await checkPublic(raw, deps.resolve);
@@ -113,6 +121,8 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
       },
     });
   }
+
+  if (shared != null) return await fromShared(authorization, apiKey, check.url, shared, deps);
 
   const got = await fetchPage(check.url, deps.fetchFn, deps.resolve);
   const host = (got.ok ? got.url : check.url).hostname;
@@ -162,14 +172,53 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
       url: got.url.href,
     });
   }
-  const offered = [
-    ...product.images,
-    ...product.variants.flatMap((v) => v.image == null ? [] : [v.image]),
-  ].filter((u, i, all) => all.indexOf(u) === i).slice(0, 12);
+  const offered = offeredImages(product);
   return json({
     result: 'ok',
     store: await site('ok', product.sources.name ?? product.sources.images, offered),
     url: got.url.href,
     product,
   });
+}
+
+function offeredImages(product: ProductPreview): string[] {
+  return [
+    ...product.images,
+    ...product.variants.flatMap((v) => v.image == null ? [] : [v.image]),
+  ].filter((u, i, all) => all.indexOf(u) === i).slice(0, 12);
+}
+
+/**
+ * A página que o utilizador abriu no Safari e partilhou (atalho do iPhone).
+ * Não se pede nada à loja. `record_import` com `shared` só autoriza as
+ * imagens: não conta para o estado do site, que diz se o link funciona.
+ */
+async function fromShared(
+  authorization: string,
+  apiKey: string | null,
+  url: URL,
+  page: SharedPage,
+  deps: Deps,
+): Promise<Response> {
+  const product = parseProduct(sharedPageHtml(page), url);
+  const images = product == null ? [] : offeredImages(product);
+  let recorded: Recorded | null = null;
+  try {
+    recorded = await deps.record(authorization, apiKey, {
+      host: url.hostname,
+      result: 'shared',
+      source: product?.sources.name ?? product?.sources.images,
+      images,
+    });
+  } catch {
+    // Sem registo, as imagens não se copiam, mas os dados aparecem.
+  }
+  const store = {
+    id: url.hostname,
+    name: siteName(url.hostname),
+    status: recorded?.status ?? 'new',
+    okCount: recorded?.ok_count ?? 0,
+  };
+  if (product == null) return json({ result: 'no_metadata', store, url: url.href });
+  return json({ result: 'ok', store, url: url.href, product, via: 'shared' });
 }

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import '../../../core/domain/result.dart';
@@ -72,6 +73,7 @@ final class ProductPreview {
     required this.storeName,
     required this.url,
     this.siteStatus = SiteStatus.newSite,
+    this.viaShortcut = false,
     this.name,
     this.brand,
     this.description,
@@ -86,6 +88,9 @@ final class ProductPreview {
   /// O nome da loja, ou o domínio sem `www.`.
   final String storeName;
   final SiteStatus siteStatus;
+
+  /// Veio do atalho do iPhone (a página aberta no Safari), não do link.
+  final bool viaShortcut;
   final String url;
   final String? name;
   final String? brand;
@@ -111,6 +116,7 @@ final class ProductPreview {
     return ProductPreview(
       storeName: _string(store['name']) ?? '',
       siteStatus: SiteStatus.parse(store['status']),
+      viaShortcut: json['via'] == 'shared',
       url: url,
       name: _string(p['name']),
       brand: _string(p['brand']),
@@ -175,8 +181,67 @@ final class ImportUnavailable extends ImportFailure {
   const ImportUnavailable();
 }
 
+/// O que o atalho do iPhone "Importar para o fio" copia da página aberta
+/// no Safari (docs/guias/09-atalho-importar-iphone.md): o link, o título,
+/// os blocos JSON-LD e as meta tags. Serve as lojas que bloqueiam pedidos
+/// automáticos: quem abriu a página foi o utilizador, no browser dele.
+final class SharedPage {
+  const SharedPage({
+    required this.url,
+    this.title,
+    this.ld = const [],
+    this.meta = const [],
+  });
+
+  final String url;
+  final String? title;
+  final List<String> ld;
+  final List<(String, String)> meta;
+
+  /// O texto copiado pelo atalho, ou `null` se não for dele.
+  static SharedPage? parse(String text) {
+    final t = text.trim();
+    if (!t.startsWith('{')) return null;
+    Object? data;
+    try {
+      data = jsonDecode(t);
+    } on FormatException {
+      return null;
+    }
+    if (data is! Map || data['fio'] != 1) return null;
+    final url = data['url'];
+    if (url is! String || url.isEmpty) return null;
+    final title = data['title'];
+    return SharedPage(
+      url: url,
+      title: title is String ? title : null,
+      ld: [
+        for (final b in _list(data['ld']))
+          if (b is String) b,
+      ],
+      meta: [
+        for (final m in _list(data['meta']))
+          if (m case [final String k, final String v]) (k, v),
+      ],
+    );
+  }
+
+  /// O `page` do pedido à função.
+  Map<String, Object?> toJson() => {
+    'title': ?title,
+    'ld': ld,
+    'meta': [
+      for (final (k, v) in meta) [k, v],
+    ],
+  };
+}
+
 abstract interface class ProductImporter {
   Future<Result<ProductPreview, ImportFailure>> preview(String url);
+
+  /// Pré-visualização de uma página partilhada pelo atalho do iPhone. A
+  /// função não pede nada à loja.
+  Future<Result<ProductPreview, ImportFailure>> previewShared(SharedPage page);
 
   /// Copia uma imagem de [ProductPreview.images].
   Future<Result<Uint8List, ImportFailure>> image(String url);
