@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
+import '../../../app/theme.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../care/application/care_providers.dart';
@@ -13,7 +14,7 @@ import '../domain/garment_category.dart';
 import '../domain/garment_attributes.dart';
 import '../domain/garment_filter.dart';
 import '../domain/wardrobe_repository.dart';
-import 'garment_photo_view.dart';
+import 'garment_cutout.dart';
 import 'labels.dart';
 
 class WardrobeScreen extends ConsumerStatefulWidget {
@@ -53,7 +54,7 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
 
   Widget _filters(AppLocalizations l10n) => SingleChildScrollView(
     scrollDirection: Axis.horizontal,
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
     child: Row(
       spacing: 8,
       children: [
@@ -68,7 +69,7 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
               ),
             ),
           ),
-        const SizedBox(height: 32, child: VerticalDivider()),
+        const SizedBox(height: 32, child: VerticalDivider(width: 8)),
         for (final value in Availability.values)
           FilterChip(
             key: Key('filter-availability-${value.id}'),
@@ -81,7 +82,7 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
               ),
             ),
           ),
-        const SizedBox(height: 32, child: VerticalDivider()),
+        const SizedBox(height: 32, child: VerticalDivider(width: 8)),
         for (final value in Occasion.values)
           FilterChip(
             key: Key('filter-occasion-${value.id}'),
@@ -93,6 +94,15 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
               ),
             ),
           ),
+        const SizedBox(height: 32, child: VerticalDivider(width: 8)),
+        FilterChip(
+          key: const Key('filter-archived'),
+          label: Text(l10n.wardrobeShowArchived),
+          selected: _filter.includeArchived,
+          onSelected: (value) => setState(
+            () => _filter = _filter.copyWith(includeArchived: value),
+          ),
+        ),
         if (_filter.isActive)
           TextButton.icon(
             onPressed: () => setState(() {
@@ -109,6 +119,7 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
     final stream = _streamFor(ref.watch(wardrobeRepositoryProvider));
     final searching = _filter.isActive;
 
@@ -122,77 +133,199 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
         icon: const Icon(Icons.add),
         label: Text(l10n.wardrobeAdd),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _search,
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.search),
-                      hintText: l10n.wardrobeSearch,
-                      isDense: true,
-                      border: const OutlineInputBorder(),
+      body: stream == null
+          ? const Center(child: CircularProgressIndicator())
+          : StreamBuilder<List<Garment>>(
+              stream: stream,
+              builder: (context, snapshot) {
+                final garments = snapshot.data;
+                final Widget content;
+                if (snapshot.hasError) {
+                  content = EmptyState(
+                    icon: Icons.error_outline,
+                    message: l10n.wardrobeLoadError,
+                    hint: '${snapshot.error}',
+                  );
+                } else if (garments == null) {
+                  content = const Center(child: CircularProgressIndicator());
+                } else if (garments.isEmpty) {
+                  content = searching
+                      ? Center(child: Text(l10n.wardrobeNoResults))
+                      : EmptyState(
+                          icon: Icons.checkroom_outlined,
+                          message: l10n.wardrobeEmpty,
+                          hint: l10n.wardrobeEmptyHint,
+                        );
+                } else if (searching) {
+                  content = _Grid(garments: garments);
+                } else {
+                  content = _Shelves(
+                    garments: garments,
+                    onSeeAll: (group) => setState(
+                      () => _filter = _filter.copyWith(groups: {group}),
                     ),
-                    onChanged: (value) =>
-                        setState(() => _filter = _filter.copyWith(text: value)),
+                  );
+                }
+                final inCare = (garments ?? const <Garment>[])
+                    .where(
+                      (g) =>
+                          g.availability == Availability.washing ||
+                          g.availability == Availability.drying,
+                    )
+                    .length;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Sempre no mesmo lugar da árvore, para o campo de
+                    // pesquisa não perder o foco ao começar a escrever.
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                      child: Visibility(
+                        visible: garments != null && !searching,
+                        maintainSize: true,
+                        maintainAnimation: true,
+                        maintainState: true,
+                        child: Text(
+                          [
+                            l10n.wardrobeCount(garments?.length ?? 0),
+                            if (inCare > 0) l10n.wardrobeInCare(inCare),
+                          ].join(' · '),
+                          key: const Key('wardrobe-summary'),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 4),
+                      child: TextField(
+                        controller: _search,
+                        decoration: InputDecoration(
+                          prefixIcon: const Icon(Icons.search),
+                          hintText: l10n.wardrobeSearch,
+                          isDense: true,
+                          border: const OutlineInputBorder(
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(999),
+                            ),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        onChanged: (value) => setState(
+                          () => _filter = _filter.copyWith(text: value),
+                        ),
+                      ),
+                    ),
+                    _filters(l10n),
+                    Expanded(child: content),
+                  ],
+                );
+              },
+            ),
+    );
+  }
+}
+
+/// Prateleiras por tipo (visual fio v2): o título, quantas há e as peças
+/// numa linha que desliza.
+class _Shelves extends StatelessWidget {
+  const _Shelves({required this.garments, required this.onSeeAll});
+
+  final List<Garment> garments;
+  final ValueChanged<CategoryGroup> onSeeAll;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final byGroup = <CategoryGroup, List<Garment>>{};
+    for (final g in garments) {
+      (byGroup[g.category.group] ??= []).add(g);
+    }
+    final groups = [
+      for (final group in CategoryGroup.values)
+        if (byGroup[group] case final list?) (group, list),
+    ];
+    return ListView(
+      padding: const EdgeInsets.only(top: 8, bottom: 96),
+      children: [
+        for (final (group, list) in groups)
+          Padding(
+            key: Key('shelf-${group.name}'),
+            padding: const EdgeInsets.only(bottom: 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 12, 0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        l10n.categoryGroupLabel(group.name),
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontSize: 19,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${list.length}',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const Spacer(),
+                      if (list.length > 3)
+                        TextButton(
+                          key: Key('shelf-${group.name}-all'),
+                          onPressed: () => onSeeAll(group),
+                          child: Text(
+                            l10n.wardrobeSeeAll,
+                            semanticsLabel: l10n.wardrobeSeeAllGroup(
+                              l10n.categoryGroupLabel(group.name),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                FilterChip(
-                  label: Text(l10n.wardrobeShowArchived),
-                  selected: _filter.includeArchived,
-                  onSelected: (value) => setState(
-                    () => _filter = _filter.copyWith(includeArchived: value),
+                const SizedBox(height: 6),
+                // Não preguiçoso: um armário pessoal tem dezenas de peças
+                // por tipo, não milhares.
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  clipBehavior: Clip.none,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [for (final g in list) _GarmentTile(garment: g)],
                   ),
                 ),
               ],
             ),
           ),
-          _filters(l10n),
-          Expanded(
-            child: stream == null
-                ? const Center(child: CircularProgressIndicator())
-                : StreamBuilder<List<Garment>>(
-                    stream: stream,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return EmptyState(
-                          icon: Icons.error_outline,
-                          message: l10n.wardrobeLoadError,
-                          hint: '${snapshot.error}',
-                        );
-                      }
-                      final garments = snapshot.data;
-                      if (garments == null) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      if (garments.isEmpty) {
-                        return searching
-                            ? Center(child: Text(l10n.wardrobeNoResults))
-                            : EmptyState(
-                                icon: Icons.checkroom_outlined,
-                                message: l10n.wardrobeEmpty,
-                                hint: l10n.wardrobeEmptyHint,
-                              );
-                      }
-                      return ListView.separated(
-                        padding: const EdgeInsets.only(bottom: 96),
-                        itemCount: garments.length,
-                        separatorBuilder: (_, _) => const Divider(height: 1),
-                        itemBuilder: (context, i) =>
-                            _GarmentTile(garment: garments[i]),
-                      );
-                    },
-                  ),
-          ),
-        ],
-      ),
+      ],
     );
   }
+}
+
+/// Resultados de uma pesquisa ou filtro: as mesmas peças, em grelha.
+class _Grid extends StatelessWidget {
+  const _Grid({required this.garments});
+
+  final List<Garment> garments;
+
+  @override
+  Widget build(BuildContext context) => GridView.builder(
+    padding: const EdgeInsets.fromLTRB(18, 12, 18, 96),
+    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+      maxCrossAxisExtent: 124,
+      mainAxisExtent: 172,
+    ),
+    itemCount: garments.length,
+    itemBuilder: (context, i) => _GarmentTile(garment: garments[i]),
+  );
 }
 
 class _GarmentTile extends ConsumerWidget {
@@ -203,26 +336,80 @@ class _GarmentTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
     final washRecommended =
         ref.watch(laundryStatesProvider)?[garment.id]?.washRecommended ?? false;
     final category = l10n.categoryLabel(garment.category.id);
-    final subtitle = [
-      if (garment.name != null) category,
-      ?garment.brand,
-      if (garment.isArchived) l10n.garmentArchived,
-      if (washRecommended) l10n.laundryRecommendedShort,
-    ].join(' · ');
-    return ListTile(
-      leading: garment.photos.isEmpty
-          ? const SizedBox.square(
-              dimension: 48,
-              child: Icon(Icons.checkroom_outlined),
-            )
-          : GarmentPhotoView(photo: garment.photos.first, size: 48),
-      title: Text(garment.name ?? category),
-      subtitle: subtitle.isEmpty ? null : Text(subtitle),
-      trailing: AvailabilityChip(availability: garment.availability),
-      onTap: () => context.push(AppRoutes.garment(garment.id)),
+    final availability = garment.availability;
+    final inCare =
+        availability == Availability.washing ||
+        availability == Availability.drying;
+    // Só o que foge ao normal: "disponível" não se escreve.
+    final (String, Color)? status = garment.isArchived
+        ? (l10n.garmentArchived, AppColors.onSurfaceMuted)
+        : availability != Availability.available
+        ? (
+            l10n.availabilityLabel(availability.id),
+            inCare ? AppColors.care : AppColors.onSurfaceMuted,
+          )
+        : washRecommended
+        ? (l10n.laundryRecommendedShort, AppColors.care)
+        : null;
+    return SizedBox(
+      key: Key('garment-tile-${garment.id.value}'),
+      width: 112,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => context.push(AppRoutes.garment(garment.id)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(6, 6, 6, 8),
+          child: Column(
+            children: [
+              GarmentCutout(garment: garment, size: 88),
+              const SizedBox(height: 8),
+              Text(
+                garment.name ?? category,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  fontSize: 13,
+                  height: 1.2,
+                ),
+              ),
+              if (status case (final label, final color)) ...[
+                const SizedBox(height: 2),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const SizedBox.square(dimension: 6),
+                    ),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: color == AppColors.care
+                              ? AppColors.onCareSoft
+                              : AppColors.onSurfaceMuted,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

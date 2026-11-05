@@ -7,8 +7,16 @@ import '../../../support/app_harness.dart';
 import '../../../support/test_database.dart';
 
 /// Texto dentro de um item da lista (os filtros repetem as etiquetas).
-Finder inList(String text) =>
-    find.descendant(of: find.byType(ListTile), matching: find.text(text));
+/// Um texto numa linha de lista ou numa peça do Armário.
+Finder inList(String text) => find.descendant(
+  of: find.byWidgetPredicate(
+    (w) =>
+        w is ListTile ||
+        (w.key is ValueKey<String> &&
+            (w.key! as ValueKey<String>).value.startsWith('garment-tile-')),
+  ),
+  matching: find.text(text),
+);
 
 Future<void> openWardrobe(WidgetTester tester) async {
   await tester.tap(find.byIcon(Icons.checkroom_outlined));
@@ -52,8 +60,9 @@ void main() {
     );
 
     expect(find.text('Ganga azul'), findsOneWidget);
-    expect(find.text('Calças de ganga · Levi’s'), findsOneWidget);
-    expect(inList('Disponível'), findsOneWidget);
+    // Disponível é o normal: a peça não mostra estado.
+    expect(inList('Disponível'), findsNothing);
+    expect(find.text('1 peça'), findsOneWidget);
     // Guardado localmente, com a operação na fila de envio.
     final pending = (await tester.runAsync(() => pendingOperations(app.db)))!;
     expect(pending.map((op) => op['kind']), ['create']);
@@ -132,10 +141,12 @@ void main() {
     );
     expect(find.text('Riscas'), findsNothing);
 
-    await tester.tap(find.widgetWithText(FilterChip, 'Arquivadas'));
+    await tester.ensureVisible(find.byKey(const Key('filter-archived')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('filter-archived')));
     await settle(tester);
     expect(find.text('Riscas'), findsOneWidget);
-    expect(find.text('Camisa · Arquivada'), findsOneWidget);
+    expect(inList('Arquivada'), findsOneWidget);
   });
 
   testWidgets('duplica uma peça como peça nova', (tester) async {

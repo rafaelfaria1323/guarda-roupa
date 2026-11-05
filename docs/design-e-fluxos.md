@@ -1,6 +1,6 @@
 # Design e fluxos
 
-Estado: **visual "fio" v2 aprovado pelo utilizador a 2026-11-05** ([proposta com os ecrãs](https://claude.ai/artifact/CP7pHDPqsatzGsJzPn3Tqr), privada). Tema e ecrã Hoje aplicados na app; Armário e Peça são redesenhados a seguir (ver [roadmap](roadmap.md)).
+Estado: **visual "fio" v2 aprovado pelo utilizador a 2026-11-05** ([proposta com os ecrãs](https://claude.ai/artifact/CP7pHDPqsatzGsJzPn3Tqr), privada). Tema e ecrãs Hoje e Armário aplicados na app; a Peça é redesenhada a seguir (ver [roadmap](roadmap.md)).
 
 ## Nome e logótipo
 
@@ -46,6 +46,17 @@ De cima para baixo, sem cartões à volta (`PlannerScreen`):
 7. **A tua semana como um fio** (`WeekThread`): sete nós com a cor da peça principal de cada dia (vestida, senão planeada); tracejado = por decidir; hoje com contorno. Por baixo, os dias em cartões brancos com a ocasião, "Pode não acontecer", as peças e as ações (inalterados).
 
 Os textos longos de ajuda (o que conta como uso, as regras da semana) saíram do ecrã; as regras continuam nas features.
+
+## Ecrã Armário (v2, aplicado)
+
+`WardrobeScreen`, de cima para baixo:
+
+1. Título "Armário" na barra e uma frase com o total: "8 peças · 2 a lavar ou a secar" (a segunda parte só aparece quando há peças nesse estado).
+2. Pesquisa em pílula branca (nome, marca ou notas) e, numa linha que desliza, os filtros: tipo, disponibilidade, ocasião e "Arquivadas" no fim.
+3. **Sem filtros:** prateleiras por tipo (Tops, Partes de baixo, Calçado…), cada uma com o título, quantas peças tem e as peças recortadas (`GarmentCutout`) numa linha que desliza. "Ver todas" (com mais de 3 peças) filtra por esse tipo.
+4. **Com pesquisa ou filtros:** as mesmas peças em grelha.
+5. Cada peça mostra o nome e, só quando foge ao normal, um ponto e uma palavra: a laranja para "A lavar", "A secar" e "Lavar recomendado"; a cinzento para outras disponibilidades e "Arquivada". "Disponível" não se escreve.
+6. Botão "Adicionar peça" em pílula índigo, com o texto à vista (mais claro do que só "+").
 
 ## Navegação
 
