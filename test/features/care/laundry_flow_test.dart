@@ -37,8 +37,13 @@ void main() {
 
     // T-shirt: aviso após cada utilização.
     await openWardrobe(tester);
-    await settleUntil(tester, find.text('T-shirt · Lavar recomendado'));
-    expect(inList('Disponível'), findsOne, reason: 'aviso não muda estado');
+    await settleUntil(tester, inList('Lavar recomendado'));
+    expect(
+      find.byKey(const Key('wardrobe-summary')),
+      findsOne,
+      reason: 'aviso não muda estado',
+    );
+    expect(find.textContaining('a lavar'), findsNothing);
 
     await tester.tap(inList('Branca'));
     await settle(tester);
@@ -101,7 +106,7 @@ void main() {
     await back(tester);
     await back(tester);
 
-    await settleUntil(tester, find.text('T-shirt'));
-    expect(find.text('T-shirt · Lavar recomendado'), findsNothing);
+    await settleUntil(tester, inList('Branca'));
+    expect(inList('Lavar recomendado'), findsNothing);
   });
 }

@@ -212,7 +212,7 @@
   "signInFailed": "Não foi possível entrar. Confirma que esta conta tem acesso.",
   "signInUnconfigured": "A app foi compilada sem a configuração do Supabase. Corre com --dart-define-from-file=config/public.json.",
   "wardrobeAdd": "Adicionar peça",
-  "wardrobeSearch": "Pesquisar por nome, marca ou notas",
+  "wardrobeSearch": "Procurar por nome ou marca",
   "wardrobeShowArchived": "Arquivadas",
   "wardrobeNoResults": "Nenhuma peça corresponde à pesquisa.",
   "wardrobeLoadError": "Não foi possível ler as peças deste dispositivo.",
@@ -1164,6 +1164,31 @@
     "placeholders": {
       "planned": {
         "type": "int"
+      }
+    }
+  },
+  "wardrobeCount": "{count, plural, =1{1 peça} other{{count} peças}}",
+  "@wardrobeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wardrobeInCare": "{count} a lavar ou a secar",
+  "@wardrobeInCare": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wardrobeSeeAll": "Ver todas",
+  "wardrobeSeeAllGroup": "Ver todas: {group}",
+  "@wardrobeSeeAllGroup": {
+    "placeholders": {
+      "group": {
+        "type": "String"
       }
     }
   }
