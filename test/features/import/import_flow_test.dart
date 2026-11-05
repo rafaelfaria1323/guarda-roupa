@@ -412,6 +412,23 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('fio_chave2'), findsNothing);
     expect(importer.keyStatus.active, isFalse);
+
+    // Entretanto o atalho mandou uma peça: ao voltar, já aparece.
+    importer.inboxItems.add(
+      InboxItem(id: 'i1', preview: sample, createdAt: DateTime(2026)),
+    );
+    tester.state<NavigatorState>(find.byType(Navigator).last).pop();
+    await tester.pumpAndSettle();
+    expect(find.text('1 peça enviada pelo atalho'), findsOneWidget);
+
+    // E ao voltar à app vinda do Safari.
+    importer.inboxItems.add(
+      InboxItem(id: 'i2', preview: sample, createdAt: DateTime(2026)),
+    );
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+    expect(find.text('2 peças enviadas pelo atalho'), findsOneWidget);
   });
 
   testWidgets('sem Supabase configurado, o botão não aparece', (tester) async {

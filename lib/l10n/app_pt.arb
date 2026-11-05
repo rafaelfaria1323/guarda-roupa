@@ -1296,5 +1296,6 @@
   "shortcutHowTo": "No atalho, a ação \"Obter conteúdo do URL\" usa este endereço, o método POST, o cabeçalho x-fio-key com a chave e, como corpo, o resultado do JavaScript. Os passos estão no guia \"Atalho do iPhone\".",
   "shortcutCopy": "Copiar",
   "shortcutCopied": "Copiado.",
-  "shortcutUnavailable": "Não foi possível falar com o fio. Confirma a sessão e tenta outra vez."
+  "shortcutUnavailable": "Não foi possível falar com o fio. Confirma a sessão e tenta outra vez.",
+  "importInboxRefresh": "Ver peças enviadas pelo atalho"
 }
