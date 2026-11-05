@@ -5,7 +5,7 @@ import 'package:guarda_roupa/features/wear/application/wear_providers.dart';
 import '../../support/app_harness.dart';
 import '../wardrobe/domain/fakes.dart';
 import '../wardrobe/presentation/wardrobe_flow_test.dart'
-    show addGarment, inList, openWardrobe;
+    show openEdit, closeDetail, addGarment, inList, openWardrobe;
 
 Finder keyStarting(String prefix) => find.byWidgetPredicate(
   (w) =>
@@ -86,8 +86,7 @@ void main() {
 
     // Histórico na ficha da peça.
     await openWardrobe(tester);
-    await tester.tap(inList('Branca'));
-    await settle(tester);
+    await openEdit(tester, inList('Branca'));
     final form = find
         .descendant(of: find.byType(Form), matching: find.byType(Scrollable))
         .first;
@@ -107,6 +106,7 @@ void main() {
       find.byKey(const Key('garment-save')),
       gone: true,
     );
+    await closeDetail(tester);
 
     // Corrigir: afinal foi a ganga.
     await openToday(tester);

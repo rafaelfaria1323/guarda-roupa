@@ -6,7 +6,7 @@ import 'package:guarda_roupa/features/wear/application/wear_providers.dart';
 import '../../support/app_harness.dart';
 import '../wardrobe/domain/fakes.dart';
 import '../wardrobe/presentation/wardrobe_flow_test.dart'
-    show addGarment, inList, openWardrobe;
+    show openEdit, closeDetail, addGarment, inList, openWardrobe;
 import '../wear/wear_flow_test.dart' show openToday, pick, save;
 
 Future<void> back(WidgetTester tester) async {
@@ -45,8 +45,7 @@ void main() {
     );
     expect(find.textContaining('a lavar'), findsNothing);
 
-    await tester.tap(inList('Branca'));
-    await settle(tester);
+    await openEdit(tester, inList('Branca'));
     final form = find
         .descendant(of: find.byType(Form), matching: find.byType(Scrollable))
         .first;
@@ -86,6 +85,7 @@ void main() {
       find.byKey(const Key('garment-save')),
       gone: true,
     );
+    await closeDetail(tester);
 
     // Categoria T-shirt: sem aviso.
     await tester.tap(find.byTooltip('Definições'));

@@ -14,7 +14,7 @@ import 'package:crypto/crypto.dart';
 import '../../../support/app_harness.dart';
 import '../../../support/fake_photos.dart';
 import '../../../support/test_database.dart';
-import 'wardrobe_flow_test.dart' show addGarment, openWardrobe;
+import 'wardrobe_flow_test.dart' show addGarment, openEdit, openWardrobe;
 
 final _photo = find.byType(Image);
 
@@ -42,10 +42,8 @@ Future<List<String?>> kinds(WidgetTester tester, PowerSyncDatabase db) async =>
         op['kind'] as String?,
     ];
 
-Future<void> openGarment(WidgetTester tester, String name) async {
-  await tester.tap(find.text(name));
-  await settle(tester);
-}
+Future<void> openGarment(WidgetTester tester, String name) =>
+    openEdit(tester, find.text(name));
 
 void main() {
   testWidgets('peça nova com fotografia da galeria', (tester) async {

@@ -19,6 +19,7 @@ import '../features/outfits/presentation/outfit_editor_screen.dart';
 import '../features/outfits/presentation/outfits_screen.dart';
 import '../features/planner/presentation/planner_screen.dart';
 import '../features/wardrobe/domain/garment.dart';
+import '../features/wardrobe/presentation/garment_detail_screen.dart';
 import '../features/wardrobe/presentation/garment_form_screen.dart';
 import '../features/wardrobe/presentation/wardrobe_screen.dart';
 import '../features/wear/presentation/wear_picker_screen.dart';
@@ -30,6 +31,8 @@ abstract final class AppRoutes {
   static const wardrobe = '/guarda-roupa';
   static const newGarment = '/guarda-roupa/nova';
   static String garment(GarmentId id) => '/guarda-roupa/peca/${id.value}';
+  static String editGarment(GarmentId id) =>
+      '/guarda-roupa/peca/${id.value}/editar';
   static const outfits = '/conjuntos';
   static const newOutfit = '/conjuntos/novo';
   static String outfit(String id) => '/conjuntos/conjunto/$id';
@@ -96,6 +99,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/guarda-roupa/peca/:id',
+        builder: (context, state) =>
+            GarmentDetailScreen(id: GarmentId(state.pathParameters['id']!)),
+      ),
+      GoRoute(
+        path: '/guarda-roupa/peca/:id/editar',
         builder: (context, state) =>
             GarmentFormScreen(id: GarmentId(state.pathParameters['id']!)),
       ),
