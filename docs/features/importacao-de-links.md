@@ -49,7 +49,7 @@ Decisão do utilizador (2026-11-04): aceitar **qualquer link** de loja, não só
   - SQL da quota e dos perfis;
   - Flutter com um importador falso e do cliente com `MockClient`.
 - **Publicação** pelo workflow Supabase, com o secret `SUPABASE_ACCESS_TOKEN` (permissão `edge_functions_write`). Publicada desde 2026-11-04. Se a função não estiver publicada, a app mostra “A importação não está disponível agora”.
-- **Por fazer**: o smoke com links reais ([tool/import/README.md](../../tool/import/README.md)). O ambiente de desenvolvimento na cloud não chega aos sites das lojas, por isso corre no Mac. Sites que bloqueiam pedidos automáticos (anti-bot) vão continuar a falhar: o perfil mostra-o como “costuma falhar” e fica a introdução manual.
+- **Por fazer**: o smoke com links reais ([tool/import/README.md](../../tool/import/README.md)). Corre no Mac ou no ambiente na cloud (desde 2026-11-05 a cloud já chega às lojas). Sites que bloqueiam pedidos automáticos (anti-bot, como a Zara e a Massimo Dutti) vão continuar a falhar: a app diz que a loja bloqueia, o perfil mostra-o como “costuma falhar” e fica a introdução manual.
 - **Próximo passo possível**: usar as correções do utilizador (categoria escolhida, nome editado) para sugerir a categoria da próxima peça do mesmo site. Fica para depois: precisa de mais dados reais.
 
 ### Estado por loja (uso real)
@@ -57,8 +57,10 @@ Decisão do utilizador (2026-11-04): aceitar **qualquer link** de loja, não só
 | Loja | Resultado | Data | Notas |
 |---|---|---|---|
 | Uniqlo | Importa | 2026-11-05 | Testado pelo utilizador na PWA (iPhone) |
-| Zara | Falha | 2026-11-05 | Inditex; por investigar (provável bloqueio a pedidos automáticos ou dados só via JavaScript/API interna) |
-| Massimo Dutti | Falha | 2026-11-05 | Inditex, mesma plataforma da Zara; a correção deve servir às duas |
+| Zara | Bloqueada | 2026-11-05 | Akamai Bot Manager: responde 200 com um desafio JavaScript (`bm-verify`) em vez do produto, a qualquer pedido sem browser. Não se contorna; a app diz "Esta loja bloqueia leituras automáticas" e segue para "Preencher à mão" |
+| Massimo Dutti | Bloqueada | 2026-11-05 | O mesmo desafio Akamai da Zara (Inditex). Pull&Bear e Bershka, também Inditex, devem ter o mesmo comportamento |
+
+**Desafios anti-bot (2026-11-05).** Antes, uma página de desafio passava por "página sem dados" (`no_metadata`), o que enganava. Agora, se a página não tem produto e traz as marcas de um desafio conhecido (Akamai `bm-verify`, Cloudflare "Just a moment...", DataDome, PerimeterX), a resposta é `fetch_failed` com `blocked` (`challenge.ts`). Só se olha para isso quando não há produto, porque algumas páginas normais carregam os scripts destes serviços. Resolver o desafio (correr o JavaScript, imitar um browser) seria contornar o anti-bot, o que está fora das regras desta funcionalidade.
 
 ## Objetivo
 

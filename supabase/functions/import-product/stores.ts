@@ -19,6 +19,11 @@ export const STORES: readonly Store[] = [
     hosts: ['www.pullandbear.com', 'pullandbear.com'],
   },
   { id: 'bershka', name: 'Bershka', hosts: ['www.bershka.com', 'bershka.com'] },
+  {
+    id: 'massimodutti',
+    name: 'Massimo Dutti',
+    hosts: ['www.massimodutti.com', 'massimodutti.com'],
+  },
 ];
 
 /** Nome a mostrar: o da lista, ou o domínio sem `www.`. */

@@ -1,3 +1,4 @@
+import { isBotChallenge } from './challenge.ts';
 import { fetchImage, fetchPage } from './fetch_limited.ts';
 import { parseProduct, type Source } from './parse.ts';
 import { siteName } from './stores.ts';
@@ -144,6 +145,16 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
   }
   const html = new TextDecoder().decode(got.body);
   const product = parseProduct(html, got.url);
+  if (product == null && isBotChallenge(html)) {
+    // Desafio anti-bot (ex.: Akamai na Zara): é um bloqueio, não uma página
+    // sem dados. Não se contorna.
+    return json({
+      result: 'fetch_failed',
+      reason: 'blocked',
+      status: 200,
+      store: await site('fetch_failed'),
+    });
+  }
   if (product == null) {
     return json({
       result: 'no_metadata',

@@ -173,7 +173,12 @@ void main() {
     );
     await openWardrobe(tester);
     await openImport(tester, url);
-    expect(find.text('A loja não deixou ler a página.'), findsOneWidget);
+    expect(
+      find.text(
+        'Esta loja bloqueia leituras automáticas. Preenche à mão: o link fica nas notas.',
+      ),
+      findsOneWidget,
+    );
 
     importer.next = const Err(RateLimited());
     await tester.tap(find.byKey(const Key('import-read')));
