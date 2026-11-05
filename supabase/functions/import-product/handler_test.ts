@@ -218,3 +218,27 @@ Deno.test('falhas também atualizam o perfil; sem perfil a importação segue', 
   const ok = await (await handle(post({ url: 'https://loja.example/p' }), broken.d)).json();
   assertEquals([ok.result, ok.store.status], ['ok', 'new']);
 });
+
+Deno.test('desafio anti-bot (Akamai): bloqueado, não "sem dados"', async () => {
+  const { d, log } = deps(() => html(fixture('bot_challenge.html')));
+  const res = await handle(
+    post({ url: 'https://www.massimodutti.com/pt/camisa-l1' }),
+    d,
+  );
+  const body = await res.json();
+  assertEquals(body.result, 'fetch_failed');
+  assertEquals(body.reason, 'blocked');
+  assertEquals(body.store.name, 'Massimo Dutti');
+  assertEquals(log.recorded.map((r) => r.result), ['fetch_failed']);
+  assertEquals(log.fetched.length, 1);
+});
+
+Deno.test('página com produto e script anti-bot continua a dar o produto', async () => {
+  const page = fixture('product_group.html').replace(
+    '</head>',
+    '<script src="https://js.captcha-delivery.com/tags.js"></script></head>',
+  );
+  const { d } = deps(() => html(page));
+  const res = await handle(post({ url: 'https://www.zara.com/pt/pt/c-p1.html' }), d);
+  assertEquals((await res.json()).result, 'ok');
+});

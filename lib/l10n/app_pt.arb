@@ -944,7 +944,7 @@
   "importConfirmLater": "A categoria e as cores escolhes a seguir, no formulário. Nada é guardado até carregares em Guardar.",
   "importUse": "Usar na peça nova",
   "importManual": "Preencher à mão",
-  "importFailure": "{kind, select, notPublic{Este link aponta para um endereço interno e não se abre.} invalid{Este link não parece válido.} blocked{A loja não deixou ler a página.} notFound{A página não existe ou já não está à venda.} failed{Não foi possível ler a página.} noMetadata{A página não tem os dados do produto.} rateLimited{Muitas importações seguidas. Tenta mais tarde.} notAllowed{A importação precisa de sessão iniciada com uma conta autorizada.} other{A importação não está disponível agora. Verifica a ligação.}}",
+  "importFailure": "{kind, select, notPublic{Este link aponta para um endereço interno e não se abre.} invalid{Este link não parece válido.} blocked{Esta loja bloqueia leituras automáticas. Preenche à mão: o link fica nas notas.} notFound{A página não existe ou já não está à venda.} failed{Não foi possível ler a página.} noMetadata{A página não tem os dados do produto.} rateLimited{Muitas importações seguidas. Tenta mais tarde.} notAllowed{A importação precisa de sessão iniciada com uma conta autorizada.} other{A importação não está disponível agora. Verifica a ligação.}}",
   "@importFailure": {
     "placeholders": {
       "kind": {

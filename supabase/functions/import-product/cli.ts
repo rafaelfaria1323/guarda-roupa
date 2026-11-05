@@ -1,5 +1,6 @@
 // Smoke local (sem conta nem quota): `deno run --allow-net cli.ts <link>`.
 // Mostra o que a função extrairia desta página. Ver tool/import/README.md.
+import { isBotChallenge } from './challenge.ts';
 import { fetchPage } from './fetch_limited.ts';
 import { parseProduct } from './parse.ts';
 import { siteName } from './stores.ts';
@@ -20,7 +21,14 @@ if (!got.ok) {
   console.log(JSON.stringify({ result: 'fetch_failed', ...got }, null, 2));
   Deno.exit(1);
 }
-const product = parseProduct(new TextDecoder().decode(got.body), got.url);
+const html = new TextDecoder().decode(got.body);
+const product = parseProduct(html, got.url);
+if (product == null && isBotChallenge(html)) {
+  console.log(
+    JSON.stringify({ result: 'fetch_failed', reason: 'blocked', challenge: true }, null, 2),
+  );
+  Deno.exit(1);
+}
 console.log(JSON.stringify(
   product == null ? { result: 'no_metadata', url: got.url.href } : {
     result: 'ok',
