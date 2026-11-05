@@ -242,3 +242,110 @@ Deno.test('página com produto e script anti-bot continua a dar o produto', asyn
   const res = await handle(post({ url: 'https://www.zara.com/pt/pt/c-p1.html' }), d);
   assertEquals((await res.json()).result, 'ok');
 });
+
+// O que o atalho do iPhone copia de uma página da Zara (forma real, dados
+// sintéticos).
+const sharedZara = {
+  title: 'CASACO EM PELE - Preto | ZARA Portugal',
+  ld: [
+    JSON.stringify({
+      '@context': 'https://schema.org/',
+      '@type': 'ProductGroup',
+      name: 'CASACO EM PELE',
+      brand: { '@type': 'Brand', name: 'ZARA' },
+      description: 'Casaco em pele. Gola com lapelas largas. </script><b>x</b>',
+      image: ['https://static.zara.net/assets/public/a/05479600800-p.jpg'],
+      hasVariant: [
+        { '@type': 'Product', color: 'Preto', size: 'M', sku: '1-M' },
+        { '@type': 'Product', color: 'Preto', size: 'L', sku: '1-L' },
+      ],
+    }),
+  ],
+  meta: [
+    ['og:title', 'CASACO EM PELE'],
+    ['og:image', 'https://static.zara.net/assets/public/a/05479600800-p.jpg?w=560'],
+  ],
+};
+
+Deno.test('página partilhada pelo atalho: produto sem pedir a página à loja', async () => {
+  const { d, log } = deps(() => {
+    throw new Error('não devia pedir nada à loja');
+  });
+  const res = await handle(
+    post({ url: 'https://www.zara.com/pt/pt/casaco-p05479600.html', page: sharedZara }),
+    d,
+  );
+  const body = await res.json();
+  assertEquals(body.result, 'ok');
+  assertEquals(body.via, 'shared');
+  assertEquals(body.product.name, 'CASACO EM PELE');
+  assertEquals(body.product.brand, 'ZARA');
+  // O `</script>` do texto não fecha o bloco antes do tempo.
+  assertEquals(
+    body.product.description.startsWith('Casaco em pele. Gola com lapelas largas.'),
+    true,
+  );
+  assertEquals(body.store.name, 'Zara');
+  assertEquals(log.fetched, []);
+  assertEquals(log.claims, 1);
+  assertEquals(log.recorded.map((r) => r.result), ['shared']);
+  assertEquals(
+    log.recorded[0].images.includes('https://static.zara.net/assets/public/a/05479600800-p.jpg'),
+    true,
+  );
+});
+
+Deno.test('página partilhada: a imagem oferecida pode ser copiada', async () => {
+  const img = 'https://static.zara.net/assets/public/a/05479600800-p.jpg';
+  const { d, log } = deps((url) =>
+    url.hostname === 'static.zara.net'
+      ? new Response(new Uint8Array([1, 2, 3]), { headers: { 'content-type': 'image/webp' } })
+      : html('não')
+  );
+  await handle(
+    post({ url: 'https://www.zara.com/pt/pt/casaco-p05479600.html', page: sharedZara }),
+    d,
+  );
+  const res = await handle(post({ image: img }), d);
+  assertEquals(res.status, 200);
+  assertEquals(log.fetched, [img]);
+});
+
+Deno.test('página partilhada mal formada: recusada sem gastar quota', async () => {
+  const { d, log } = deps(() => html(''));
+  for (
+    const page of [
+      'texto',
+      { ld: 'não é lista' },
+      { ld: [1] },
+      { meta: [['og:title']] },
+      { ld: Array(11).fill('{}') },
+      { ld: ['x'.repeat(200_001)] },
+    ]
+  ) {
+    const res = await handle(post({ url: 'https://www.zara.com/pt/pt/a.html', page }), d);
+    assertEquals(res.status, 400);
+  }
+  const res = await handle(post({ image: 'https://a.example/x.jpg', page: { ld: [] } }), d);
+  assertEquals(res.status, 400);
+  assertEquals(log.claims, 0);
+});
+
+Deno.test('página partilhada sem produto: sem dados', async () => {
+  const { d } = deps(() => html(''));
+  const res = await handle(
+    post({ url: 'https://www.zara.com/pt/pt/a.html', page: { title: 'ZARA', ld: [], meta: [] } }),
+    d,
+  );
+  assertEquals((await res.json()).result, 'no_metadata');
+});
+
+Deno.test('página partilhada com link interno: recusada', async () => {
+  const { d, log } = deps(() => html(''));
+  const res = await handle(
+    post({ url: 'https://localhost/a', page: sharedZara }),
+    d,
+  );
+  assertEquals((await res.json()).result, 'not_public');
+  assertEquals(log.claims, 0);
+});

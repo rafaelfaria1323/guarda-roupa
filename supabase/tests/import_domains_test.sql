@@ -56,6 +56,23 @@ select pg_temp.check('autorização expirada',
   not public.import_image_allowed('https://cdn.loja.example/a.jpg'));
 commit;
 
+begin;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000d1', 'dono@example.com');
+select public.record_import('bloqueia.example', 'fetch_failed');
+select pg_temp.check('página partilhada: devolve o perfil sem contar',
+  (public.record_import('bloqueia.example', 'shared', 'json-ld',
+     array['https://static.bloqueia.example/p.jpg']) ->> 'fail_count')::int = 1);
+select pg_temp.check('página partilhada: imagem autorizada',
+  public.import_image_allowed('https://static.bloqueia.example/p.jpg'));
+select pg_temp.check('página partilhada de site nunca visto: novo e sem perfil criado',
+  public.record_import('nunca.example', 'shared') ->> 'status' = 'new');
+reset role;
+select pg_temp.check('página partilhada não cria nem mexe no perfil',
+  not exists (select 1 from public.import_domains where host = 'nunca.example')
+  and (select ok_count = 0 and fail_count = 1 and last_result = 'fetch_failed'
+         from public.import_domains where host = 'bloqueia.example'));
+commit;
+
 do $$
 begin
   perform pg_temp.as_user('00000000-0000-0000-0000-0000000000d3', 'fora@example.com');

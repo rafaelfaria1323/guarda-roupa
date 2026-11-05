@@ -29,7 +29,7 @@ final class SupabaseProductImporter implements ProductImporter {
 
   static const _timeout = Duration(seconds: 20);
 
-  Future<http.Response?> _post(Map<String, String> body) async {
+  Future<http.Response?> _post(Map<String, Object?> body) async {
     final token = accessToken();
     if (token == null) return null;
     return _client
@@ -46,9 +46,19 @@ final class SupabaseProductImporter implements ProductImporter {
   }
 
   @override
-  Future<Result<ProductPreview, ImportFailure>> preview(String url) async {
+  Future<Result<ProductPreview, ImportFailure>> preview(String url) =>
+      _preview({'url': url});
+
+  @override
+  Future<Result<ProductPreview, ImportFailure>> previewShared(
+    SharedPage page,
+  ) => _preview({'url': page.url, 'page': page.toJson()});
+
+  Future<Result<ProductPreview, ImportFailure>> _preview(
+    Map<String, Object?> body,
+  ) async {
     try {
-      final response = await _post({'url': url});
+      final response = await _post(body);
       if (response == null) return const Err(NotAllowed());
       final json = _json(response);
       if (json == null) return Err(_status(response.statusCode));

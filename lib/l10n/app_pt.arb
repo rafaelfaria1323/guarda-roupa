@@ -1232,5 +1232,26 @@
     }
   },
   "garmentWornAlone": "só esta peça registada",
-  "garmentWearToday": "Vou vestir hoje"
+  "garmentWearToday": "Vou vestir hoje",
+  "importPasteShared": "Colar do atalho",
+  "@importPasteShared": {
+    "description": "Botão que lê o que o atalho do iPhone \"Importar para o fio\" copiou."
+  },
+  "importSharedInvalid": "O que está copiado não veio do atalho. No Safari, abre a peça, partilha com \"Importar para o fio\" e volta aqui.",
+  "@importSharedInvalid": {
+    "description": "O texto copiado não é do atalho."
+  },
+  "importBlockedShortcut": "No iPhone: abre a peça no Safari, partilha com o atalho \"Importar para o fio\" e carrega em \"Colar do atalho\".",
+  "@importBlockedShortcut": {
+    "description": "Dica quando a loja bloqueia leituras automáticas."
+  },
+  "importSiteShared": "{store} · pelo atalho",
+  "@importSiteShared": {
+    "description": "Etiqueta da loja quando os dados vieram do atalho do iPhone.",
+    "placeholders": {
+      "store": {
+        "type": "String"
+      }
+    }
+  }
 }

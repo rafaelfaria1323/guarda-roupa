@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:powersync/powersync.dart' show PowerSyncDatabase;
 import 'package:guarda_roupa/core/domain/result.dart';
@@ -42,11 +42,20 @@ final sample = ProductPreview(
 final class FakeImporter implements ProductImporter {
   Result<ProductPreview, ImportFailure> next = Ok(sample);
   final previews = <String>[];
+  final shared = <SharedPage>[];
   final images = <String>[];
 
   @override
   Future<Result<ProductPreview, ImportFailure>> preview(String url) async {
     previews.add(url);
+    return next;
+  }
+
+  @override
+  Future<Result<ProductPreview, ImportFailure>> previewShared(
+    SharedPage page,
+  ) async {
+    shared.add(page);
     return next;
   }
 
@@ -187,6 +196,73 @@ void main() {
       find.text('Muitas importações seguidas. Tenta mais tarde.'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('loja bloqueada: dica do atalho e "Colar do atalho"', (
+    tester,
+  ) async {
+    final importer = FakeImporter()..next = const Err(FetchFailed('blocked'));
+    await pumpApp(
+      tester,
+      overrides: [productImporterProvider.overrideWithValue(importer)],
+    );
+    await openWardrobe(tester);
+    await openImport(tester, url);
+    expect(find.byKey(const Key('import-blocked-shortcut')), findsOneWidget);
+
+    // O que está copiado não é do atalho.
+    var clipboard = 'olá';
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async => call.method == 'Clipboard.getData'
+          ? <String, Object?>{'text': clipboard}
+          : null,
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    await tester.tap(find.byKey(const Key('import-paste-shared')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('import-not-shared')), findsOneWidget);
+    expect(importer.shared, isEmpty);
+
+    // O texto do atalho: pré-visualização sem pedir a página à loja.
+    clipboard = jsonEncode({
+      'fio': 1,
+      'url': url,
+      'title': 'CAMISA',
+      'ld': ['{}'],
+      'meta': [
+        ['og:title', 'CAMISA'],
+      ],
+    });
+    importer.next = Ok(sample);
+    await tester.tap(find.byKey(const Key('import-paste-shared')));
+    await tester.pumpAndSettle();
+    expect(importer.shared.single.url, url);
+    expect(importer.previews, [url], reason: 'só o primeiro, pelo link');
+    expect(find.text('Camisa de linho'), findsOneWidget);
+    final field = tester.widget<TextField>(find.byKey(const Key('import-url')));
+    expect(field.controller!.text, url);
+  });
+
+  testWidgets('colar no campo o texto do atalho também serve', (tester) async {
+    final importer = FakeImporter();
+    await pumpApp(
+      tester,
+      overrides: [productImporterProvider.overrideWithValue(importer)],
+    );
+    await openWardrobe(tester);
+    await openImport(
+      tester,
+      jsonEncode({'fio': 1, 'url': url, 'ld': <String>[]}),
+    );
+    expect(importer.previews, isEmpty);
+    expect(importer.shared.single.url, url);
+    expect(find.text('Camisa de linho'), findsOneWidget);
   });
 
   testWidgets('sem Supabase configurado, o botão não aparece', (tester) async {
