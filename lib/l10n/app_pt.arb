@@ -1253,5 +1253,48 @@
         "type": "String"
       }
     }
-  }
+  },
+  "importInboxTitle": "{count, plural, =1{1 peça enviada pelo atalho} other{{count} peças enviadas pelo atalho}}",
+  "@importInboxTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importInboxDiscard": "Descartar",
+  "wardrobeInbox": "{count, plural, =1{1 peça enviada pelo atalho do iPhone} other{{count} peças enviadas pelo atalho do iPhone}}",
+  "@wardrobeInbox": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shortcutSetupTitle": "Atalho do iPhone",
+  "shortcutSetupIntro": "O atalho \"Importar para o fio\" manda a página aberta no Safari logo para aqui. As peças ficam em \"Enviadas pelo atalho\", no topo de Importar de um link, durante 7 dias.",
+  "shortcutActive": "Ligado.",
+  "shortcutInactive": "Desligado. Cria uma chave para o atalho.",
+  "shortcutNeverUsed": "Ainda não foi usado.",
+  "shortcutLastUsed": "Usado pela última vez a {date}.",
+  "@shortcutLastUsed": {
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "yMMMMd"
+      }
+    }
+  },
+  "shortcutCreate": "Criar chave",
+  "shortcutNewKey": "Nova chave",
+  "shortcutRevoke": "Desligar",
+  "shortcutReplaceTitle": "Criar uma chave nova?",
+  "shortcutReplaceBody": "A chave atual deixa de servir. Tens de pôr a nova no atalho.",
+  "shortcutKeyLabel": "Chave (cabeçalho x-fio-key)",
+  "shortcutKeyOnce": "Só se mostra agora. Guarda-a no atalho; se a perderes, cria outra.",
+  "shortcutEndpointLabel": "Endereço (URL)",
+  "shortcutHowTo": "No atalho, a ação \"Obter conteúdo do URL\" usa este endereço, o método POST, o cabeçalho x-fio-key com a chave e, como corpo, o resultado do JavaScript. Os passos estão no guia \"Atalho do iPhone\".",
+  "shortcutCopy": "Copiar",
+  "shortcutCopied": "Copiado.",
+  "shortcutUnavailable": "Não foi possível falar com o fio. Confirma a sessão e tenta outra vez."
 }

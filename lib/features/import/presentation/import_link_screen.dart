@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/domain/result.dart';
 import '../../../l10n/app_localizations.dart';
 import '../domain/product_import.dart';
+import 'shortcut_setup_screen.dart';
 
 /// Colar um link de produto, ver o que se leu e escolher o que segue para a
 /// peça nova. Devolve um [ImportedGarment] (ou `null` se o utilizador sair).
@@ -34,6 +37,61 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
   ProductPreview? _preview;
   ImportVariant? _variant;
   final _images = <String>{};
+
+  /// Peças mandadas pelo atalho; `null` enquanto carrega ou se falhou.
+  List<InboxItem>? _inbox;
+
+  /// A peça da caixa que está na pré-visualização: sai da caixa ao usar.
+  String? _inboxId;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadInbox());
+  }
+
+  Future<void> _loadInbox() async {
+    final result = await widget.importer.inbox();
+    if (!mounted) return;
+    setState(
+      () => _inbox = result is Ok<List<InboxItem>, ImportFailure>
+          ? result.value
+          : null,
+    );
+  }
+
+  void _open(InboxItem item) {
+    final p = item.preview;
+    _url.text = p.url;
+    setState(() {
+      _inboxId = item.id;
+      _notShared = false;
+      _failure = null;
+      _preview = p;
+      _variant = null;
+      _images.clear();
+      if (p.images.isNotEmpty && widget.maxImages > 0) {
+        _images.add(p.images.first);
+      }
+    });
+  }
+
+  Future<void> _discard(InboxItem item) async {
+    setState(() {
+      _inbox = [...?_inbox]..remove(item);
+      if (_inboxId == item.id) {
+        _inboxId = null;
+        _preview = null;
+      }
+    });
+    await widget.importer.discardInbox(item.id);
+  }
+
+  /// Sai do ecrã com a peça; a da caixa já não fica à espera.
+  void _finish(ImportedGarment garment) {
+    if (_inboxId case final id?) unawaited(widget.importer.discardInbox(id));
+    Navigator.of(context).pop(garment);
+  }
 
   @override
   void dispose() {
@@ -66,6 +124,7 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
     FocusScope.of(context).unfocus();
     setState(() {
       _busy = true;
+      _inboxId = null;
       _notShared = false;
       _failure = null;
       _preview = null;
@@ -120,7 +179,7 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
       }
     }
     if (!mounted) return;
-    Navigator.of(context).pop(
+    _finish(
       ImportedGarment.from(
         p,
         variant: _variant,
@@ -138,10 +197,51 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
     final preview = _preview;
     final failure = _failure;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.importTitle)),
+      appBar: AppBar(
+        title: Text(l10n.importTitle),
+        actions: [
+          IconButton(
+            key: const Key('import-shortcut-setup'),
+            tooltip: l10n.shortcutSetupTitle,
+            icon: const Icon(Icons.phone_iphone),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => ShortcutSetupScreen(importer: widget.importer),
+              ),
+            ),
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          if (_inbox case final inbox? when inbox.isNotEmpty) ...[
+            Text(
+              l10n.importInboxTitle(inbox.length),
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            for (final item in inbox)
+              ListTile(
+                key: Key('import-inbox-${item.id}'),
+                contentPadding: EdgeInsets.zero,
+                selected: _inboxId == item.id,
+                leading: const Icon(Icons.phone_iphone),
+                title: Text(
+                  item.preview.name ?? item.preview.storeName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(item.preview.storeName),
+                onTap: _busy ? null : () => _open(item),
+                trailing: IconButton(
+                  key: Key('import-inbox-discard-${item.id}'),
+                  tooltip: l10n.importInboxDiscard,
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: _busy ? null : () => _discard(item),
+                ),
+              ),
+            const Divider(height: 24),
+          ],
           TextField(
             key: const Key('import-url'),
             controller: _url,
@@ -216,9 +316,7 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
         const SizedBox(height: 12),
         OutlinedButton(
           key: const Key('import-manual'),
-          onPressed: () =>
-              Navigator.of(context)
-                  .pop(ImportedGarment.linkOnly(_url.text.trim())),
+          onPressed: () => _finish(ImportedGarment.linkOnly(_url.text.trim())),
           child: Text(l10n.importManual),
         ),
       ],
@@ -330,8 +428,7 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
           ),
           OutlinedButton(
             key: const Key('import-manual'),
-            onPressed: () =>
-                Navigator.of(context).pop(ImportedGarment.linkOnly(p.url)),
+            onPressed: () => _finish(ImportedGarment.linkOnly(p.url)),
             child: Text(l10n.importManual),
           ),
         ],

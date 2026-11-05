@@ -1,13 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../app/theme.dart';
+import '../../../core/domain/result.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../care/application/care_providers.dart';
 import '../../account_sync/application/providers.dart';
+import '../../import/application/import_providers.dart';
 import '../domain/availability.dart';
 import '../domain/garment.dart';
 import '../domain/garment_category.dart';
@@ -31,6 +35,30 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
   WardrobeRepository? _repo;
   GarmentFilter? _streamFilter;
   Stream<List<Garment>>? _garments;
+
+  /// Peças que o atalho do iPhone mandou e esperam na caixa.
+  int _inbox = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadInbox());
+  }
+
+  Future<void> _loadInbox() async {
+    final importer = ref.read(productImporterProvider);
+    if (importer == null) return;
+    final result = await importer.inbox();
+    if (!mounted) return;
+    if (result case Ok(value: final items)) {
+      setState(() => _inbox = items.length);
+    }
+  }
+
+  Future<void> _openInbox() async {
+    await context.push(AppRoutes.newGarmentFromShortcut);
+    await _loadInbox();
+  }
 
   @override
   void dispose() {
@@ -217,6 +245,20 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
                         ),
                       ),
                     ),
+                    if (_inbox > 0)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 4, 24, 4),
+                        child: Card.outlined(
+                          margin: EdgeInsets.zero,
+                          child: ListTile(
+                            key: const Key('wardrobe-inbox'),
+                            leading: const Icon(Icons.phone_iphone),
+                            title: Text(l10n.wardrobeInbox(_inbox)),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: _openInbox,
+                          ),
+                        ),
+                      ),
                     _filters(l10n),
                     Expanded(child: content),
                   ],

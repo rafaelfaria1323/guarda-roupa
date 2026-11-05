@@ -1,5 +1,5 @@
 // Edge Function `import-product` (docs/features/importacao-de-links.md).
-import { handle, type Quota, type Recorded } from './handler.ts';
+import { handle, type InboxResult, type Quota, type Recorded } from './handler.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
 // A chave pública que o cliente já envia (publishable); a do ambiente só
@@ -9,7 +9,7 @@ const envKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 /** Chama uma função da base como o utilizador do token. */
 async function rpc(
   name: string,
-  authorization: string,
+  authorization: string | null,
   apiKey: string | null,
   args: Record<string, unknown> = {},
 ): Promise<Response> {
@@ -17,7 +17,7 @@ async function rpc(
     method: 'POST',
     headers: {
       apikey: apiKey ?? envKey,
-      authorization,
+      ...(authorization == null ? {} : { authorization }),
       'content-type': 'application/json',
     },
     body: JSON.stringify(args),
@@ -56,6 +56,20 @@ Deno.serve((req) =>
         return null;
       }
       return await res.json() as Recorded;
+    },
+    // Sem sessão (atalho do iPhone): como anónimo, a chave autentica.
+    submitInbox: async (key, apiKey, e) => {
+      const res = await rpc('submit_import_inbox', null, apiKey, {
+        p_key: key,
+        p_url: e.url,
+        p_preview: e.preview,
+        p_images: e.images,
+      });
+      if (!res.ok) {
+        await res.body?.cancel();
+        throw new Error(`submit_import_inbox: ${res.status}`);
+      }
+      return await res.json() as InboxResult;
     },
     imageAllowed: async (authorization, apiKey, url) => {
       const res = await rpc('import_image_allowed', authorization, apiKey, { p_url: url });

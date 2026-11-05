@@ -122,6 +122,69 @@ void main() {
     });
   });
 
+  test('cliente: caixa do atalho pela base, com a sessão', () async {
+    final sent = <http.Request>[];
+    final client = importer((r) async {
+      sent.add(r);
+      return switch (r.url.pathSegments.last) {
+        'list_import_inbox' => jsonResponse([
+          {
+            'id': 'i1',
+            'url': okBody['url'],
+            'preview': {...okBody, 'via': 'shared'},
+            'created_at': '2026-11-05T10:00:00Z',
+          },
+          {'id': 'mal', 'preview': 'x', 'created_at': 'x'},
+        ]),
+        'import_inbox_key_status' => jsonResponse({
+          'active': true,
+          'created_at': '2026-11-01T10:00:00Z',
+          'last_used_at': null,
+        }),
+        'create_import_inbox_key' => jsonResponse('fio_abc'),
+        _ => http.Response('', 204),
+      };
+    });
+    final inbox = await client.inbox();
+    final items = (inbox as Ok<List<InboxItem>, ImportFailure>).value;
+    expect(items.single.id, 'i1');
+    expect(items.single.preview.viaShortcut, isTrue);
+    expect(items.single.preview.name, 'Camisa de linho');
+    expect(
+      sent.single.url.toString(),
+      'https://p.supabase.co/rest/v1/rpc/list_import_inbox',
+    );
+    expect(sent.single.headers['authorization'], 'Bearer jwt');
+    expect(sent.single.headers['apikey'], 'sb_publishable_test');
+
+    expect(await client.discardInbox('i1'), isA<Ok<void, ImportFailure>>());
+    expect(jsonDecode(sent.last.body), {'p_id': 'i1'});
+    final status = await client.shortcutKeyStatus();
+    final s = (status as Ok<ShortcutKeyStatus, ImportFailure>).value;
+    expect([s.active, s.lastUsedAt], [true, null]);
+    expect(await client.createShortcutKey(), isA<Ok<String, ImportFailure>>());
+    expect(await client.revokeShortcutKey(), isA<Ok<void, ImportFailure>>());
+    expect(
+      client.shortcutEndpoint,
+      'https://p.supabase.co/functions/v1/import-product?apikey=sb_publishable_test',
+    );
+  });
+
+  test('cliente: caixa sem sessão ou recusada', () async {
+    var calls = 0;
+    final none = importer((r) async {
+      calls++;
+      return jsonResponse([]);
+    }, token: null);
+    expect(await none.inbox(), isA<Err<List<InboxItem>, ImportFailure>>());
+    expect(calls, 0);
+    final denied = importer((r) async => jsonResponse({'code': '42501'}, 403));
+    expect(
+      (await denied.createShortcutKey() as Err).failure,
+      isA<NotAllowed>(),
+    );
+  });
+
   test('atalho do iPhone: lê só o texto que ele copia', () {
     final page = SharedPage.parse(
       ' {"fio":1,"url":"https://www.zara.com/pt/pt/c-p1.html","title":"CASACO",'
