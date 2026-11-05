@@ -23,7 +23,7 @@ Cartão em Hoje (antes Planeador), por baixo de "Vesti hoje":
   - Sem previsão, diz porquê e sugere sem regras de conforto.
   - Em alternativa, tempo indicado à mão (Calor, Ameno, Frio e chuva), sempre identificado como manual, até voltar à previsão. Usa 26, 18 ou 8 °C de sensação.
 - **Ocasião:** qualquer, ou uma das três.
-- **Conjuntos:** até 3 sugestões, cada uma com peças, papel e notas por peça (avisos a vermelho), o que falta, a camada opcional e as lacunas por papel. "Outras sugestões" muda a seed.
+- **Conjuntos:** até 3 sugestões, cada uma com peças, papel e notas por peça (avisos a laranja escuro), o que falta, a camada opcional e as lacunas por papel. Em Hoje aparece uma de cada vez, em flat-lay: "Mostrar outro" passa à seguinte e, depois da última, muda a seed. As razões ficam atrás de "Porquê este"; os avisos ficam à vista.
 - **Sem conjunto possível:** explica os dados insuficientes ou porque nada serve.
 - **"Vou vestir isto":** abre "Vesti hoje" com as peças já escolhidas. Só conta como uso depois de guardar (P-08). As escolhas do cartão não ficam guardadas.
 
@@ -40,7 +40,7 @@ Cartão em Hoje (antes Planeador), por baixo de "Vesti hoje":
 - **Padrões e texturas:** padrão por indicar ou liso não conta. Cada padrão além do primeiro, e cada textura forte (marcada ou com pelo) além da primeira, soma um ponto de "competição". O conjunto fica atrás de outro igual em tudo o resto, com a nota "Mais de um padrão: podem competir". Nunca é excluído nem conta como aviso.
 - **Limite:** os pares continuam a ser a i-ésima peça de cada papel. A harmonia ordena estes conjuntos, mas não procura outros pares.
 
-As notas do conjunto aparecem em "Sugestões para hoje". Só o papel em falta fica a vermelho.
+As notas do conjunto aparecem em "Sugestões para hoje". Só o papel em falta fica a laranja escuro, à vista; as outras ficam em "Porquê este".
 
 Ainda não: formalidade do conjunto, contraste desejado, acessórios, camada intermédia, conjuntos guardados como preferência, diversidade na semana.
 

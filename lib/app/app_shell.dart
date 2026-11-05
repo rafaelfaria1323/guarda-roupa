@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../features/account_sync/application/providers.dart';
 import '../features/account_sync/presentation/sync_status.dart';
 import '../l10n/app_localizations.dart';
+import 'fio_mark.dart';
 import 'router.dart';
 
 /// Largura a partir da qual a navegação inferior passa a lateral.
@@ -31,7 +32,10 @@ class AppShell extends ConsumerWidget {
     ];
     final title = destinations[navigationShell.currentIndex].$3;
     final appBar = AppBar(
-      title: Text(title),
+      // Em "Hoje" o título é a marca; nos outros separadores, o nome.
+      title: navigationShell.currentIndex == 0
+          ? const FioWordmark(size: 24)
+          : Text(title),
       actions: [
         SyncStatusIcon(
           sync: ref.watch(syncSummaryProvider),

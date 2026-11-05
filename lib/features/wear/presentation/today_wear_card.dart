@@ -9,6 +9,7 @@ import '../../wardrobe/domain/garment.dart';
 import '../../wardrobe/domain/garment_filter.dart';
 import '../application/wear_providers.dart';
 import '../domain/wear_event.dart';
+import '../../wardrobe/presentation/garment_cutout.dart';
 import 'wear_messages.dart';
 
 /// "Vesti hoje" (P-08): o que foi realmente usado hoje, com corrigir e
@@ -25,50 +26,51 @@ class TodayWearCard extends ConsumerWidget {
     final today = todayFrom(ref.watch(clockProvider));
     final theme = Theme.of(context);
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: StreamBuilder<List<WearEvent>>(
-          stream: repo.watchDay(today),
-          builder: (context, events) => StreamBuilder<List<Garment>>(
-            // Inclui arquivadas: uma peça usada hoje pode ter sido arquivada.
-            stream: wardrobe.watchGarments(
-              const GarmentFilter(includeArchived: true),
-            ),
-            builder: (context, garments) {
-              final list = events.data ?? const <WearEvent>[];
-              final byId = {
-                for (final g in garments.data ?? <Garment>[]) g.id: g,
-              };
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(l10n.wearTodayTitle, style: theme.textTheme.titleMedium),
-                  Text(l10n.wearDay(today.toLocalDateTime())),
-                  const SizedBox(height: 12),
-                  if (list.isEmpty) Text(l10n.wearTodayNone),
-                  for (final event in list)
-                    _EventRow(event: event, garments: byId),
-                  const SizedBox(height: 12),
-                  if (list.isEmpty)
-                    FilledButton.icon(
-                      key: const Key('wear-today'),
-                      onPressed: () => context.push(AppRoutes.wear),
-                      icon: const Icon(Icons.checkroom),
-                      label: Text(l10n.wearTodayButton),
-                    )
-                  else
-                    TextButton.icon(
-                      key: const Key('wear-today'),
-                      onPressed: () => context.push(AppRoutes.wear),
-                      icon: const Icon(Icons.add),
-                      label: Text(l10n.wearAnother),
-                    ),
-                ],
-              );
-            },
-          ),
+    final muted = theme.textTheme.bodyMedium?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+
+    return StreamBuilder<List<WearEvent>>(
+      stream: repo.watchDay(today),
+      builder: (context, events) => StreamBuilder<List<Garment>>(
+        // Inclui arquivadas: uma peça usada hoje pode ter sido arquivada.
+        stream: wardrobe.watchGarments(
+          const GarmentFilter(includeArchived: true),
         ),
+        builder: (context, garments) {
+          final list = events.data ?? const <WearEvent>[];
+          final byId = {for (final g in garments.data ?? <Garment>[]) g.id: g};
+          if (list.isEmpty) {
+            // Ainda nada: uma linha discreta, a sugestão é o principal.
+            return Wrap(
+              spacing: 12,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text(l10n.wearTodayNone, style: muted),
+                OutlinedButton(
+                  key: const Key('wear-today'),
+                  onPressed: () => context.push(AppRoutes.wear),
+                  child: Text(l10n.wearTodayButton),
+                ),
+              ],
+            );
+          }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.wearTodayTitle, style: theme.textTheme.titleLarge),
+              const SizedBox(height: 10),
+              for (final event in list) _EventRow(event: event, garments: byId),
+              TextButton(
+                key: const Key('wear-today'),
+                style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                onPressed: () => context.push(AppRoutes.wear),
+                child: Text(l10n.wearAnother),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -89,13 +91,40 @@ class _EventRow extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            children: [
-              for (final id in event.garmentIds)
-                Chip(label: Text(garmentLabel(l10n, garments[id]))),
-            ],
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final id in event.garmentIds)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 14),
+                    child: SizedBox(
+                      width: 76,
+                      child: Column(
+                        children: [
+                          if (garments[id] case final g?)
+                            GarmentCutout(garment: g, size: 64)
+                          else
+                            const SizedBox.square(
+                              dimension: 64,
+                              child: Icon(Icons.help_outline),
+                            ),
+                          const SizedBox(height: 6),
+                          Text(
+                            garmentLabel(l10n, garments[id]),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.labelMedium,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
           Row(
             children: [

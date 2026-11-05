@@ -77,7 +77,7 @@ void main() {
       200,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('Esta semana'), findsOne);
+    expect(find.text('A tua semana'), findsOne);
     expect(text(tester, day(0, 'state')), 'Por planear');
 
     await generate(tester, '7 dias propostos.');

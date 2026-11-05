@@ -71,17 +71,20 @@ void main() {
     expect(calls, 1);
 
     await scrollTo(tester, find.byKey(const Key('suggestion-0-wear')));
-    expect(find.text('Sugestão 1'), findsOne);
+    expect(find.textContaining('Sugestão 1 de'), findsOne);
     for (final name in ['Branca', 'Azul', 'Brancos']) {
       expect(
         find.descendant(
           of: find.byKey(const Key('suggestion-0')),
-          matching: find.text(name),
+          matching: find.textContaining(name),
         ),
         findsOne,
       );
     }
     // Sem ocasiões nem aquecimento indicados: diz-se, não se inventa.
+    await scrollTo(tester, find.byKey(const Key('suggestion-0-why')));
+    await tester.tap(find.byKey(const Key('suggestion-0-why')));
+    await tester.pumpAndSettle();
     expect(find.textContaining('aquecimento desconhecido'), findsWidgets);
 
     await tester.tap(find.byKey(const Key('suggestion-0-wear')));
