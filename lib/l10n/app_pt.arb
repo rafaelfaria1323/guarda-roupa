@@ -1971,5 +1971,15 @@
         "type": "int"
       }
     }
-  }
+  },
+  "todayPlanWeek": "Planear a semana",
+  "todayLaundry": "{count, plural, =1{1 peça na lavandaria} other{{count} peças na lavandaria}}",
+  "@todayLaundry": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "todayLaundryOpen": "Ver"
 }

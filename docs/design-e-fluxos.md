@@ -37,17 +37,24 @@ Cartões brancos com 16 de raio e contorno de 1 px; botões, etiquetas e pesquis
 
 Letra: **Manrope** em tudo (títulos a 600–700, mais apertados). OFL, incluída como assets estáticos em `assets/fonts/` (gerados com `tool/fonts/instance_fonts.py`). Não depender só da cor para comunicar estados.
 
-## Ecrã Hoje (v2, aplicado)
+## Ecrã Hoje (v3, aplicado)
 
-De cima para baixo, sem cartões à volta (`PlannerScreen`):
+`PlannerScreen` segue o ecrã "home_dashboard" do Stitch (2026-11-06), só com o que a app já faz. De cima para baixo:
 
-1. **Marca e saudação.** A barra mostra `FioWordmark`; o título é "Bom dia." / "Boa tarde." / "Boa noite." conforme a hora (Manrope, 40).
-2. **Tempo numa frase** (resumo da previsão, origem e hora em letra pequena; "Atualizar" e "Indicar o tempo à mão" como ações discretas).
-3. **Sugestão do dia como flat-lay.** As peças (`GarmentCutout`: foto com borda branca e sombra; sem foto, um cartão na cor principal da peça) pousadas com rotações pequenas. Por baixo, "Sugestão 1 de N", os nomes numa frase e os avisos (lavagem, rotação, papel em falta) a laranja escuro. As razões ficam atrás de "Porquê este".
-4. **Ocasião** numa só linha de pílulas que desliza na horizontal.
-5. **Um botão principal**, "Vou vestir isto" (abre "Vesti hoje" com as peças por confirmar), "Mostrar outro" (passa à sugestão seguinte; no fim pede um novo lote ao motor) e "Guardar como conjunto" (com a ocasião escolhida, sem a camada opcional). Uma sugestão que já é um conjunto guardado diz "Um dos teus conjuntos" a índigo, por baixo dos nomes, e não mostra o botão; com uma peça trocada diz "De um dos teus conjuntos, com Preta em vez de Azul" e o botão fica (guarda a variante como outro).
-6. **Vesti hoje.** Sem registo: uma linha e o botão "Vesti hoje". Com registo: "Hoje vestiste" com as peças recortadas, "Corrigir" e "Desfazer".
-7. **A tua semana como um fio** (`WeekThread`): sete nós com a cor da peça principal de cada dia (vestida, senão planeada); tracejado = por decidir; hoje com contorno. Por baixo, os dias em cartões brancos com a ocasião, "Pode não acontecer", as peças e as ações (inalterados).
+1. **Data e saudação.** A barra mostra `FioWordmark`. Por cima do título, a data em maiúsculas pequenas ("SEXTA-FEIRA, 6 DE NOVEMBRO"); o título é "Bom dia." / "Boa tarde." / "Boa noite." conforme a hora.
+2. **Tempo numa caixa branca** (resumo da previsão, origem e hora em letra pequena; "Atualizar" e "Indicar o tempo à mão" como ações discretas).
+3. **Cartão do look do dia.** Começa com um ponto verde e "Sugestões para hoje" e a ocasião numa linha de pílulas que desliza. Depois vem a sugestão como flat-lay: as peças (`GarmentCutout`: foto com borda branca e sombra; sem foto, um cartão na cor principal da peça) pousadas com rotações pequenas. Por baixo, "Sugestão 1 de N", os nomes numa frase e os avisos (lavagem, rotação, papel em falta) a laranja escuro. As razões ficam atrás de "Porquê este".
+4. **Botões do cartão.** "Vou vestir isto" ocupa a largura e abre "Vesti hoje" com as peças por confirmar. Ao lado há dois botões redondos:
+   - guardar como conjunto, com a ocasião escolhida e sem a camada opcional;
+   - mostrar outro, que passa à sugestão seguinte e, no fim, pede um novo lote ao motor.
+
+   Uma sugestão que já é um conjunto guardado diz "Um dos teus conjuntos" a verde, por baixo dos nomes, e não mostra o botão de guardar. Com uma peça trocada diz "De um dos teus conjuntos, com Preta em vez de Azul" e o botão fica (guarda a variante como outro).
+5. **Pedir ao stylist** (só com o Gemini ligado), como antes.
+6. **Atalhos**: três cartões iguais com um círculo verde-claro: "Adicionar peça", "Novo conjunto" e "Planear a semana" (abre o separador Semana).
+7. **Lavandaria**, só quando há peças por lavar, a lavar, a secar ou na limpeza: "2 peças na lavandaria", as primeiras pelo nome e "Ver" (abre o cesto).
+8. **Vesti hoje.** Sem registo: uma linha e o botão "Vesti hoje". Com registo: "Hoje vestiste" com as peças recortadas, "Corrigir" e "Desfazer".
+
+A semana passou para o separador Semana ([planeamento semanal](features/planeamento-semanal.md)).
 
 Os textos longos de ajuda (o que conta como uso, as regras da semana) saíram do ecrã; as regras continuam nas features.
 
