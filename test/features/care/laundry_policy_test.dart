@@ -230,4 +230,12 @@ void main() {
       expect(dirty(wear(10, ['x'])), isEmpty);
     });
   });
+
+  test('etiqueta que pede limpeza profissional', () {
+    expect(LaundryPolicy.asksProfessional('Limpeza a seco'), isTrue);
+    expect(LaundryPolicy.asksProfessional('NÃO LAVAR. Só a seco.'), isTrue);
+    expect(LaundryPolicy.asksProfessional('Dry clean only'), isTrue);
+    expect(LaundryPolicy.asksProfessional('Lavar à máquina a 30 °C'), isFalse);
+    expect(LaundryPolicy.asksProfessional(null), isFalse);
+  });
 }

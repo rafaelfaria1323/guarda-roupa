@@ -7,7 +7,10 @@ enum Availability {
   available('available', 0),
   drying('drying', 1),
   washing('washing', 2),
-  needsCleaning('needs_cleaning', 3);
+
+  /// Na limpeza profissional (lavandaria, limpeza a seco), fora de casa.
+  atCleaners('at_cleaners', 3),
+  needsCleaning('needs_cleaning', 4);
 
   const Availability(this.id, this._caution);
 
@@ -27,7 +30,8 @@ enum Availability {
   }
 
   /// Resolve duas alterações concorrentes (ADR-008): prevalece o estado
-  /// menos disponível (`needs_cleaning` > `washing` > `drying` > `available`).
+  /// menos disponível (`needs_cleaning` > `at_cleaners` > `washing` >
+  /// `drying` > `available`).
   ///
   /// Uma peça nunca volta a "disponível" por causa de um conflito: isso exige
   /// confirmação explícita do utilizador.

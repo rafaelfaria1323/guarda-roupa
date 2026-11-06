@@ -175,6 +175,21 @@ select pg_temp.check('fica a lavar', (select availability = 'washing' from publi
 select pg_temp.op('60000000-0000-0000-0000-000000000006', 'set_availability',
   '{"from":"washing","to":"limpa"}') as r \gset
 select pg_temp.check('estado desconhecido é rejeitado', :'r'::jsonb ->> 'reason' = 'invalid');
+
+select pg_temp.op('60000000-0000-0000-0000-000000000007', 'set_availability',
+  '{"from":"washing","to":"at_cleaners"}') as r \gset
+select pg_temp.check('vai à lavandaria',
+  :'r'::jsonb ->> 'result' = 'applied'
+  and (select availability = 'at_cleaners' from public.garments));
+select pg_temp.op('60000000-0000-0000-0000-000000000008', 'set_availability',
+  '{"from":"available","to":"washing"}') as r \gset
+select pg_temp.check('a lavar com base antiga não tira da lavandaria',
+  :'r'::jsonb ->> 'result' = 'conflict'
+  and (select availability = 'at_cleaners' from public.garments));
+select pg_temp.op('60000000-0000-0000-0000-000000000009', 'set_availability',
+  '{"from":"available","to":"needs_cleaning"}') as r \gset
+select pg_temp.check('precisa de limpeza prevalece sobre a lavandaria',
+  :'r'::jsonb ->> 'result' = 'applied');
 commit;
 
 -- ------------------------------------------------------ arquivo e tombstone

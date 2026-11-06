@@ -1,5 +1,6 @@
 import '../../wardrobe/domain/garment.dart';
 import '../../wardrobe/domain/garment_category.dart';
+import '../../wardrobe/domain/garment_filter.dart';
 import '../../wear/domain/calendar_day.dart';
 import '../../wear/domain/wear_event.dart';
 import 'care_policies.dart';
@@ -105,6 +106,24 @@ abstract final class LaundryPolicy {
         if (states[g.id]!.washRecommended) g.id,
     ];
   }
+
+  /// O texto de cuidados da etiqueta pede limpeza profissional (a seco ou
+  /// "não lavar"). Só se lê o que o utilizador escreveu; nada se adivinha.
+  static bool asksProfessional(String? care) {
+    if (care == null) return false;
+    final text = GarmentFilter.fold(care);
+    return _professional.any(text.contains);
+  }
+
+  static const _professional = [
+    'a seco',
+    'limpeza profissional',
+    'lavandaria',
+    'nao lavar',
+    'dry clean',
+    'professional',
+    'do not wash',
+  ];
 
   /// No mesmo dia, conta a ordem em que foram registados.
   static bool _after(CalendarDay day, DateTime created, CleaningEvent c) {

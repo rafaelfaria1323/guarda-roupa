@@ -198,7 +198,7 @@
       }
     }
   },
-  "availabilityLabel": "{availability, select, available{Disponível} drying{A secar} washing{A lavar} needs_cleaning{Precisa de limpeza} other{Desconhecida}}",
+  "availabilityLabel": "{availability, select, available{Disponível} drying{A secar} washing{A lavar} at_cleaners{Na lavandaria} needs_cleaning{Precisa de limpeza} other{Desconhecida}}",
   "@availabilityLabel": {
     "placeholders": {
       "availability": {
@@ -523,6 +523,7 @@
   "wearPickTitle": "O que vestiste hoje?",
   "wearCorrectTitle": "Corrigir utilização",
   "wearSave": "Guardar",
+  "wearDirtyNow": "Ficou para lavar já (nódoa ou uso intenso)",
   "wearPickHint": "Só conta como utilização o que confirmares aqui. Planear não conta.",
   "wearPickEmpty": "Ainda não há peças no guarda-roupa.",
   "wearSelected": "{count, plural, =0{Nenhuma peça escolhida} =1{1 peça escolhida} other{{count} peças escolhidas}}",
@@ -590,6 +591,11 @@
   "laundryRecommended": "Recomendado lavar. É só um aviso: a disponibilidade não muda.",
   "laundryRecommendedShort": "Lavar recomendado",
   "laundryCleanedToday": "Lavei hoje",
+  "laundryToCleaners": "Levei à lavandaria",
+  "laundryBackFromCleaners": "Já veio da lavandaria",
+  "laundryAtCleaners": "Na lavandaria até a ires buscar.",
+  "laundryBackAvailable": "Limpeza registada. Voltou da lavandaria e está disponível.",
+  "laundryProfessionalLabel": "A etiqueta pede limpeza profissional.",
   "laundryCleaned": "Limpeza registada.",
   "laundryAfterLabel": "Aviso de lavagem",
   "laundryAfterValue": "{count, plural, =0{Sem aviso} =1{Após cada utilização} other{Após {count} utilizações}}",
