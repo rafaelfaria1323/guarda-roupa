@@ -70,6 +70,20 @@ const pickIn = (values: readonly string[], v: unknown): string | null =>
   typeof v === 'string' && values.includes(v) ? v : null;
 
 /** O pedido limpo, ou `null` se não serve (antes de gastar quota). */
+/** Uma inspiração em texto: só as etiquetas, com tamanhos limitados. */
+export function inspirationOf(x: unknown) {
+  const i = (x ?? {}) as Record<string, unknown>;
+  return {
+    title: str(i.title, 80),
+    palette: strs(i.palette, 6, 20),
+    formality: str(i.formality, 20),
+    patterns: strs(i.patterns, 6, 20),
+    textures: strs(i.textures, 6, 20),
+    occasions: strs(i.occasions, 3, 20),
+    proportions: strs(i.proportions, 6, 40),
+  };
+}
+
 export function shoppingBriefOf(body: Record<string, unknown>) {
   const raw = Array.isArray(body.garments) ? body.garments : null;
   if (raw == null || raw.length > 300) return null;
@@ -90,18 +104,7 @@ export function shoppingBriefOf(body: Record<string, unknown>) {
   if (garments.some((g) => g == null)) return null;
   const inspirations = (Array.isArray(body.inspirations) ? body.inspirations : [])
     .slice(0, 40)
-    .map((x) => {
-      const i = (x ?? {}) as Record<string, unknown>;
-      return {
-        title: str(i.title, 80),
-        palette: strs(i.palette, 6, 20),
-        formality: str(i.formality, 20),
-        patterns: strs(i.patterns, 6, 20),
-        textures: strs(i.textures, 6, 20),
-        occasions: strs(i.occasions, 3, 20),
-        proportions: strs(i.proportions, 6, 40),
-      };
-    });
+    .map(inspirationOf);
   const gaps = (Array.isArray(body.gaps) ? body.gaps : []).slice(0, 10).flatMap((x) => {
     const g = (x ?? {}) as Record<string, unknown>;
     const reason = pickIn(REASONS, g.reason);

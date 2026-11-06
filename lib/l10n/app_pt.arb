@@ -1846,7 +1846,7 @@
   "stylistAsk": "Pedir ao stylist",
   "stylistThinking": "A pensar…",
   "stylistTitle": "Ideia do stylist",
-  "stylistHint": "O Gemini escolhe um conjunto com as tuas peças para hoje e explica porquê.",
+  "stylistHint": "O Gemini escolhe um conjunto com as tuas peças para hoje, na linha das tuas inspirações, e explica porquê.",
   "stylistAnother": "Outra ideia",
   "stylistChange": "Pedir mudança",
   "stylistChangeHint": "Ex.: mais arranjado, sem ténis",
@@ -1933,5 +1933,7 @@
       }
     }
   },
-  "shoppingCopied": "Pesquisa copiada. Cola-a no navegador."
+  "shoppingCopied": "Pesquisa copiada. Cola-a no navegador.",
+  "stylistAskLook": "Pedir ao stylist um look assim",
+  "stylistLookHint": "O Gemini monta um conjunto parecido com esta inspiração, só com as tuas peças, e explica o que bate certo e o que muda."
 }

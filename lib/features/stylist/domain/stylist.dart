@@ -1,6 +1,8 @@
 import '../../../core/domain/result.dart';
 import '../../engine/domain/daily_engine.dart';
 import '../../engine/domain/suggestion.dart';
+import '../../inspirations/domain/inspiration.dart';
+import '../../inspirations/domain/inspiration_brief.dart';
 import '../../inspirations/domain/style_preference.dart';
 import '../../outfits/domain/outfit.dart';
 import '../../photo_ai/domain/photo_reader.dart';
@@ -43,11 +45,16 @@ final class StylistBrief {
   StylistBrief._(this.json, this.ids);
 
   /// Até [maxGarments] peças: as menos usadas primeiro, se houver mais.
+  /// [inspirations]: o estilo que a pessoa guardou (as mais recentes, até
+  /// [maxInspirations]). [target]: "um look assim", a partir de uma
+  /// inspiração; a ocasião passa a ser a dela, se tiver só uma.
   factory StylistBrief.build(
     WardrobeSnapshot snapshot,
     SuggestionRequest request, {
     String? ask,
     List<GarmentId> previous = const [],
+    List<Inspiration> inspirations = const [],
+    Inspiration? target,
   }) {
     final day = request.day;
     final last = <GarmentId, CalendarDay>{};
@@ -80,7 +87,16 @@ final class StylistBrief {
       _ => '${p.subject.id} ${p.value}',
     };
     return StylistBrief._({
-      'occasion': request.occasion?.id,
+      'occasion':
+          (target != null && target.occasions.length == 1
+                  ? target.occasions.single
+                  : request.occasion)
+              ?.id,
+      'inspirations': [
+        for (final i in inspirations.take(maxInspirations))
+          if (i.id != target?.id) inspirationBrief(i),
+      ],
+      'target': target == null ? null : inspirationBrief(target),
       'weather': weather == null
           ? null
           : {
@@ -127,6 +143,9 @@ final class StylistBrief {
 
   /// O servidor aceita até 200.
   static const maxGarments = 150;
+
+  /// O servidor aceita até 20.
+  static const maxInspirations = 20;
 
   final Map<String, Object?> json;
 

@@ -2,7 +2,13 @@
 // conjunto só com as peças que a app manda (texto, sem fotos) e explica
 // porquê. Devolve só peças e papéis válidos; a app volta a verificar.
 import type { Generated, Quota } from '../_shared/gemini.ts';
-import { ideasOf, SHOPPING_PROMPT, SHOPPING_SCHEMA, shoppingBriefOf } from './shopping.ts';
+import {
+  ideasOf,
+  inspirationOf,
+  SHOPPING_PROMPT,
+  SHOPPING_SCHEMA,
+  shoppingBriefOf,
+} from './shopping.ts';
 
 export interface Deps {
   configured: boolean;
@@ -21,6 +27,7 @@ export const ROLES = [
 ] as const;
 const OCCASIONS = ['casual', 'work_casual', 'evening'];
 const MAX_GARMENTS = 200;
+const MAX_INSPIRATIONS = 20;
 const ID = /^p\d{1,3}$/;
 
 const CORS = {
@@ -63,6 +70,8 @@ Rules:
 - Add outer_layer when it is cold or rainy. Accessories (umbrella, scarf, sunglasses, ...) only when the weather or the look asks for them.
 - Respect the weather (feels_like_c in °C), the occasion and the user's likes and avoids. Prefer items worn less recently ("last_worn_days"; null = never worn).
 - Think about color harmony, proportions (fit, length) and a coherent formality.
+- "inspirations" are looks the user saved (tags only): lean towards their colors, formality, patterns, textures and proportions when it suits today.
+- If "target" is given, recreate that look as closely as possible with the user's items (colors, formality, patterns, textures, proportions); resemblance to "target" matters more than "inspirations", while still respecting the weather. In "why", say what matches the look and what differs.
 - If "previous" is given, propose something clearly different, unless "ask" asks to adjust it.
 - If "ask" is given, follow it when possible.
 - "name": a short outfit name in European Portuguese (pt-PT), at most 5 words.
@@ -142,6 +151,12 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
     avoids: strs(body.avoids, 20, 40),
     previous: strs(body.previous, 10, 5).filter((id) => ids.has(id)),
     ask: str(body.ask, 200),
+    inspirations: (Array.isArray(body.inspirations) ? body.inspirations : [])
+      .slice(0, MAX_INSPIRATIONS)
+      .map(inspirationOf),
+    target: body.target != null && typeof body.target === 'object'
+      ? inspirationOf(body.target)
+      : null,
     wardrobe: garments,
   };
 
