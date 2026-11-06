@@ -155,17 +155,22 @@ final todaySuggestionsProvider = Provider<SuggestionResult?>((ref) {
   final snapshot = ref.watch(wardrobeSnapshotProvider);
   if (snapshot == null) return null;
   final choices = ref.watch(suggestionChoicesProvider);
-  final report = ref.watch(todayWeatherProvider).value;
-  final conditions =
-      choices.manual?.toConditions() ?? report?.weather?.toConditions();
   return DailyEngine.suggest(
     snapshot,
     SuggestionRequest(
       day: todayFrom(ref.watch(clockProvider)),
       occasion: choices.occasion,
-      weather: conditions,
+      weather: ref.watch(todayConditionsProvider),
       comfort: currentComfort(ref),
       seed: choices.seed,
     ),
   );
+});
+
+/// O tempo das sugestões de hoje: o indicado à mão ou a previsão (`null`
+/// enquanto carrega ou sem nenhum dos dois).
+final todayConditionsProvider = Provider<WeatherConditions?>((ref) {
+  final manual = ref.watch(suggestionChoicesProvider).manual;
+  if (manual != null) return manual.toConditions();
+  return ref.watch(todayWeatherProvider).value?.weather?.toConditions();
 });

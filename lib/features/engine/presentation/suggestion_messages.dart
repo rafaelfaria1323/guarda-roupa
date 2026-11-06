@@ -5,6 +5,7 @@ import '../../inspirations/domain/style_preference.dart';
 import '../../inspirations/presentation/preference_messages.dart';
 import '../../wear/presentation/today_wear_card.dart';
 import '../domain/comfort.dart';
+import '../domain/look_target.dart';
 import '../domain/suggestion.dart';
 
 /// Texto curto de uma nota (`null` = não vale a pena mostrar).
@@ -34,6 +35,12 @@ String? noteText(BuildContext context, SuggestionNote note) {
     NeverWorn() => l10n.noteNeverWorn,
     RecentUses(:final times) => l10n.noteRecentUses(times),
     WashRecommended() => l10n.noteWash,
+    LookMatch(:final aspects) => l10n.noteLookMatch(
+      [
+        for (final a in LookAspect.values)
+          if (aspects.contains(a)) l10n.lookAspectLabel(a.name),
+      ].join(', '),
+    ),
     PreferenceMatch(:final preference) => preferenceTitle(l10n, preference),
     ColorCombosNote(:final combos) => l10n.noteColorCombos(
       [

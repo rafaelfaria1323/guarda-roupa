@@ -123,7 +123,7 @@ Postos de parte:
 
 **Peças parecidas com uma inspiração — feito (2026-11-04):**
 
-- **Na app:** no editor de uma inspiração com imagem, com o FashionCLIP descarregado, "Procurar peças parecidas" compara a miniatura da imagem com a capa (miniatura) de cada peça não arquivada. Mostra as 5 mais parecidas por cosseno e um toque abre a peça. Não liga nada, não cria etiquetas e não muda a inspiração.
+- **Na app:** no editor de uma inspiração com imagem, com o FashionCLIP descarregado, "Procurar peças parecidas" compara a miniatura da imagem com a capa (miniatura) de cada peça não arquivada. Mostra as 5 mais parecidas por cosseno e um toque abre a peça. Não liga nada, não cria etiquetas e não muda a inspiração. Desde 2026-11-06, a mesma comparação alimenta "Montar com o que tenho": das 8 mais parecidas, até 2 por grupo contam para o conjunto ([inspirações](inspiracoes-e-estilo.md)).
   - Cada capa analisa-se uma vez por dispositivo; o embedding fica na tabela local `photo_embeddings` (fora da sincronização, apagada ao terminar sessão). Na Web são cerca de 1,4 s por capa na primeira vez.
   - Peças cuja foto ainda não está neste dispositivo ficam de fora, e a app diz quantas. Sem modelo, o botão não aparece.
 - **Medição:** `tool/models/eval_similar.py`, nas mesmas 621 fotos. Para cada foto, entre as 5 mais parecidas, 74 % têm a mesma etiqueta: 98 % no calçado, 92 % nas calças, 37 % nas blusas e 42 % em "Longsleeve", que se confundem com outras peças de cima.

@@ -1483,5 +1483,35 @@
       }
     }
   },
-  "noteSavedOutfitGone": "a peça que já não tens"
+  "noteSavedOutfitGone": "a peça que já não tens",
+  "lookOpen": "Montar com o que tenho",
+  "lookTitle": "Montar com o que tenho",
+  "lookSearching": "Procuro nas tuas peças: {aspects}",
+  "@lookSearching": {
+    "placeholders": {
+      "aspects": {
+        "type": "String"
+      }
+    }
+  },
+  "lookNothingToMatch": "Esta inspiração ainda não tem etiquetas nem imagem: estes são os conjuntos de hoje. Junta cores, formalidade ou uma imagem para eu saber o que procurar.",
+  "lookImageNoModel": "Para comparar a imagem com as tuas peças, descarrega os modelos de IA local nas Definições.",
+  "lookMore": "Mostrar outros",
+  "lookFootnote": "Só peças tuas e disponíveis, com as regras de hoje (tempo, rotatividade, lavagem). Tudo neste dispositivo; a inspiração não muda nada.",
+  "noteLookMatch": "Como na inspiração: {aspects}",
+  "@noteLookMatch": {
+    "placeholders": {
+      "aspects": {
+        "type": "String"
+      }
+    }
+  },
+  "lookAspectLabel": "{aspect, select, color{cor} formality{formalidade} pattern{padrão} texture{textura} image{parecida com a imagem} other{—}}",
+  "@lookAspectLabel": {
+    "placeholders": {
+      "aspect": {
+        "type": "String"
+      }
+    }
+  }
 }

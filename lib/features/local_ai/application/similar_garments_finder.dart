@@ -24,10 +24,11 @@ final class SimilarGarmentsFinder {
   final WardrobeRepository _repo;
 
   /// `null` se a imagem [query] não se conseguir analisar. Só considera
-  /// peças com foto e não arquivadas.
+  /// peças com foto e não arquivadas; devolve as [top] mais parecidas.
   Future<SimilarGarmentsResult?> find(
     Uint8List query,
     List<Garment> garments, {
+    int top = SimilarGarments.top,
     void Function(int done, int total)? onProgress,
   }) async {
     final q = await _embedder.embed(query);
@@ -48,7 +49,10 @@ final class SimilarGarmentsFinder {
       }
     }
     onProgress?.call(withPhoto.length, withPhoto.length);
-    return (items: SimilarGarments.rank(q, candidates), skipped: skipped);
+    return (
+      items: SimilarGarments.rank(q, candidates, top: top),
+      skipped: skipped,
+    );
   }
 
   Future<Float32List?> _embeddingOf(String photoId) async {

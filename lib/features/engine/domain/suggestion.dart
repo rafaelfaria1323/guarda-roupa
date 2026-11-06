@@ -7,6 +7,7 @@ import '../../wardrobe/domain/garment_attributes.dart';
 import '../../wear/domain/calendar_day.dart';
 import '../../wear/domain/wear_event.dart';
 import 'comfort.dart';
+import 'look_target.dart';
 
 /// O que o motor sabe do guarda-roupa: só peças que existem e histórico
 /// confirmado. Inspirações nunca entram como peças.
@@ -49,6 +50,7 @@ final class SuggestionRequest {
     this.comfort = const ComfortThresholds(),
     this.seed = 0,
     this.maxResults = 3,
+    this.look,
   });
 
   final CalendarDay day;
@@ -65,6 +67,10 @@ final class SuggestionRequest {
   /// resultado.
   final int seed;
   final int maxResults;
+
+  /// "Montar com o que tenho": peças com mais em comum com a inspiração
+  /// passam à frente, depois das regras e dos avisos. `null` = o dia.
+  final LookTarget? look;
 }
 
 /// Estado da pesquisa (docs/features/motor-de-combinacoes.md §6).
@@ -141,6 +147,12 @@ final class WashRecommended extends SuggestionNote {
   const WashRecommended(this.uses, this.threshold);
   final int uses;
   final int threshold;
+}
+
+/// O que a peça tem da inspiração pedida ([SuggestionRequest.look]).
+final class LookMatch extends SuggestionNote {
+  const LookMatch(this.aspects);
+  final Set<LookAspect> aspects;
 }
 
 final class PreferenceMatch extends SuggestionNote {
