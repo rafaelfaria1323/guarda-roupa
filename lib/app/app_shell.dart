@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/account_sync/application/providers.dart';
 import '../features/account_sync/presentation/sync_status.dart';
+import '../features/local_ai/presentation/models_auto_download.dart';
 import '../features/planner/presentation/week_autopilot.dart';
 import '../l10n/app_localizations.dart';
 import 'fio_mark.dart';
@@ -22,10 +23,10 @@ class AppShell extends ConsumerWidget {
     initialLocation: index == navigationShell.currentIndex,
   );
 
-  // A semana planeia-se sozinha em qualquer separador.
+  // A semana planeia-se e os modelos descarregam-se em qualquer separador.
   @override
   Widget build(BuildContext context, WidgetRef ref) =>
-      WeekAutopilot(child: _scaffold(context, ref));
+      ModelsAutoDownload(child: WeekAutopilot(child: _scaffold(context, ref)));
 
   Widget _scaffold(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);

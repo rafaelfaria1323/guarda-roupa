@@ -1069,7 +1069,7 @@
   "localAiTitle": "IA local",
   "localAiSummaryOff": "Desligada: as sugestões usam o método simples",
   "localAiSummaryOn": "Ativa neste dispositivo",
-  "localAiIntro": "Os modelos correm só neste dispositivo: as fotos não saem daqui. Descarregar é opcional e pode desfazer-se; sem modelo, a app funciona na mesma e as sugestões usam o método simples.",
+  "localAiIntro": "Os modelos correm só neste dispositivo: as fotos não saem daqui. Descarregam-se sozinhos com a primeira peça com foto; se removeres um, só volta quando pedires. Sem modelo, a app funciona na mesma e as sugestões usam o método simples.",
   "localAiBackgroundTitle": "Recorte do fundo",
   "localAiBackgroundBody": "Separa a peça do fundo antes de sugerir as cores, para o fundo não contar como cor da peça. As cores continuam por confirmar.",
   "localAiModelInfo": "Modelo {name} · {size} · licença {license}",

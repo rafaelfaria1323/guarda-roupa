@@ -1,6 +1,6 @@
 # Feature futura — IA local
 
-Estado: POC aprovada pelo utilizador e implementada (2026-11-04): recorte de fundo, categoria e peças parecidas, tudo opcional e descarregado a pedido ([POC implementada](#poc-implementada-2026-11-04)). Falta medir em aparelho (P-14).
+Estado: POC aprovada pelo utilizador e implementada (2026-11-04): recorte de fundo, categoria e peças parecidas, tudo opcional; desde 2026-11-06 descarrega-se sozinho com a primeira peça com foto ([POC implementada](#poc-implementada-2026-11-04)). Falta medir em aparelho (P-14).
 
 ## Casos potencialmente úteis
 
@@ -66,7 +66,8 @@ Postos de parte:
 - **Modelo:** `u2netp.onnx` da release `v0.0.0` do [rembg](https://github.com/danielgatis/rembg/releases/tag/v0.0.0). São 4 574 861 bytes, com sha256 `309c8469…4ddd8` fixo em `lib/features/local_ai/domain/local_model.dart`. Pesos Apache-2.0 ([U-2-Net](https://github.com/xuebinqin/U-2-Net)).
   - Entrada `input.1` `[1, 3, 320, 320]`, como no rembg: divide-se pelo máximo e normaliza-se com média e desvio do ImageNet.
   - Usa-se a primeira de 7 saídas `[1, 1, 320, 320]`, normalizada para 0–1. É peça se ≥ 0,5.
-- **Descarga só a pedido:** Definições › IA local mostra o tamanho e a licença e tem "Descarregar" e "Remover".
+- **Descarga sozinha** (decisão do utilizador a 2026-11-06, `ModelsAutoDownload`): com a primeira peça com foto, descarrega-se em segundo plano primeiro o U²-Netp (≈ 4,6 MB) e depois o FashionCLIP (≈ 81 MB). É uma tentativa por sessão; uma falha (offline, interrompida) fica para a sessão seguinte ou para um toque.
+  - Definições › IA local mostra o tamanho e a licença e tem "Descarregar" e "Remover". Remover desliga a descarga sozinha neste dispositivo (`local_settings.local_ai_auto_off`); descarregar à mão volta a ligá-la.
   - Confirma tamanho e sha256 antes de o modelo ficar pronto.
   - Descarga recusada, interrompida ou com ficheiro errado: nada fica a meio, aparece aviso e pode tentar-se de novo.
   - Sem modelo, tudo funciona como antes (E2E-19).
@@ -143,7 +144,7 @@ Postos de parte:
 
 O utilizador aprova download/uso de modelos e confirma sugestões. Não é pedido cartão nem API key paga como pré-requisito.
 
-E2E-19 do [plano](../plano-e2e.md): download recusado/interrompido, inferência útil, correção, offline e continuidade sem modelo. Coberto por testes de widgets com modelo e recorte falsos (descarga a pedido, progresso, falha, remoção; recorte que falha cai na borda). Falta o E2E em aparelho.
+E2E-19 do [plano](../plano-e2e.md): download recusado/interrompido, inferência útil, correção, offline e continuidade sem modelo. Coberto por testes de widgets com modelo e recorte falsos (descarga sozinha com a primeira foto e desligada ao remover, descarga a pedido, progresso, falha, remoção; recorte que falha cai na borda). Falta o E2E em aparelho.
 
 Ver [fontes](../fontes.md), [motor](motor-de-combinacoes.md) e P-14.
 
