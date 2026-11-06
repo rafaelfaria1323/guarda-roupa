@@ -85,6 +85,7 @@ abstract final class GarmentRow {
       warmth: Warmth.fromId(row['warmth'] as String?),
       rainOk: _bool(row['rain_ok']),
       windOk: _bool(row['wind_ok']),
+      formality: Formality.fromId(row['formality'] as String?),
       occasions: Set.unmodifiable(occasions),
       material: row['material'] as String?,
       care: row['care'] as String?,

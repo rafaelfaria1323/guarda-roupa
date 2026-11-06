@@ -354,6 +354,21 @@ select pg_temp.op('b1000000-0000-0000-0000-000000000006', 'edit',
 select pg_temp.check('texto vazio volta a desconhecido',
   :'r'::jsonb ->> 'result' = 'applied'
   and (select material is null from public.garments where id = :'G3'));
+
+select pg_temp.op('b1000000-0000-0000-0000-000000000007', 'create',
+  '{"category":"shirt","formality":"dressy"}', '10000000-0000-0000-0000-000000000005') as r \gset
+select pg_temp.check('cria com formalidade',
+  :'r'::jsonb ->> 'result' = 'applied'
+  and (select formality = 'dressy' from public.garments
+       where id = '10000000-0000-0000-0000-000000000005'));
+select pg_temp.op('b1000000-0000-0000-0000-000000000008', 'edit',
+  '{"changes":{"formality":{"from":null,"to":"relaxed"}}}', :'G3') as r \gset
+select pg_temp.check('edita a formalidade',
+  :'r'::jsonb ->> 'result' = 'applied'
+  and (select formality = 'relaxed' from public.garments where id = :'G3'));
+select pg_temp.op('b1000000-0000-0000-0000-000000000009', 'edit',
+  '{"changes":{"formality":{"from":"relaxed","to":"black_tie"}}}', :'G3') as r \gset
+select pg_temp.check('formalidade desconhecida é rejeitada', :'r'::jsonb ->> 'reason' = 'invalid');
 commit;
 
 \echo 'Todos os testes SQL passaram.'

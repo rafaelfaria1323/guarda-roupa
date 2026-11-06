@@ -530,13 +530,14 @@ final class _Context {
     };
   }
 
-  /// Cor, padrão e textura aplicam-se a cada peça. As combinações de cor
-  /// são do conjunto ([compose]); a formalidade ainda não entra.
+  /// Cor, padrão, textura e formalidade aplicam-se a cada peça. As
+  /// combinações de cor são do conjunto ([compose]).
   static bool _matches(StylePreference p, Garment g) => switch (p.subject) {
     PreferenceSubject.color => g.colors.any((c) => '${c.rgb}' == p.value),
     PreferenceSubject.pattern => g.attributes.pattern?.id == p.value,
     PreferenceSubject.texture => g.attributes.texture?.id == p.value,
-    PreferenceSubject.formality || PreferenceSubject.combo => false,
+    PreferenceSubject.formality => g.attributes.formality?.id == p.value,
+    PreferenceSubject.combo => false,
   };
 
   /// [variant]: um conjunto guardado com peças trocadas (papel → a peça
@@ -596,6 +597,10 @@ final class _Context {
     final surface = OutfitHarmony.surface([
       for (final (e, _) in items) e.garment,
     ]);
+    final clash = OutfitHarmony.formalityClash([
+      for (final (e, _) in items) e.garment,
+    ]);
+    if (clash) notes.add(const FormalityMixNote());
     final load = OutfitHarmony.load(surface);
     if (load > 0) {
       notes.add(
@@ -649,6 +654,7 @@ final class _Context {
       entries: [for (final (e, _) in items) e],
       seed: request.seed,
       comboPreference: comboPreference + (savedNote == null ? 0 : 1),
+      clash: clash,
       load: load,
     );
   }
@@ -669,6 +675,7 @@ final class _Draft {
     required List<_Entry> entries,
     required int seed,
     required int comboPreference,
+    required this.clash,
     required this.load,
   }) : key = (entries.map((e) => e.garment.id.value).toList()..sort()).join(
          ',',
@@ -689,6 +696,9 @@ final class _Draft {
   final int warnings;
   final int preference;
 
+  /// Descontraído com arranjado ([OutfitHarmony.formalityClash]).
+  final bool clash;
+
   /// Padrões e texturas fortes a competir ([OutfitHarmony.load]).
   final int load;
 
@@ -697,8 +707,8 @@ final class _Draft {
   late final int tiebreak;
 
   /// Completos primeiro, menos avisos, mais preferências (das peças e do
-  /// conjunto), menos padrões/texturas a competir, peças mais bem
-  /// ordenadas, seed.
+  /// conjunto), formalidade coerente, menos padrões/texturas a competir,
+  /// peças mais bem ordenadas, seed.
   static int compare(_Draft a, _Draft b) {
     var c = a.missing.compareTo(b.missing);
     if (c != 0) return c;
@@ -706,6 +716,7 @@ final class _Draft {
     if (c != 0) return c;
     c = b.preference.compareTo(a.preference);
     if (c != 0) return c;
+    if (a.clash != b.clash) return a.clash ? 1 : -1;
     c = a.load.compareTo(b.load);
     if (c != 0) return c;
     c = a.positions.compareTo(b.positions);

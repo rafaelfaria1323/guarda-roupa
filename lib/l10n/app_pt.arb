@@ -392,6 +392,7 @@
   "garmentPattern": "Padrão",
   "garmentTexture": "Textura",
   "garmentWarmth": "Aquecimento",
+  "garmentFormality": "Formalidade",
   "garmentRain": "Serve para chuva?",
   "garmentWind": "Serve para vento?",
   "garmentOccasions": "Ocasiões",
@@ -1059,6 +1060,7 @@
       }
     }
   },
+  "noteFormalityMix": "Uma peça descontraída com outra arranjada: podem não ligar",
   "colorsFromPhoto": "Sugerir pela foto",
   "colorsSuggested": "Cores sugeridas pela foto: confirma ou ajusta.",
   "colorsSuggestFailed": "Não consegui tirar cores desta foto. Escolhe-as à mão.",

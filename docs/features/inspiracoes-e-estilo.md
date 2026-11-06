@@ -31,7 +31,7 @@ Estado: abordagem assistida confirmada; interpretação visual avançada adiada.
   - a tabela `inspirations` é escrita por `apply_style_operation` (`create_inspiration`, `edit_inspiration` campo a campo, `delete_inspiration`, `set_inspiration_image`, `remove_inspiration_image`) e sincronizada pelo stream `user_inspirations`;
   - a tabela `style_preferences` é escrita pela mesma função (`create_preference`, `edit_preference`, `delete_preference`) e sincronizada pelo stream `user_style_preferences`;
   - as duas partilham a fila local `style_operations`.
-- Por fazer no motor: preferências de formalidade.
+- No motor (2026-11-06): as preferências de formalidade contam em cada peça com essa formalidade ([motor](motor-de-combinacoes.md)).
 - Backup: inspirações (com proporções, desde a v4, e imagem, desde a v5) e preferências entram e são recuperadas com ids novos ([backups](backups-e-recuperacao.md)).
 
 ## Objetivo

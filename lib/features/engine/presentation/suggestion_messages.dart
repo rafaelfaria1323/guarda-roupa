@@ -48,6 +48,7 @@ String? noteText(BuildContext context, SuggestionNote note) {
         _ => 'textures',
       },
     ),
+    FormalityMixNote() => l10n.noteFormalityMix,
     OptionalLayerNote() => l10n.noteOptionalLayer,
     SavedOutfitNote(:final outfit, swaps: []) => switch (outfit.name) {
       final name? => l10n.noteSavedOutfit(name),

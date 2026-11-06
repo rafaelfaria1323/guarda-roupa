@@ -25,6 +25,7 @@ Garment g(
   bool? windOk,
   int? rgb,
   GarmentPattern? pattern,
+  Formality? formality,
 }) => Garment(
   id: GarmentId(id),
   category: category,
@@ -39,6 +40,7 @@ Garment g(
     rainOk: rainOk,
     windOk: windOk,
     pattern: pattern,
+    formality: formality,
   ),
 );
 
@@ -568,6 +570,64 @@ void main() {
         final mix = r.candidates.last.notes.whereType<SurfaceMixNote>().single;
         expect(mix.patterned, 2);
         expect(r.candidates.first.notes.whereType<SurfaceMixNote>(), isEmpty);
+      }
+    });
+  });
+
+  group('formalidade', () {
+    final hoodie = g(
+      'hoodie',
+      GarmentCategory.tShirt,
+      formality: Formality.relaxed,
+    );
+    final polo = g(
+      'polo',
+      GarmentCategory.tShirt,
+      formality: Formality.smartCasual,
+    );
+    final tailored = g(
+      'tailored',
+      GarmentCategory.trousers,
+      formality: Formality.dressy,
+    );
+
+    String top(OutfitCandidate c) => c.items
+        .firstWhere((i) => i.role == OutfitRole.mainTop)
+        .garment
+        .id
+        .value;
+
+    test('descontraído com arranjado: atrás, com nota, nunca excluído', () {
+      for (var seed = 0; seed < 6; seed++) {
+        final r = run([hoodie, polo, tailored, sneakers], seed: seed);
+        expect(r.candidates.map(top), ['polo', 'hoodie'], reason: '$seed');
+        expect(
+          r.candidates.last.notes.whereType<FormalityMixNote>(),
+          hasLength(1),
+        );
+        expect(r.candidates.first.notes.whereType<FormalityMixNote>(), isEmpty);
+      }
+    });
+
+    test('formalidade por indicar não conta como mistura', () {
+      final r = run([hoodie, jeans, sneakers]);
+      expect(r.candidates.single.notes.whereType<FormalityMixNote>(), isEmpty);
+    });
+
+    test('a preferência de formalidade conta em cada peça', () {
+      for (var seed = 0; seed < 6; seed++) {
+        final r = run(
+          [hoodie, polo, jeans, sneakers],
+          seed: seed,
+          preferences: [
+            pref(PreferenceSubject.formality, 'relaxed', PreferenceStance.like),
+          ],
+        );
+        expect(r.candidates.map(top), ['hoodie', 'polo'], reason: '$seed');
+        expect(
+          r.candidates.first.items.first.notes.whereType<PreferenceMatch>(),
+          hasLength(1),
+        );
       }
     });
   });
