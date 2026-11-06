@@ -10,6 +10,9 @@ import '../../../core/domain/result.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../account_sync/application/providers.dart';
 import '../../local_ai/application/local_ai_providers.dart';
+import '../../photo_ai/application/photo_ai_providers.dart';
+import '../../photo_ai/domain/photo_reader.dart';
+import '../../photo_ai/presentation/photo_read_messages.dart';
 import '../application/batch_add.dart';
 import '../application/photo_providers.dart';
 import '../data/photo_processor.dart';
@@ -63,6 +66,9 @@ class _BatchAddScreenState extends ConsumerState<BatchAddScreen> {
     final process = ref.read(photoProcessorProvider);
     final suggester = ref.read(categorySuggesterProvider);
     final remover = ref.read(backgroundRemoverProvider);
+    var reader = ref.read(activePhotoReaderProvider);
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context);
     final start = _rows.length;
     setState(() {
       _working = true;
@@ -76,9 +82,22 @@ class _BatchAddScreenState extends ConsumerState<BatchAddScreen> {
           process: process,
           suggester: suggester,
           remover: remover,
+          reader: reader,
         );
         if (!mounted) return;
         setState(() => _rows[start + i] = outcome);
+        // Sem chave, sem quota ou fora da lista: não adianta insistir.
+        if (outcome case BatchCreated(:final readFailure?)
+            when reader != null && readFailure != PhotoReadFailure.failed) {
+          reader = null;
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(
+                l10n.batchGeminiOff(photoReadMessage(l10n, readFailure)),
+              ),
+            ),
+          );
+        }
       }
     } finally {
       if (mounted) setState(() => _working = false);
@@ -100,7 +119,11 @@ class _BatchAddScreenState extends ConsumerState<BatchAddScreen> {
     if (!mounted) return;
     if (result case Ok(value: final garment)) {
       setState(() {
-        _rows[index] = BatchCreated(garment, row.suggestions);
+        _rows[index] = BatchCreated(
+          garment,
+          row.suggestions,
+          readFailure: row.readFailure,
+        );
         _chosen.add(garment.id);
       });
     } else {
@@ -174,7 +197,9 @@ class _BatchAddScreenState extends ConsumerState<BatchAddScreen> {
                 Text(l10n.batchIntro, style: theme.textTheme.bodyLarge),
                 const SizedBox(height: 8),
                 Text(
-                  ref.watch(categorySuggesterProvider) == null
+                  ref.watch(activePhotoReaderProvider) != null
+                      ? l10n.batchGeminiHint
+                      : ref.watch(categorySuggesterProvider) == null
                       ? l10n.batchNoModel
                       : l10n.batchHint,
                   style: theme.textTheme.bodySmall?.copyWith(

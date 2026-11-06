@@ -117,6 +117,16 @@ Tabelas só do servidor (fora do PowerSync), com RLS e sem acesso direto, a não
 | `day_summaries` | `(owner_id, day)` pk, `plan_version`, `wear_body`, `eve_body` (≤ 300) | `set_day_summaries` (até 14 dias; apaga os passados). Só se usa se `plan_version` for a versão atual da entrada do plano |
 | `reminder_sends` | `(owner_id, day, kind)` pk, `kind` ∈ `wear_check`, `eve` | `claim_due_reminders`, só com o token do cron (`private.reminder_cron`) |
 
+## Leitura de fotos com o Gemini (2026-11-06)
+
+Tabela só do servidor, sem acesso direto ([Gemini](features/ia-gemini.md)):
+
+| Tabela | Campos | Escrita |
+|---|---|---|
+| `photo_ai_requests` | `id`, `owner_id`, `requested_at` | `claim_photo_ai_quota` (até 60 por hora e 300 por dia; apaga o que tem mais de um dia) |
+
+A opção "Usar o Gemini neste aparelho" fica só no aparelho, em `local_settings` (`gemini_photos`).
+
 ## Sync: campos condicionais
 
 Na opção própria: outbox durável com ID de operação, entidade, versão base, payload e estado; receção com cursor de servidor comprovado e tombstones.

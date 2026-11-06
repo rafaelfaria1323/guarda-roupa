@@ -123,8 +123,8 @@ jobs:
 
   functions:
     name: Publicar Edge Functions
-    # Depois das migrações (as funções usam claim_import_quota e
-    # claim_due_reminders).
+    # Depois das migrações (as funções usam claim_import_quota,
+    # claim_due_reminders e claim_photo_ai_quota).
     needs: deploy
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -166,8 +166,23 @@ jobs:
           rm vapid.env
           echo "Chaves VAPID criadas"
       - if: steps.secrets.outputs.ok == 'true'
+        name: Chave do Gemini (leitura de fotos, opcional)
+        # Do secret GEMINI_API_KEY do GitHub para os secrets da função; sem
+        # ele, a função responde "not_configured" e a app usa o que já tem.
+        env:
+          REF: ${{ steps.secrets.outputs.ref }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          for f in import-product reminders; do
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "Sem GEMINI_API_KEY: leitura de fotos com o Gemini desligada."; exit 0
+          fi
+          umask 077
+          printf 'GEMINI_API_KEY=%s\n' "$GEMINI_API_KEY" > gemini.env
+          supabase secrets set --env-file gemini.env --project-ref "$REF"
+          rm gemini.env
+      - if: steps.secrets.outputs.ok == 'true'
+        run: |
+          for f in import-product reminders describe-photo; do
             supabase functions deploy "$f" --project-ref "${{ steps.secrets.outputs.ref }}" --use-api
           done
       - if: steps.secrets.outputs.ok == 'true' && env.SUPABASE_DB_URL != ''

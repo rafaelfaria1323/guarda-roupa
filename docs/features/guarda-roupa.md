@@ -11,10 +11,13 @@ Pedido do utilizador (tornar a app mais automática). No Armário, o ícone de g
 - Escolhem-se até 20 fotos da galeria, uma por peça. Cada foto passa a uma peça logo ali, como se fosse criada à mão (a foto conta para a quota e sincroniza).
 - **Categoria:** a mais provável pela foto, com a IA local ([FashionCLIP](ia-local.md)); sem o modelo neste aparelho, “Outra”. A seguir mostram-se as 3 mais prováveis em chips: um toque muda, e “Outra…” abre a lista toda.
 - **Cores:** da miniatura, sem o fundo quando há o modelo de recorte; ficam por confirmar, como nas cores sugeridas no formulário.
+- **Com o Gemini ligado** ([Gemini](ia-gemini.md)): cada foto vem também com um nome curto, as cores e os atributos lidos pelo Gemini; se falhar, segue como acima.
 - Fotos que não servem (HEIC, formato desconhecido, demasiado grandes) ficam na lista com o motivo e não criam peça.
 - Tocar na foto abre a peça para o resto (nome, marca, detalhes). “Concluir” volta ao Armário.
 
 Código: `BatchAddScreen`, `addPhotoAsGarment` (`lib/features/wardrobe/`).
+
+No formulário da peça, com o Gemini ligado, há também **Preencher pela foto** e **Ler a etiqueta** ([Gemini](ia-gemini.md)).
 
 ## Objetivo e dados
 

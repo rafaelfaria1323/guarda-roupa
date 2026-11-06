@@ -45,6 +45,7 @@ Uma recomendação de package não é uma garantia de compatibilidade com todos 
 | [Manequim 3D](features/manequim-3d.md) | Conjunto num manequim 3D (adiado) |
 | [Backups e recuperação](features/backups-e-recuperacao.md) | Exportação, integridade e recuperação sem perda silenciosa |
 | [IA local](features/ia-local.md) | Evolução opcional, modelos e limites de inferência |
+| [Gemini (opcional)](features/ia-gemini.md) | Ler fotos de peças e etiquetas com o Gemini, se ligado |
 | [Subscrições e evolução](features/subscricoes-e-evolucao.md) | Futuro comercial, pagamentos e custos |
 
 ## Decisões arquiteturais

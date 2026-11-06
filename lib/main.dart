@@ -4,6 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app/app.dart';
 import 'app/config.dart';
+import 'features/photo_ai/application/photo_ai_providers.dart';
+import 'features/photo_ai/data/supabase_photo_reader.dart';
 import 'features/account_sync/application/providers.dart';
 import 'features/account_sync/data/supabase_auth_service.dart';
 import 'features/account_sync/data/supabase_connector.dart';
@@ -35,6 +37,15 @@ Future<void> main() async {
       ..add(
         productImporterProvider.overrideWithValue(
           SupabaseProductImporter(
+            supabaseUrl: config.supabaseUrl,
+            apiKey: config.supabasePublishableKey,
+            accessToken: () => client.auth.currentSession?.accessToken,
+          ),
+        ),
+      )
+      ..add(
+        photoReaderProvider.overrideWithValue(
+          SupabasePhotoReader(
             supabaseUrl: config.supabaseUrl,
             apiKey: config.supabasePublishableKey,
             accessToken: () => client.auth.currentSession?.accessToken,

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../photo_ai/application/photo_ai_providers.dart';
 import '../application/local_ai_providers.dart';
 import '../domain/local_model.dart';
 
@@ -43,6 +44,10 @@ class LocalAiSettingsScreen extends ConsumerWidget {
             title: l10n.localAiCategoryTitle,
             body: l10n.localAiCategoryBody,
           ),
+          if (ref.watch(photoReaderProvider) != null) ...[
+            const SizedBox(height: 24),
+            const _GeminiCard(),
+          ],
         ],
       ),
     );
@@ -146,6 +151,44 @@ class _ModelCard extends ConsumerWidget {
                 ],
               ),
             },
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// O Gemini é opcional e fica desligado até o utilizador o ligar aqui.
+class _GeminiCard extends ConsumerWidget {
+  const _GeminiCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final enabled = ref.watch(geminiPhotosProvider).value;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.geminiTitle, style: theme.textTheme.titleMedium),
+            const SizedBox(height: 4),
+            Text(l10n.geminiBody),
+            const SizedBox(height: 8),
+            Text(l10n.geminiPrivacy, style: theme.textTheme.bodySmall),
+            SwitchListTile(
+              key: const Key('gemini-photos'),
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.geminiSwitch),
+              value: enabled ?? false,
+              onChanged: enabled == null
+                  ? null
+                  : (on) => unawaited(
+                      ref.read(geminiPhotosProvider.notifier).set(enabled: on),
+                    ),
+            ),
           ],
         ),
       ),
