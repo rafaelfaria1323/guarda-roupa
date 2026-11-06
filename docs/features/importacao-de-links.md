@@ -83,6 +83,7 @@ O atalho não tem sessão, por isso autentica-se com uma **chave pessoal** criad
   - nome, marca e material da loja; nas **notas**, a descrição, a cor da loja quando só há uma e o link (o tamanho fica para o utilizador).
   Cada peça sai da caixa depois de criada; se falhar, fica para a próxima vez. Um aviso diz quantas entraram. Para as importações por link, com a pré-visualização, mantém-se a regra de confirmar no formulário.
 - **Ainda à mão, se preciso:** as peças que estejam na caixa também aparecem no topo de Importar de um link (usar ou descartar).
+- **Pins e Instagram (2026-11-06):** a mesma caixa recebe inspirações. Uma página do Pinterest ou do Instagram partilhada pelo atalho vai para o Estilo, não para o Armário ([inspirações](inspiracoes-e-estilo.md#pinterest)). Um link destes sites colado em Importar de um link não é lido, porque o robots.txt do Pinterest recusa leitores automáticos: a app diz para o partilhar pelo atalho.
 - **Riscos:** quem tiver a chave só consegue pôr peças na caixa do dono, dentro da quota e do limite de 20; não lê nada. Uma chave perdida desliga-se na app.
 
 ### Estado por loja (uso real)

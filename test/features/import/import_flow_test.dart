@@ -74,10 +74,17 @@ final class FakeImporter implements ProductImporter {
   Future<Result<List<InboxItem>, ImportFailure>> inbox() async =>
       Ok([...inboxItems]);
 
+  final inspirationItems = <InspirationInboxItem>[];
+
+  @override
+  Future<Result<List<InspirationInboxItem>, ImportFailure>>
+  inspirationInbox() async => Ok([...inspirationItems]);
+
   @override
   Future<Result<void, ImportFailure>> discardInbox(String id) async {
     discarded.add(id);
     inboxItems.removeWhere((i) => i.id == id);
+    inspirationItems.removeWhere((i) => i.id == id);
     return const Ok(null);
   }
 

@@ -311,6 +311,7 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
       FetchFailed(reason: 'not_found') => 'notFound',
       FetchFailed() => 'failed',
       NoMetadata() => 'noMetadata',
+      InspirationSiteLink() => 'inspiration',
       RateLimited() => 'rateLimited',
       NotAllowed() => 'notAllowed',
       ImportUnavailable() => 'unavailable',
