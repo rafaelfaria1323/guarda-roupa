@@ -20,4 +20,13 @@ final class ImagePickerPhotoPicker implements PhotoPicker {
     );
     return file?.readAsBytes();
   }
+
+  @override
+  Future<List<Uint8List>> pickMany({required int limit}) async {
+    final files = await ImagePicker().pickMultiImage(
+      limit: limit,
+      requestFullMetadata: false,
+    );
+    return [for (final f in files.take(limit)) await f.readAsBytes()];
+  }
 }
