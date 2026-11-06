@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,7 +9,9 @@ import '../application/local_ai_providers.dart';
 import '../domain/local_model.dart';
 
 /// Descarregar ou remover os modelos de IA local (P-14), com o tamanho e a
-/// licença à vista. Nada se descarrega sem um toque aqui.
+/// licença à vista. Descarregam-se sozinhos com a primeira peça com foto;
+/// remover um aqui desliga isso neste dispositivo, descarregar volta a
+/// ligar.
 class LocalAiSettingsScreen extends ConsumerWidget {
   const LocalAiSettingsScreen({super.key});
 
@@ -106,7 +110,14 @@ class _ModelCard extends ConsumerWidget {
                   ],
                   FilledButton.icon(
                     key: Key('local-model-download-${model.id}'),
-                    onPressed: notifier.download,
+                    onPressed: () {
+                      unawaited(
+                        ref
+                            .read(localAiAutoOptOutProvider.notifier)
+                            .set(optedOut: false),
+                      );
+                      unawaited(notifier.download());
+                    },
                     icon: const Icon(Icons.download_outlined),
                     label: Text('${l10n.localAiDownload} ($size)'),
                   ),
@@ -122,7 +133,14 @@ class _ModelCard extends ConsumerWidget {
                   Expanded(child: Text(l10n.localAiReady)),
                   TextButton(
                     key: Key('local-model-remove-${model.id}'),
-                    onPressed: notifier.remove,
+                    onPressed: () {
+                      unawaited(
+                        ref
+                            .read(localAiAutoOptOutProvider.notifier)
+                            .set(optedOut: true),
+                      );
+                      unawaited(notifier.remove());
+                    },
                     child: Text(l10n.localAiRemove),
                   ),
                 ],

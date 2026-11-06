@@ -69,8 +69,8 @@ void main() {
     expect(store.ready, {'u2netp'});
 
     await tester.tap(find.byKey(const Key('local-model-remove-u2netp')));
-    await tester.pump();
-    await tester.pump();
+    // Remover também desliga a descarga automática (escrita na base).
+    await settle(tester);
     expect(store.ready, isEmpty);
     expect(find.byKey(download), findsOneWidget);
   });

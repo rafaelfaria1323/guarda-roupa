@@ -13,8 +13,9 @@ import 'similar_garments_finder.dart';
 
 final modelStoreProvider = Provider<ModelStore>((ref) => createModelStore());
 
-/// Estado de um modelo neste dispositivo; descarregar só quando o
-/// utilizador pede.
+/// Estado de um modelo neste dispositivo. Descarrega-se sozinho com a
+/// primeira peça com foto (`ModelsAutoDownload`) ou a pedido nas
+/// Definições.
 final localModelProvider =
     NotifierProvider.family<LocalModelNotifier, ModelState, LocalModel>(
       LocalModelNotifier.new,
@@ -113,3 +114,37 @@ final similarGarmentsFinderProvider = Provider<SimilarGarmentsFinder?>((ref) {
   if (embedder == null || db == null || repo == null) return null;
   return SimilarGarmentsFinder(embedder, db, repo);
 });
+
+/// Descarregar sozinho com a primeira peça com foto (decisão do utilizador
+/// a 2026-11-06). Os testes desligam-no: não há rede.
+final localAiAutoDownloadEnabledProvider = Provider<bool>((_) => true);
+
+/// O utilizador removeu um modelo neste dispositivo: daí em diante só se
+/// descarrega a pedido. `null` enquanto a base local abre.
+final localAiAutoOptOutProvider =
+    AsyncNotifierProvider<LocalAiAutoOptOut, bool?>(LocalAiAutoOptOut.new);
+
+class LocalAiAutoOptOut extends AsyncNotifier<bool?> {
+  static const _key = 'local_ai_auto_off';
+
+  @override
+  Future<bool?> build() async {
+    final db = ref.watch(userDatabaseProvider).value;
+    if (db == null) return null;
+    final row = await db.getOptional(
+      'SELECT value FROM local_settings WHERE key = ?',
+      [_key],
+    );
+    return row?['value'] == '1';
+  }
+
+  Future<void> set({required bool optedOut}) async {
+    final db = ref.read(userDatabaseProvider).value;
+    if (db == null) return;
+    await db.execute(
+      'INSERT OR REPLACE INTO local_settings (key, value) VALUES (?, ?)',
+      [_key, optedOut ? '1' : '0'],
+    );
+    if (ref.mounted) state = AsyncData(optedOut);
+  }
+}
