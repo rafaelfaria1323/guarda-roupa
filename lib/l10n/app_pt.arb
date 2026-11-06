@@ -414,15 +414,14 @@
   },
   "backupFailed": "Não foi possível criar o backup.",
   "backupRestore": "Recuperar backup",
-  "backupRestoreHint": "Só para uma conta sem peças. Nada é alterado antes de confirmares.",
+  "backupRestoreHint": "Junta o backup ao que a conta já tem, sem duplicar. Nada é alterado antes de confirmares.",
   "backupChecking": "A verificar o backup…",
   "backupPickFailed": "Não foi possível abrir o ficheiro.",
   "backupRestoreBlockedTitle": "Não é possível recuperar",
   "backupNotABackup": "Este ficheiro não é um backup do Guarda-roupa.",
   "backupNewerVersion": "Este backup foi feito por uma versão mais recente da app. Atualiza a app e tenta de novo.",
   "backupCorrupt": "O backup está danificado ou incompleto. Nada foi alterado.",
-  "backupAccountNotEmpty": "Esta conta já tem peças. Por agora só é possível recuperar para uma conta vazia, sem misturar nem substituir dados.",
-  "backupNotSynced": "A conta ainda não terminou a primeira sincronização, por isso não se sabe se está vazia. Liga-te à internet e espera que termine.",
+  "backupNotSynced": "A conta ainda não terminou a primeira sincronização, por isso não se sabe o que já tem. Liga-te à internet e espera que termine.",
   "backupRestoreFailed": "Não foi possível recuperar. Nada foi alterado.",
   "backupPreviewTitle": "Recuperar este backup?",
   "backupPreviewDate": "Feito a {date}.",
@@ -491,7 +490,7 @@
       }
     }
   },
-  "backupPreviewHow": "As peças, o histórico, os conjuntos, as inspirações e as preferências são criados de novo nesta conta e depois sincronizados.",
+  "backupPreviewHow": "Só se acrescenta o que falta: o que a conta já tem fica como está, e o que apagaste ou desfizeste depois do backup não volta. O que falta é criado de novo nesta conta e depois sincronizado.",
   "backupRestoreConfirm": "Recuperar",
   "backupRestored": "{count, plural, =0{Backup recuperado (sem peças).} =1{Recuperada 1 peça.} other{Recuperadas {count} peças.}}",
   "@backupRestored": {
@@ -1344,5 +1343,23 @@
       }
     }
   },
-  "laundryCleanedAvailable": "Limpeza registada. Voltou a estar disponível."
+  "laundryCleanedAvailable": "Limpeza registada. Voltou a estar disponível.",
+  "backupNeedsNetwork": "Para juntar a uma conta com peças é preciso perguntar ao servidor o que apagaste depois do backup, para não voltar sem dares por isso. Liga-te à internet e tenta de novo.",
+  "backupPreviewPresent": "{count, plural, =1{1 peça do backup já está na conta e fica como está.} other{{count} peças do backup já estão na conta e ficam como estão.}}",
+  "@backupPreviewPresent": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupPreviewRemoved": "{count, plural, =1{Recuperar também 1 peça apagada depois do backup} other{Recuperar também {count} peças apagadas depois do backup}}",
+  "@backupPreviewRemoved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupPreviewNothing": "Esta conta já tem tudo o que o backup traz. Não há nada a acrescentar."
 }

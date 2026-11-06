@@ -110,13 +110,35 @@ void main() {
     expect(inList('Azul'), findsNothing);
   });
 
-  testWidgets('conta com peças: explica e não recupera', (tester) async {
+  testWidgets('conta com peças: junta ao que lá está; o mesmo backup outra '
+      'vez já não tem nada a acrescentar', (tester) async {
     await openSettings(tester, FakePicker(backupWith(['Azul'])));
     await openWardrobe(tester);
     await addGarment(tester, category: 'Saia', name: 'Já cá');
     await tapRestore(tester);
-    expect(find.textContaining('Esta conta já tem peças.'), findsOneWidget);
-    expect(find.text('Recuperar este backup?'), findsNothing);
+    expect(find.text('1 peça e nenhuma fotografia.'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('backup-restore-confirm')));
+    await settleUntil(tester, find.text('Recuperada 1 peça.'));
+
+    await tester.tap(find.byKey(const Key('backup-restore')));
+    await settleUntil(tester, find.byType(AlertDialog));
+    expect(
+      find.text('1 peça do backup já está na conta e fica como está.'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Não há nada a acrescentar'), findsOneWidget);
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('backup-restore-confirm')))
+          .onPressed,
+      isNull,
+    );
+    await tester.tap(find.text('Cancelar'));
+    await settle(tester);
+    // As Definições abriram-se do Armário: voltar é voltar a ele.
+    await tester.tap(find.byType(BackButton));
+    await settleUntil(tester, inList('Azul'));
+    expect(inList('Já cá'), findsOneWidget);
   });
 
   testWidgets('ficheiro que não é backup: explica', (tester) async {

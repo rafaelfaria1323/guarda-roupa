@@ -34,6 +34,12 @@ final backupPickerProvider = Provider<BackupPicker>(
   (ref) => const FileSelectorBackupPicker(),
 );
 
+/// Com cloud: pergunta ao servidor o que a conta já apagou ou desfez.
+/// `null` sem cloud (o que se apaga fica neste dispositivo).
+final remoteRemovedLookupProvider = Provider<RemoteRemovedLookup?>(
+  (ref) => null,
+);
+
 /// `null` enquanto a base da conta não está aberta.
 final backupRestorerProvider = Provider<BackupRestorer?>((ref) {
   final db = ref.watch(userDatabaseProvider).value;
@@ -44,5 +50,8 @@ final backupRestorerProvider = Provider<BackupRestorer?>((ref) {
     db: db,
     ownerId: userId,
     accountSynced: !sync.configured || sync.lastSyncedAt != null,
+    remoteRemoved: sync.configured
+        ? ref.watch(remoteRemovedLookupProvider)
+        : null,
   );
 });

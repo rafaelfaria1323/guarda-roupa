@@ -56,9 +56,7 @@ Substituir pelo caminho real. Este hash ajuda a comparar cópias, mas não verif
 
 ## 4. Ensaiar a recuperação sem arriscar o original
 
-Pré-requisito: importador implementado e modo de recuperação aprovado. Até P-11 estar fechada, não fazer merge/substituição sobre uma conta cloud com dados existentes.
-
-Implementado (2026-11-03): **Definições > Dados e backup > Recuperar backup**, só para uma conta sem peças e, com cloud, depois da primeira sincronização. A app recusa contas com peças e mostra o motivo.
+Implementado: **Definições > Dados e backup > Recuperar backup**, com cloud depois da primeira sincronização. Desde 2026-11-06 (P-11) **junta** ao que a conta tem: só acrescenta o que falta, não duplica, e as peças apagadas depois do backup só voltam se as marcares no preview ([regras](../features/backups-e-recuperacao.md)). Numa conta com peças precisa de rede, para saber o que foi apagado.
 
 1. Manter a instalação/conta original intacta e o backup guardado.
 2. Preparar um destino de experiência vazio, autenticado e autorizado para aquele modo de recuperação.

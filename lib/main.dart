@@ -8,6 +8,8 @@ import 'features/account_sync/application/providers.dart';
 import 'features/account_sync/data/supabase_auth_service.dart';
 import 'features/account_sync/data/supabase_connector.dart';
 import 'features/account_sync/data/supabase_photo_storage.dart';
+import 'features/backup/application/backup_providers.dart';
+import 'features/backup/data/supabase_removed_lookup.dart';
 import 'features/import/application/import_providers.dart';
 import 'features/import/data/supabase_product_importer.dart';
 import 'features/wardrobe/application/photo_providers.dart';
@@ -35,6 +37,11 @@ Future<void> main() async {
             apiKey: config.supabasePublishableKey,
             accessToken: () => client.auth.currentSession?.accessToken,
           ),
+        ),
+      )
+      ..add(
+        remoteRemovedLookupProvider.overrideWithValue(
+          supabaseRemovedLookup(client),
         ),
       )
       ..add(
