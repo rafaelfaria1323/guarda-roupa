@@ -123,7 +123,8 @@ jobs:
 
   functions:
     name: Publicar Edge Functions
-    # Depois das migrações (a função usa claim_import_quota).
+    # Depois das migrações (as funções usam claim_import_quota e
+    # claim_due_reminders).
     needs: deploy
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -146,7 +147,47 @@ jobs:
         with:
           version: ${{ env.SUPABASE_CLI_VERSION }}
       - if: steps.secrets.outputs.ok == 'true'
-        run: supabase functions deploy import-product --project-ref "${{ steps.secrets.outputs.ref }}" --use-api
+        name: Chaves VAPID dos lembretes (cria se não existirem)
+        # Geradas aqui e guardadas só nos secrets das Edge Functions: nunca
+        # no repositório nem no log. A pública chega à app pela função.
+        env:
+          REF: ${{ steps.secrets.outputs.ref }}
+        run: |
+          if supabase secrets list --project-ref "$REF" | grep -qw VAPID_PRIVATE_KEY; then
+            echo "Chaves VAPID já existem"; exit 0
+          fi
+          keys=$(npx --yes web-push@3.6.7 generate-vapid-keys --json)
+          private=$(jq -r .privateKey <<<"$keys")
+          echo "::add-mask::$private"
+          umask 077
+          jq -r '"VAPID_PUBLIC_KEY=\(.publicKey)\nVAPID_PRIVATE_KEY=\(.privateKey)"' <<<"$keys" > vapid.env
+          unset keys private
+          supabase secrets set --env-file vapid.env --project-ref "$REF"
+          rm vapid.env
+          echo "Chaves VAPID criadas"
+      - if: steps.secrets.outputs.ok == 'true'
+        run: |
+          for f in import-product reminders; do
+            supabase functions deploy "$f" --project-ref "${{ steps.secrets.outputs.ref }}" --use-api
+          done
+      - if: steps.secrets.outputs.ok == 'true' && env.SUPABASE_DB_URL != ''
+        name: Agendar os lembretes (pg_cron, de 5 em 5 minutos)
+        # Sem segredos no comando: o token do cron fica na base
+        # (private.reminder_cron) e a chave publishable é pública.
+        env:
+          REF: ${{ steps.secrets.outputs.ref }}
+        run: |
+          key=$(jq -r .SUPABASE_PUBLISHABLE_KEY config/public.json)
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -P pager=off \
+            -v url="https://$REF.supabase.co/functions/v1/reminders" -v key="$key" <<'SQL'
+          create extension if not exists pg_cron with schema pg_catalog;
+          create extension if not exists pg_net with schema extensions;
+          select cron.schedule('fio-reminders', '*/5 * * * *', format(
+            $c$select net.http_post(url := %L,
+              body := jsonb_build_object('token', (select token from private.reminder_cron)),
+              headers := jsonb_build_object('content-type', 'application/json', 'apikey', %L),
+              timeout_milliseconds := 30000)$c$, :'url', :'key')) as job;
+          SQL
 
   # Sync Streams: valida em PRs, faz deploy depois das migrações (as streams
   # leem tabelas que as migrações criam). O PowerSync só muda se o ficheiro

@@ -12,6 +12,8 @@ import 'features/backup/application/backup_providers.dart';
 import 'features/backup/data/supabase_removed_lookup.dart';
 import 'features/import/application/import_providers.dart';
 import 'features/import/data/supabase_product_importer.dart';
+import 'features/reminders/application/reminder_providers.dart';
+import 'features/reminders/data/supabase_reminder_backend.dart';
 import 'features/wardrobe/application/photo_providers.dart';
 
 Future<void> main() async {
@@ -36,6 +38,15 @@ Future<void> main() async {
             supabaseUrl: config.supabaseUrl,
             apiKey: config.supabasePublishableKey,
             accessToken: () => client.auth.currentSession?.accessToken,
+          ),
+        ),
+      )
+      ..add(
+        reminderBackendProvider.overrideWithValue(
+          SupabaseReminderBackend(
+            client: client,
+            supabaseUrl: config.supabaseUrl,
+            apiKey: config.supabasePublishableKey,
           ),
         ),
       )

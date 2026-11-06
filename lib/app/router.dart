@@ -20,6 +20,7 @@ import '../features/inspirations/presentation/inspiration_look_screen.dart';
 import '../features/inspirations/presentation/preference_editor_screen.dart';
 import '../features/outfits/presentation/outfit_editor_screen.dart';
 import '../features/outfits/presentation/outfits_screen.dart';
+import '../features/reminders/presentation/reminder_settings_screen.dart';
 import '../features/planner/presentation/planner_screen.dart';
 import '../features/wardrobe/domain/garment.dart';
 import '../features/wardrobe/presentation/garment_detail_screen.dart';
@@ -53,6 +54,7 @@ abstract final class AppRoutes {
   static const weatherLocation = '/definicoes/localizacao';
   static const comfortSettings = '/definicoes/conforto';
   static const localAiSettings = '/definicoes/ia-local';
+  static const reminderSettings = '/definicoes/lembretes';
   static const wear = '/vesti';
 
   /// "Vesti hoje" com estas peças já escolhidas (por confirmar). Com
@@ -173,6 +175,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.localAiSettings,
         builder: (context, state) => const LocalAiSettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.reminderSettings,
+        builder: (context, state) => const ReminderSettingsScreen(),
       ),
       GoRoute(
         path: AppRoutes.wear,
