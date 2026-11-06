@@ -90,7 +90,7 @@ Um conjunto simples com t-shirt, calças e ténis não precisa de uma camada adi
 
 ## Disponibilidade versus recomendação
 
-Disponibilidade proposta: `available`, `needs_cleaning`, `washing`, `drying`, `archived`.
+Disponibilidade: `available`, `needs_cleaning`, `washing`, `drying` e, desde 2026-11-06, `at_cleaners` (na lavandaria / limpeza profissional). Arquivar é `archived_at`, não um estado.
 
 O aviso `cleaning_recommended` é derivado da política/histórico e não é mais um estado de indisponibilidade. Um aviso não altera por si só `available`.
 

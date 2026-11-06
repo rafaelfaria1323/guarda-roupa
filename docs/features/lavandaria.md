@@ -23,7 +23,9 @@ Contam só utilizações confirmadas (“Vesti hoje”) desde a última limpeza 
 - Sem limpeza registada contam todas as utilizações registadas (não se presume que a peça acabou de ser lavada). No mesmo dia, conta a ordem de registo entre utilização e limpeza.
 - Dados: `cleaning_events` e `care_policies` (uma linha por categoria ou peça, id determinístico; último a escrever ganha, campo a campo), escritos por `apply_wear_operation` (`record_cleaning`, `void_cleaning`, `set_policy`). `care_policies.rotation_days` fica pronto para a rotatividade.
 - Backup (desde o formato v2): limpezas e valores escolhidos entram e são recuperados.
-- Por fazer: indicar nódoas/uso intenso e limpeza profissional.
+- **Nódoa ou uso intenso (2026-11-06):** no “Vesti hoje”, uma peça escolhida tem o botão da gota, “Ficou para lavar já”. Ao guardar, vai para “Precisa de limpeza” mesmo antes do limiar, no mesmo aviso (“Marquei para lavar: …”) e com o mesmo “Desfazer”.
+- **Limpeza profissional (2026-11-06):** estado **Na lavandaria** (`at_cleaners`): a peça está fora de casa, numa lavandaria ou limpeza a seco, e não entra nas sugestões. Na ficha, **Levei à lavandaria** marca-a (com desfazer); enquanto lá está, o botão de limpeza passa a **Já veio da lavandaria**, que regista a limpeza e a devolve a Disponível. Se o texto de cuidados da etiqueta pede limpeza a seco ou “não lavar”, a ficha diz “A etiqueta pede limpeza profissional.” (só lê o que foi escrito; não adivinha). Nos conflitos entre dispositivos, fica entre “A lavar” e “Precisa de limpeza”.
+- Por fazer: símbolos de cuidados estruturados (hoje é texto livre).
 
 ## Dois conceitos separados
 
@@ -36,7 +38,7 @@ Atingir o limiar ao confirmar um uso marca a peça como “Precisa de limpeza”
 
 ## Estados e transições
 
-Fluxo comum: disponível → precisa de limpeza → em lavagem → a secar → disponível. Permitir registar outros processos reais, como lavagem e secagem concluídas numa ação ou limpeza profissional, sem obrigar a passos fictícios.
+Fluxo comum: disponível → precisa de limpeza → em lavagem → a secar → disponível. Limpeza profissional: precisa de limpeza (ou disponível) → na lavandaria → disponível (“Já veio da lavandaria”). Permitir registar outros processos reais, como lavagem e secagem concluídas numa ação ou limpeza profissional, sem obrigar a passos fictícios.
 
 Uma limpeza confirmada reinicia a contagem relevante, mas a peça só fica disponível quando estiver pronta. Secagem não termina porque passou um temporizador presumido.
 

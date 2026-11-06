@@ -7,6 +7,7 @@ IconData availabilityIcon(Availability availability) => switch (availability) {
   Availability.available => Icons.check_circle_outline,
   Availability.drying => Icons.air,
   Availability.washing => Icons.local_laundry_service_outlined,
+  Availability.atCleaners => Icons.dry_cleaning_outlined,
   Availability.needsCleaning => Icons.cleaning_services_outlined,
 };
 

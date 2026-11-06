@@ -47,6 +47,10 @@ class WearPickerScreen extends ConsumerStatefulWidget {
 
 class _WearPickerScreenState extends ConsumerState<WearPickerScreen> {
   final _selected = <GarmentId>{};
+
+  /// Peças que ficaram para lavar já (nódoa, suor, uso intenso), mesmo
+  /// antes do limiar. Só contam as que continuam escolhidas.
+  final _dirtyNow = <GarmentId>{};
   bool _loaded = false;
   bool _saving = false;
   Stream<List<Garment>>? _garments;
@@ -184,7 +188,7 @@ class _WearPickerScreenState extends ConsumerState<WearPickerScreen> {
     onChanged: (on) => setState(
       () => on == true ? _selected.add(g.id) : _selected.remove(g.id),
     ),
-    title: Text(garmentLabel(l10n, g)),
+    title: _title(l10n, garmentLabel(l10n, g), [g.id]),
     subtitle: _subtitle(l10n, g, rotation?[g.id]),
     secondary: _thumb(g),
   );
@@ -207,9 +211,38 @@ class _WearPickerScreenState extends ConsumerState<WearPickerScreen> {
           _selected.removeAll([for (final g in units) g.id]);
         }
       }),
-      title: Text('${garmentLabel(l10n, units.first)} ×${units.length}'),
+      title: _title(
+        l10n,
+        '${garmentLabel(l10n, units.first)} ×${units.length}',
+        [for (final g in units) g.id],
+      ),
       subtitle: Text(l10n.wearTwinsPick(units.length)),
       secondary: _thumb(units.first),
+    );
+  }
+
+  /// Com a peça escolhida, um botão para a marcar para lavar já.
+  Widget _title(AppLocalizations l10n, String label, List<GarmentId> ids) {
+    final chosen = [
+      for (final id in ids)
+        if (_selected.contains(id)) id,
+    ];
+    if (chosen.isEmpty) return Text(label);
+    final on = chosen.any(_dirtyNow.contains);
+    return Row(
+      children: [
+        Expanded(child: Text(label)),
+        IconButton(
+          key: Key('wear-dirty-${ids.first.value}'),
+          tooltip: l10n.wearDirtyNow,
+          isSelected: on,
+          icon: const Icon(Icons.water_drop_outlined),
+          selectedIcon: const Icon(Icons.water_drop),
+          onPressed: () => setState(
+            () => on ? _dirtyNow.removeAll(chosen) : _dirtyNow.addAll(chosen),
+          ),
+        ),
+      ],
     );
   }
 
@@ -316,20 +349,23 @@ class _WearPickerScreenState extends ConsumerState<WearPickerScreen> {
     final event = (result as Ok<WearEvent, WearFailure>).value;
     // Lavandaria sozinha (2026-11-06): o que chega ao limiar vai para
     // lavar; só volta com "Lavei hoje" ou à mão.
+    // E as que o utilizador marcou para lavar já (nódoa, uso intenso).
     final dirty = <Garment>[];
-    if (wardrobe != null &&
-        garments != null &&
-        wears != null &&
-        cleanings != null &&
-        policies != null) {
+    if (wardrobe != null && garments != null) {
       final byId = {for (final g in garments) g.id: g};
-      for (final id in LaundryPolicy.dirtyAfterWear(
-        event,
-        garments: garments,
-        wears: wears,
-        cleanings: cleanings,
-        policies: policies,
-      )) {
+      final toMark = {
+        if (wears != null && cleanings != null && policies != null)
+          ...LaundryPolicy.dirtyAfterWear(
+            event,
+            garments: garments,
+            wears: wears,
+            cleanings: cleanings,
+            policies: policies,
+          ),
+        for (final id in _dirtyNow)
+          if (_selected.contains(id) && (byId[id]?.isCandidate ?? false)) id,
+      };
+      for (final id in toMark) {
         final marked = await wardrobe.setAvailability(
           id,
           Availability.needsCleaning,

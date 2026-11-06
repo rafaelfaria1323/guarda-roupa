@@ -89,13 +89,13 @@ final class GarmentFilter {
         !garment.attributes.occasions.any(occasions.contains)) {
       return false;
     }
-    final query = _fold(text?.trim() ?? '');
+    final query = fold(text?.trim() ?? '');
     if (query.isEmpty) return true;
     return [
       garment.name,
       garment.brand,
       garment.notes,
-    ].whereType<String>().any((field) => _fold(field).contains(query));
+    ].whereType<String>().any((field) => fold(field).contains(query));
   }
 
   static const _accents = {
@@ -107,7 +107,8 @@ final class GarmentFilter {
     'ç': 'c', 'ñ': 'n',
   };
 
-  static String _fold(String value) {
+  /// Minúsculas e sem acentos, para comparar texto livre.
+  static String fold(String value) {
     final buffer = StringBuffer();
     for (final char in value.toLowerCase().split('')) {
       buffer.write(_accents[char] ?? char);

@@ -118,4 +118,73 @@ void main() {
     await settleUntil(tester, inList('Branca'));
     expect(inList('Lavar recomendado'), findsNothing);
   });
+
+  testWidgets('para lavar já antes do limiar; lavandaria até a ir buscar', (
+    tester,
+  ) async {
+    final app = await pumpApp(
+      tester,
+      overrides: [
+        clockProvider.overrideWithValue(
+          FixedClock(DateTime.utc(2026, 11, 3, 12)),
+        ),
+      ],
+    );
+    await openWardrobe(tester);
+    await addGarment(tester, category: 'Calças', name: 'Pretas');
+    Future<String> availability() async =>
+        (await tester.runAsync(
+              () => app.db.get('SELECT availability FROM garments'),
+            ))!['availability']!
+            as String;
+
+    // Calças só pedem lavagem às 4 utilizações; uma nódoa marca-as já.
+    await openToday(tester);
+    await tester.tap(find.byKey(const Key('wear-today')));
+    await settle(tester);
+    final dirty = find.byWidgetPredicate(
+      (w) =>
+          w.key is ValueKey<String> &&
+          (w.key! as ValueKey<String>).value.startsWith('wear-dirty-'),
+    );
+    expect(dirty, findsNothing);
+    await tester.tap(pick('Pretas'));
+    await tester.pump();
+    await tester.tap(dirty);
+    await tester.pump();
+    await save(tester);
+    expect(
+      find.text('Utilização registada. Marquei para lavar: Pretas.'),
+      findsOne,
+    );
+    expect(await availability(), 'needs_cleaning');
+
+    await openWardrobe(tester);
+    await openEdit(tester, inList('Pretas'));
+    final form = find
+        .descendant(of: find.byType(Form), matching: find.byType(Scrollable))
+        .first;
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('garment-details')),
+      300,
+      scrollable: form,
+    );
+    await settleUntil(tester, find.byKey(const Key('garment-to-cleaners')));
+    await tester.ensureVisible(find.byKey(const Key('garment-to-cleaners')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('garment-laundry-professional')), findsNothing);
+    await tester.tap(find.byKey(const Key('garment-to-cleaners')));
+    await settleUntil(tester, find.text('Já veio da lavandaria'));
+    expect(find.text('Na lavandaria até a ires buscar.'), findsOne);
+    expect(await availability(), 'at_cleaners');
+    expect(find.byKey(const Key('garment-to-cleaners')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('garment-cleaned')));
+    await settleUntil(
+      tester,
+      find.text('Limpeza registada. Voltou da lavandaria e está disponível.'),
+    );
+    expect(await availability(), 'available');
+    expect(find.text('Sem utilizações desde a última limpeza.'), findsOne);
+  });
 }
