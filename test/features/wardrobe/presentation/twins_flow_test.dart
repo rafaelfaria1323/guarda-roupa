@@ -81,6 +81,12 @@ void main() {
 
     // Vesti hoje: escolher o grupo regista uma só unidade.
     await openToday(tester);
+    tester
+        .state<ScaffoldMessengerState>(find.byType(ScaffoldMessenger).first)
+        .clearSnackBars();
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('wear-today')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('wear-today')));
     await settle(tester);
     expect(find.text('Branca ×4'), findsOneWidget);

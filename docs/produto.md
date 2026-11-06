@@ -20,7 +20,7 @@ O objetivo não é maximizar o número de funcionalidades, mas reduzir a decisã
 | Calendário | Um conjunto por dia inicialmente; vários por dia posteriormente |
 | Histórico | Um toque para confirmar utilização; planeado não significa utilizado |
 | Alterações | Avisar e propor; aplicar apenas depois de confirmação |
-| Estilo | Referências visuais e links com preferências assistidas inicialmente |
+| Perfil (estilo) | Referências visuais e links com preferências assistidas inicialmente |
 | Reutilização | Calçado e acessórios podem repetir; indisponibilidade continua a impedir utilização |
 | Custos | Uso pessoal sem serviços pagos obrigatórios, respeitando quotas e limitações |
 | Desenvolvimento | Flutter, Repository Pattern, código sustentável e testes de comportamento |

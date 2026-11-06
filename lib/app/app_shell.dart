@@ -34,10 +34,11 @@ class AppShell extends ConsumerWidget {
   Widget _scaffold(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final destinations = [
-      (Icons.wb_sunny_outlined, Icons.wb_sunny, l10n.navPlanner),
+      (Icons.home_outlined, Icons.home, l10n.navPlanner),
       (Icons.checkroom_outlined, Icons.checkroom, l10n.navWardrobe),
       (Icons.style_outlined, Icons.style, l10n.navOutfits),
-      (Icons.auto_awesome_outlined, Icons.auto_awesome, l10n.navStyle),
+      (Icons.calendar_month_outlined, Icons.calendar_month, l10n.navWeek),
+      (Icons.person_outline, Icons.person, l10n.navProfile),
     ];
     final title = destinations[navigationShell.currentIndex].$3;
     final appBar = AppBar(

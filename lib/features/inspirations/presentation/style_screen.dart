@@ -8,7 +8,10 @@ import '../../../app/router.dart';
 import '../../../core/domain/result.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../account_sync/application/providers.dart';
+import '../../care/application/care_providers.dart';
 import '../../import/application/import_providers.dart';
+import '../../outfits/application/outfit_providers.dart';
 import '../../import/domain/product_import.dart';
 import '../../wardrobe/domain/reference_color.dart';
 import '../../wardrobe/presentation/colors_editor.dart';
@@ -19,7 +22,8 @@ import '../domain/style_preference.dart';
 import 'inspiration_messages.dart';
 import 'preference_messages.dart';
 
-/// Separador Estilo: inspirações guardadas e preferências explícitas.
+/// Separador Perfil (design v3): a conta e um resumo do armário em cima, e
+/// por baixo o estilo — inspirações guardadas e preferências explícitas.
 /// Nenhuma das duas é posse: não são peças.
 class StyleScreen extends ConsumerStatefulWidget {
   const StyleScreen({super.key});
@@ -29,6 +33,70 @@ class StyleScreen extends ConsumerStatefulWidget {
 }
 
 enum _StyleView { inspirations, preferences }
+
+/// Quem está na conta, quanto há no armário e a entrada para Definições.
+class _ProfileHeader extends ConsumerWidget {
+  const _ProfileHeader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final email = ref.watch(currentUserProvider).value?.email ?? '';
+    final garments = ref.watch(allGarmentsProvider).value?.length ?? 0;
+    final outfits = ref.watch(outfitsProvider).value?.length ?? 0;
+    final inspirations = ref.watch(inspirationsProvider).value?.length ?? 0;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: theme.colorScheme.primaryContainer,
+                foregroundColor: theme.colorScheme.onPrimaryContainer,
+                child: Text(
+                  email.isEmpty ? '·' : email.characters.first.toUpperCase(),
+                  style: theme.textTheme.titleMedium,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      email,
+                      style: theme.textTheme.titleMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      l10n.profileStats(garments, outfits, inspirations),
+                      key: const Key('profile-stats'),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                key: const Key('profile-settings'),
+                tooltip: l10n.profileOpenSettings,
+                icon: const Icon(Icons.chevron_right),
+                onPressed: () => context.push(AppRoutes.settings),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class _StyleScreenState extends ConsumerState<StyleScreen> {
   _StyleView _view = _StyleView.inspirations;
@@ -122,6 +190,7 @@ class _StyleScreenState extends ConsumerState<StyleScreen> {
       ),
       body: Column(
         children: [
+          const _ProfileHeader(),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: SizedBox(

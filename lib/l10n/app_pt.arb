@@ -4,7 +4,8 @@
   "navPlanner": "Hoje",
   "navWardrobe": "Armário",
   "navOutfits": "Conjuntos",
-  "navStyle": "Estilo",
+  "navWeek": "Semana",
+  "navProfile": "Perfil",
   "settings": "Definições",
   "wardrobeEmpty": "Ainda não tens peças.",
   "wardrobeEmptyHint": "Toca em «Adicionar peça» para criar a primeira. As fotografias chegam mais tarde neste incremento.",
@@ -1025,7 +1026,7 @@
   "importConfirmLater": "A categoria e as cores escolhes a seguir, no formulário. Nada é guardado até carregares em Guardar.",
   "importUse": "Usar na peça nova",
   "importManual": "Preencher à mão",
-  "importFailure": "{kind, select, notPublic{Este link aponta para um endereço interno e não se abre.} invalid{Este link não parece válido.} blocked{Esta loja bloqueia leituras automáticas. Preenche à mão: o link fica nas notas.} notFound{A página não existe ou já não está à venda.} failed{Não foi possível ler a página.} noMetadata{A página não tem os dados do produto.} inspiration{Os Pins e as publicações do Instagram são inspirações, não peças. Abre-o no Safari e partilha-o com o atalho do fio: fica no Estilo.} rateLimited{Muitas importações seguidas. Tenta mais tarde.} notAllowed{A importação precisa de sessão iniciada com uma conta autorizada.} other{A importação não está disponível agora. Verifica a ligação.}}",
+  "importFailure": "{kind, select, notPublic{Este link aponta para um endereço interno e não se abre.} invalid{Este link não parece válido.} blocked{Esta loja bloqueia leituras automáticas. Preenche à mão: o link fica nas notas.} notFound{A página não existe ou já não está à venda.} failed{Não foi possível ler a página.} noMetadata{A página não tem os dados do produto.} inspiration{Os Pins e as publicações do Instagram são inspirações, não peças. Abre-o no Safari e partilha-o com o atalho do fio: fica no Perfil, nas inspirações.} rateLimited{Muitas importações seguidas. Tenta mais tarde.} notAllowed{A importação precisa de sessão iniciada com uma conta autorizada.} other{A importação não está disponível agora. Verifica a ligação.}}",
   "@importFailure": {
     "placeholders": {
       "kind": {
@@ -1944,5 +1945,20 @@
         "type": "String"
       }
     }
-  }
+  },
+  "profileStats": "{garments, plural, =0{0 peças} =1{1 peça} other{{garments} peças}} · {outfits, plural, =0{0 conjuntos} =1{1 conjunto} other{{outfits} conjuntos}} · {inspirations, plural, =0{0 inspirações} =1{1 inspiração} other{{inspirations} inspirações}}",
+  "@profileStats": {
+    "placeholders": {
+      "garments": {
+        "type": "int"
+      },
+      "outfits": {
+        "type": "int"
+      },
+      "inspirations": {
+        "type": "int"
+      }
+    }
+  },
+  "profileOpenSettings": "Abrir as definições"
 }

@@ -23,6 +23,12 @@ void main() {
     await openWardrobe(tester);
     await addGarment(tester, category: 'T-shirt', name: 'Branca');
     await openToday(tester);
+    tester
+        .state<ScaffoldMessengerState>(find.byType(ScaffoldMessenger).first)
+        .clearSnackBars();
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('wear-today')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('wear-today')));
     await settle(tester);
     await tester.tap(pick('Branca'));
@@ -30,6 +36,12 @@ void main() {
     await save(tester);
 
     // No registo seguinte, aviso informativo (t-shirt: 3 dias).
+    tester
+        .state<ScaffoldMessengerState>(find.byType(ScaffoldMessenger).first)
+        .clearSnackBars();
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('wear-today')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('wear-today')));
     await settleUntil(
       tester,
