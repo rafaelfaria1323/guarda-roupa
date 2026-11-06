@@ -50,7 +50,15 @@ Decisão do utilizador (2026-11-04): aceitar **qualquer link** de loja, não só
   - SQL da quota e dos perfis;
   - Flutter com um importador falso e do cliente com `MockClient`.
 - **Publicação** pelo workflow Supabase, com o secret `SUPABASE_ACCESS_TOKEN` (permissão `edge_functions_write`). Publicada desde 2026-11-04. Se a função não estiver publicada, a app mostra “A importação não está disponível agora”.
-- **Por fazer**: o smoke com links reais ([tool/import/README.md](../../tool/import/README.md)). Corre no Mac ou no ambiente na cloud (desde 2026-11-05 a cloud já chega às lojas). Sites que bloqueiam pedidos automáticos (anti-bot, como a Zara e a Massimo Dutti) vão continuar a falhar: a app diz que a loja bloqueia, o perfil mostra-o como “costuma falhar” e fica a introdução manual.
+- **Smoke com links reais (2026-11-06, na cloud, `cli.ts`)**, sem contornar bloqueios:
+
+  | Loja | Resultado |
+  |---|---|
+  | Uniqlo (2 produtos) | `ok`, só Open Graph: nome e uma imagem; sem material, cor nem variantes (a página monta o resto com JavaScript) |
+  | H&M (2), Mango, Levi’s, Decathlon (2) | `blocked` (403): a loja recusa pedidos automáticos; fica a introdução manual ou o atalho do iPhone |
+  | Salsa | `not_found` (404): o produto já não existia |
+
+  Daqui saiu uma correção: o nome tirado do título da página já não traz a loja no fim (“T-shirt | UNIQLO PT” → “T-shirt”), por `og:site_name` ou pelo domínio. Falta experimentar as lojas que o utilizador usa, no telemóvel ([tool/import/README.md](../../tool/import/README.md)). Nas lojas que bloqueiam, o caminho é o atalho do iPhone, que manda a página já aberta no Safari.
 - **Próximo passo possível**: usar as correções do utilizador (categoria escolhida, nome editado) para sugerir a categoria da próxima peça do mesmo site. Fica para depois: precisa de mais dados reais.
 
 ### Atalho do iPhone

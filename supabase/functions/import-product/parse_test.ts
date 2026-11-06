@@ -1,5 +1,5 @@
 import { assertEquals } from '@std/assert';
-import { parseProduct } from './parse.ts';
+import { parseProduct, withoutSiteSuffix } from './parse.ts';
 
 const page = new URL('https://www.zara.com/pt/pt/camisa-p1.html');
 const fixture = (name: string) =>
@@ -121,4 +121,33 @@ Deno.test('categoria da loja: `category` ou o caminho de navegação', () => {
   )!;
   assertEquals(trail.category, 'Mulher > Casacos');
   assertEquals(parseProduct(ld(product), page)!.category, undefined);
+});
+
+Deno.test('título de página sem o nome da loja no fim', () => {
+  assertEquals(
+    withoutSiteSuffix('Unisex 100% Supima Cotton T-Shirt | UNIQLO PT', [
+      undefined,
+      'www.uniqlo.com',
+    ]),
+    'Unisex 100% Supima Cotton T-Shirt',
+  );
+  assertEquals(
+    withoutSiteSuffix('T-shirt Slim Fit - Preto - H&M PT', [undefined, 'www2.hm.com']),
+    'T-shirt Slim Fit - Preto',
+  );
+  assertEquals(
+    withoutSiteSuffix('Camisola de lã – Loja Bonita', ['Loja Bonita', 'bonita.example']),
+    'Camisola de lã',
+  );
+  // Sem a loja no fim, fica como está (o hífen faz parte do nome).
+  assertEquals(
+    withoutSiteSuffix('T-Shirt - Preto', [undefined, 'www.uniqlo.com']),
+    'T-Shirt - Preto',
+  );
+  assertEquals(withoutSiteSuffix('| Uniqlo', [undefined, 'www.uniqlo.com']), '| Uniqlo');
+
+  const html = '<meta property="og:title" content="Calças largas | Bershka">' +
+    '<meta property="og:type" content="product">';
+  const p = parseProduct(html, new URL('https://www.bershka.com/pt/x.html'))!;
+  assertEquals(p.name, 'Calças largas');
 });
