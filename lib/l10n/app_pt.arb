@@ -1331,5 +1331,18 @@
       }
     }
   },
-  "weekAutoUndo": "Desfazer"
+  "weekAutoUndo": "Desfazer",
+  "wearMarkedDirty": "{count, plural, =1{Marquei para lavar: {names}.} other{Marquei {count} peças para lavar: {names}.}}",
+  "@wearMarkedDirty": {
+    "description": "Depois de registar o uso, as peças que chegaram ao limiar passam a precisar de limpeza.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "laundryCleanedAvailable": "Limpeza registada. Voltou a estar disponível."
 }

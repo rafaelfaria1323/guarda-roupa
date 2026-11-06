@@ -166,4 +166,68 @@ void main() {
     expect(s[coat.id]!.washRecommended, isFalse);
     expect(s[other.id]!.usesSinceCleaning, 0);
   });
+
+  group('dirtyAfterWear', () {
+    List<String> dirty(
+      WearEvent event, {
+      List<Garment>? garments,
+      List<WearEvent> wears = const [],
+      List<CleaningEvent> cleanings = const [],
+    }) => [
+      for (final id in LaundryPolicy.dirtyAfterWear(
+        event,
+        garments:
+            garments ??
+            [
+              garment('t', GarmentCategory.tShirt),
+              garment('j', GarmentCategory.jeans),
+              garment('s', GarmentCategory.sneakers),
+            ],
+        wears: wears,
+        cleanings: cleanings,
+        policies: const CarePolicies(),
+      ))
+        id.value,
+    ];
+
+    test('a t-shirt suja-se à primeira; ganga à quarta; calçado nunca', () {
+      final today = wear(10, ['t', 'j', 's']);
+      expect(dirty(today), ['t']);
+      final before = [
+        for (var d = 1; d <= 3; d++) wear(d, ['j']),
+      ];
+      expect(dirty(today, wears: before), ['t', 'j']);
+    });
+
+    test('o evento já na lista conta uma vez', () {
+      final today = wear(10, ['j']);
+      final before = [
+        for (var d = 1; d <= 2; d++) wear(d, ['j']),
+      ];
+      expect(dirty(today, wears: [...before, today]), isEmpty);
+    });
+
+    test('uma limpeza depois reinicia a contagem', () {
+      final today = wear(10, ['j']);
+      final before = [
+        for (var d = 1; d <= 3; d++) wear(d, ['j']),
+      ];
+      expect(
+        dirty(today, wears: before, cleanings: [cleaning(5, 'j')]),
+        isEmpty,
+      );
+    });
+
+    test('peças já indisponíveis ou de fora ficam como estão', () {
+      final washing = Garment(
+        id: const GarmentId('t'),
+        category: GarmentCategory.tShirt,
+        availability: Availability.washing,
+        createdAt: DateTime.utc(2026),
+        updatedAt: DateTime.utc(2026),
+      );
+      expect(dirty(wear(10, ['t']), garments: [washing]), isEmpty);
+      expect(dirty(wear(10, ['x'])), isEmpty);
+    });
+  });
 }

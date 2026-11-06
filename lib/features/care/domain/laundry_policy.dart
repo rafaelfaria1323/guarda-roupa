@@ -5,9 +5,11 @@ import '../../wear/domain/wear_event.dart';
 import 'care_policies.dart';
 import 'cleaning_event.dart';
 
-/// Recomendação de lavagem (P-07): aviso informativo a partir das
-/// utilizações confirmadas desde a última limpeza registada. Nunca muda a
-/// disponibilidade.
+/// Recomendação de lavagem (P-07): conta as utilizações confirmadas desde
+/// a última limpeza registada. Ao confirmar uma utilização que chega ao
+/// limiar, a peça passa sozinha a "Precisa de limpeza" ([dirtyAfterWear],
+/// decisão do utilizador a 2026-11-06); só volta a disponível quando o
+/// utilizador regista "Lavei hoje" ou a muda à mão.
 abstract final class LaundryPolicy {
   /// Referência USU/ACI aprovada em P-07. `0` = sem aviso.
   static int defaultFor(GarmentCategory category) => switch (category) {
@@ -71,6 +73,37 @@ abstract final class LaundryPolicy {
           threshold: thresholdFor(g, policies),
         ),
     };
+  }
+
+  /// As peças de [event] que, com ele, chegam ao limiar de lavagem e ainda
+  /// estão disponíveis: passam a "Precisa de limpeza". [wears] pode já
+  /// conter [event] (conta uma vez).
+  static List<GarmentId> dirtyAfterWear(
+    WearEvent event, {
+    required Iterable<Garment> garments,
+    required Iterable<WearEvent> wears,
+    required Iterable<CleaningEvent> cleanings,
+    required CarePolicies policies,
+  }) {
+    final worn = event.garmentIds.toSet();
+    final candidates = [
+      for (final g in garments)
+        if (worn.contains(g.id) && g.isCandidate) g,
+    ];
+    final states = evaluate(
+      garments: candidates,
+      wears: [
+        for (final w in wears)
+          if (w.id != event.id) w,
+        event,
+      ],
+      cleanings: cleanings,
+      policies: policies,
+    );
+    return [
+      for (final g in candidates)
+        if (states[g.id]!.washRecommended) g.id,
+    ];
   }
 
   /// No mesmo dia, conta a ordem em que foram registados.

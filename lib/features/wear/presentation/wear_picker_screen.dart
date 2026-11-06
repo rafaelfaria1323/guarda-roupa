@@ -5,10 +5,12 @@ import 'package:go_router/go_router.dart';
 import '../../../core/domain/result.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../account_sync/application/providers.dart';
+import '../../wardrobe/domain/availability.dart';
 import '../../wardrobe/domain/garment.dart';
 import '../../wardrobe/domain/garment_filter.dart';
 import '../../wardrobe/presentation/garment_photo_view.dart';
 import '../../care/application/care_providers.dart';
+import '../../care/domain/laundry_policy.dart';
 import '../../care/domain/rotation_policy.dart';
 import '../../outfits/application/outfit_providers.dart';
 import '../../outfits/domain/outfit.dart';
@@ -255,6 +257,12 @@ class _WearPickerScreenState extends ConsumerState<WearPickerScreen> {
     setState(() => _saving = true);
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
+    // Lidos antes de esperar: o ecrã fecha logo a seguir.
+    final wardrobe = ref.read(wardrobeRepositoryProvider);
+    final garments = ref.read(allGarmentsProvider).value;
+    final wears = ref.read(allWearsProvider).value;
+    final cleanings = ref.read(allCleaningsProvider).value;
+    final policies = ref.read(carePoliciesProvider).value;
     final WearResult<WearEvent> result = switch (widget.eventId) {
       final id? => await repo.correctWear(id, _selected),
       null => await repo.recordWear(
@@ -264,19 +272,57 @@ class _WearPickerScreenState extends ConsumerState<WearPickerScreen> {
       ),
     };
     if (!mounted) return;
-    setState(() => _saving = false);
-    if (!reportWear(context, result)) return;
+    if (!reportWear(context, result)) {
+      setState(() => _saving = false);
+      return;
+    }
     final event = (result as Ok<WearEvent, WearFailure>).value;
+    // Lavandaria sozinha (2026-11-06): o que chega ao limiar vai para
+    // lavar; só volta com "Lavei hoje" ou à mão.
+    final dirty = <Garment>[];
+    if (wardrobe != null &&
+        garments != null &&
+        wears != null &&
+        cleanings != null &&
+        policies != null) {
+      final byId = {for (final g in garments) g.id: g};
+      for (final id in LaundryPolicy.dirtyAfterWear(
+        event,
+        garments: garments,
+        wears: wears,
+        cleanings: cleanings,
+        policies: policies,
+      )) {
+        final marked = await wardrobe.setAvailability(
+          id,
+          Availability.needsCleaning,
+        );
+        if (marked is Ok) dirty.add(byId[id]!);
+      }
+    }
+    if (!mounted) return;
+    setState(() => _saving = false);
+    final done = _correcting ? l10n.wearCorrected : l10n.wearRecorded;
     messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(_correcting ? l10n.wearCorrected : l10n.wearRecorded),
+          content: Text(
+            dirty.isEmpty
+                ? done
+                : '$done ${l10n.wearMarkedDirty(dirty.length, [for (final g in dirty) garmentLabel(l10n, g)].join(', '))}',
+            key: const Key('wear-saved-message'),
+          ),
           action: _correcting
               ? null
               : SnackBarAction(
                   label: l10n.wearUndo,
-                  onPressed: () => repo.voidWear(event.id),
+                  onPressed: () async {
+                    await repo.voidWear(event.id);
+                    for (final g in dirty) {
+                      await wardrobe?.setAvailability(g.id, g.availability);
+                    }
+                  },
                 ),
         ),
       );

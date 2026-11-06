@@ -124,6 +124,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('2 peças escolhidas'), findsOne);
     await save(tester);
+    // A t-shirt foi para lavar sozinha; o aviso (mais alto) sai da frente.
+    expect(find.textContaining('Marquei para lavar: Branca'), findsOne);
+    tester
+        .state<ScaffoldMessengerState>(find.byType(ScaffoldMessenger))
+        .removeCurrentSnackBar();
+    await tester.pumpAndSettle();
 
     // Editar o conjunto não muda a utilização registada.
     await openOutfits(tester);

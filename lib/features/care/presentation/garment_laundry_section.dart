@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/domain/result.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../account_sync/application/providers.dart';
+import '../../wardrobe/domain/availability.dart';
 import '../../wardrobe/domain/garment.dart';
 import '../../wear/application/wear_providers.dart';
 import '../application/care_providers.dart';
@@ -67,19 +70,38 @@ class GarmentLaundrySection extends ConsumerWidget {
           label: Text(l10n.laundryCleanedToday),
           onPressed: () async {
             final today = todayFrom(ref.read(clockProvider));
+            final wardrobe = ref.read(wardrobeRepositoryProvider);
+            final before = garment.availability;
             final result = await repo.recordCleaning(garment.id, today);
             if (!context.mounted || !reportCare(context, result)) return;
+            // Lavada, volta a estar disponível (decisão de 2026-11-06): é
+            // o único caminho de volta além de a mudar à mão.
+            final restored =
+                !before.isAvailable &&
+                wardrobe != null &&
+                await wardrobe.setAvailability(
+                  garment.id,
+                  Availability.available,
+                ) is Ok;
+            if (!context.mounted) return;
             final messenger = ScaffoldMessenger.of(context);
             messenger
               ..hideCurrentSnackBar()
               ..showSnackBar(
                 SnackBar(
-                  content: Text(l10n.laundryCleaned),
+                  content: Text(
+                    restored
+                        ? l10n.laundryCleanedAvailable
+                        : l10n.laundryCleaned,
+                  ),
                   action: SnackBarAction(
                     label: l10n.wearUndo,
                     onPressed: () async {
                       final last = ref.read(lastCleaningProvider(garment.id));
                       if (last != null) await repo.voidCleaning(last.id);
+                      if (restored) {
+                        await wardrobe.setAvailability(garment.id, before);
+                      }
                     },
                   ),
                 ),
