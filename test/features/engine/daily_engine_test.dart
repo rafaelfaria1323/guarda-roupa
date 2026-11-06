@@ -571,4 +571,134 @@ void main() {
       }
     });
   });
+
+  group('conjuntos guardados', () {
+    // Ordem do motor: t1..t4 e b1..b4 (nunca usada, depois a mais antiga).
+    final garments = [
+      g('t1', GarmentCategory.shirt),
+      g('t2', GarmentCategory.shirt),
+      g('t3', GarmentCategory.shirt),
+      g('t4', GarmentCategory.shirt),
+      g('b1', GarmentCategory.trousers),
+      g('b2', GarmentCategory.trousers),
+      g('b3', GarmentCategory.trousers),
+      g('b4', GarmentCategory.trousers),
+      g('s1', GarmentCategory.sneakers),
+    ];
+    final wears = [
+      wore(1, ['t2', 'b2']),
+      wore(2, ['t3', 'b3']),
+      wore(3, ['t4', 'b4']),
+    ];
+    Outfit saved(
+      List<(String, OutfitRole)> items, {
+      String? name,
+      Set<Occasion> occasions = const {},
+    }) => Outfit(
+      id: 'o${items.map((i) => i.$1).join()}',
+      name: name,
+      occasions: occasions,
+      items: [for (final (id, role) in items) OutfitItem(GarmentId(id), role)],
+      createdAt: _t0,
+      updatedAt: _t0,
+    );
+    SuggestionResult withOutfits(
+      List<Outfit> outfits, {
+      List<Garment>? pieces,
+      Occasion? occasion,
+    }) => DailyEngine.suggest(
+      WardrobeSnapshot(
+        garments: pieces ?? garments,
+        wears: wears,
+        outfits: outfits,
+      ),
+      SuggestionRequest(day: day(10), occasion: occasion),
+    );
+
+    test('um conjunto guardado é proposto e vem à frente', () {
+      final mine = saved([
+        ('t4', OutfitRole.mainTop),
+        ('b1', OutfitRole.bottom),
+        ('s1', OutfitRole.footwear),
+      ], name: 'Sexta');
+      expect(ids(run(garments, wears: wears).candidates.first), [
+        't1',
+        'b1',
+        's1',
+      ]);
+      final r = withOutfits([mine]);
+      final first = r.candidates.first;
+      expect(ids(first), ['t4', 'b1', 's1']);
+      expect(
+        first.notes.whereType<SavedOutfitNote>().single.outfit.name,
+        'Sexta',
+      );
+      expect(r.candidates, hasLength(3));
+    });
+
+    test('uma sugestão que já é um conjunto guardado fica marcada', () {
+      final r = withOutfits([
+        saved([('t1', OutfitRole.mainTop), ('b1', OutfitRole.bottom)]),
+      ]);
+      expect(ids(r.candidates.first), ['t1', 'b1', 's1']);
+      expect(
+        r.candidates.first.notes.whereType<SavedOutfitNote>(),
+        hasLength(1),
+      );
+      expect(r.candidates[1].notes.whereType<SavedOutfitNote>(), isEmpty);
+    });
+
+    test('peça a lavar ou de outra ocasião: o conjunto não entra', () {
+      final mine = saved([
+        ('t4', OutfitRole.mainTop),
+        ('b4', OutfitRole.bottom),
+      ]);
+      final dirty = [
+        for (final x in garments)
+          x.id.value == 'b4'
+              ? g(
+                  'b4',
+                  GarmentCategory.trousers,
+                  availability: Availability.needsCleaning,
+                )
+              : x,
+      ];
+      final r = withOutfits([mine], pieces: dirty);
+      expect(
+        r.candidates.expand((c) => c.notes).whereType<SavedOutfitNote>(),
+        isEmpty,
+      );
+
+      final evening = saved(
+        [('t4', OutfitRole.mainTop), ('b4', OutfitRole.bottom)],
+        occasions: {Occasion.evening},
+      );
+      final work = withOutfits([evening], occasion: Occasion.workCasual);
+      expect(
+        work.candidates.expand((c) => c.notes).whereType<SavedOutfitNote>(),
+        isEmpty,
+      );
+      final out = withOutfits([evening], occasion: Occasion.evening);
+      expect(ids(out.candidates.first), ['t4', 'b4', 's1']);
+    });
+
+    test('não passa à frente de avisos (rotatividade)', () {
+      final mine = saved([
+        ('t4', OutfitRole.mainTop),
+        ('b1', OutfitRole.bottom),
+      ]);
+      final r = DailyEngine.suggest(
+        WardrobeSnapshot(
+          garments: garments,
+          wears: [
+            ...wears,
+            wore(9, ['t4']),
+          ],
+          outfits: [mine],
+        ),
+        SuggestionRequest(day: day(10)),
+      );
+      expect(ids(r.candidates.first), isNot(contains('t4')));
+    });
+  });
 }

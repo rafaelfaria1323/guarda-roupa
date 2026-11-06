@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router.dart';
 import '../../../app/theme.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../outfits/application/outfit_providers.dart';
+import '../../outfits/domain/outfit.dart';
+import '../../outfits/presentation/outfit_messages.dart';
 import '../../wardrobe/domain/garment_attributes.dart';
 import '../../wardrobe/presentation/garment_cutout.dart';
 import '../../wear/presentation/today_wear_card.dart';
@@ -233,11 +236,46 @@ class _Result extends ConsumerStatefulWidget {
 
 class _ResultState extends ConsumerState<_Result> {
   var _shown = 0;
+  var _saving = false;
+
+  static String _key(OutfitCandidate c) =>
+      ([for (final i in c.items) i.garment.id.value]..sort()).join(',');
 
   @override
   void didUpdateWidget(_Result old) {
     super.didUpdateWidget(old);
+    // A mesma sugestão continua à vista se só mudou de lugar (ex.: depois
+    // de a guardar como conjunto).
+    final before = old.result.candidates;
+    if (_shown < before.length) {
+      final key = _key(before[_shown]);
+      final now = widget.result.candidates.indexWhere((c) => _key(c) == key);
+      if (now >= 0) {
+        _shown = now;
+        return;
+      }
+    }
     if (_shown >= widget.result.candidates.length) _shown = 0;
+  }
+
+  /// Guarda as peças da sugestão (sem a camada opcional) como conjunto,
+  /// com a ocasião escolhida.
+  Future<void> _save(OutfitCandidate candidate) async {
+    final repo = ref.read(outfitRepositoryProvider);
+    if (repo == null) return;
+    final occasion = ref.read(suggestionChoicesProvider).occasion;
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _saving = true);
+    final result = await repo.createOutfit(
+      OutfitDraft(items: candidate.outfitItems, occasions: {?occasion}),
+    );
+    if (!mounted) return;
+    setState(() => _saving = false);
+    if (!reportOutfit(context, result)) return;
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(l10n.suggestionsOutfitSaved)));
   }
 
   void _next() {
@@ -311,6 +349,17 @@ class _ResultState extends ConsumerState<_Result> {
                 onPressed: _next,
                 child: Text(l10n.suggestionsShowAnother),
               ),
+              if (!result.candidates[_shown].notes.any(
+                (n) => n is SavedOutfitNote,
+              ))
+                TextButton.icon(
+                  key: Key('suggestion-$_shown-save'),
+                  onPressed: _saving
+                      ? null
+                      : () => _save(result.candidates[_shown]),
+                  icon: const Icon(Icons.bookmark_add_outlined),
+                  label: Text(l10n.suggestionsSaveOutfit),
+                ),
             ],
           ),
         ],
@@ -368,7 +417,7 @@ class _CandidateViewState extends State<_CandidateView> {
     ];
     final reasons = <Widget>[
       for (final note in candidate.notes)
-        if (note is! MissingRole)
+        if (note is! MissingRole && note is! SavedOutfitNote)
           if (noteText(context, note) case final text?)
             Text(text, style: small),
       for (final item in items)
@@ -409,6 +458,13 @@ class _CandidateViewState extends State<_CandidateView> {
             l10n.suggestionsOptionalLayer(garmentLabel(l10n, layer.garment)),
             style: small,
           ),
+        for (final note in candidate.notes.whereType<SavedOutfitNote>())
+          if (noteText(context, note) case final text?)
+            Text(
+              text,
+              key: Key('suggestion-$index-saved'),
+              style: small?.copyWith(color: theme.colorScheme.primary),
+            ),
         ...warnings,
         if (reasons.isNotEmpty) ...[
           if (_why) ...[const SizedBox(height: 4), ...reasons],

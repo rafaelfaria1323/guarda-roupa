@@ -17,6 +17,7 @@ final class WardrobeSnapshot {
     this.cleanings = const [],
     this.policies = const CarePolicies(),
     this.preferences = const [],
+    this.outfits = const [],
   });
 
   final List<Garment> garments;
@@ -24,6 +25,20 @@ final class WardrobeSnapshot {
   final List<CleaningEvent> cleanings;
   final CarePolicies policies;
   final List<StylePreference> preferences;
+
+  /// Conjuntos guardados: o motor propõe-nos e põe-nos à frente de outro
+  /// igual em avisos, como uma preferência.
+  final List<Outfit> outfits;
+
+  /// O mesmo, com outro histórico (ex.: usos projetados da semana).
+  WardrobeSnapshot withWears(List<WearEvent> wears) => WardrobeSnapshot(
+    garments: garments,
+    wears: wears,
+    cleanings: cleanings,
+    policies: policies,
+    preferences: preferences,
+    outfits: outfits,
+  );
 }
 
 final class SuggestionRequest {
@@ -157,6 +172,12 @@ final class SurfaceMixNote extends SuggestionNote {
   const SurfaceMixNote({required this.patterned, required this.textured});
   final int patterned;
   final int textured;
+}
+
+/// O conjunto é (ou contém) um conjunto guardado.
+final class SavedOutfitNote extends SuggestionNote {
+  const SavedOutfitNote(this.outfit);
+  final Outfit outfit;
 }
 
 /// Ameno: pode juntar-se esta camada, se quiser.

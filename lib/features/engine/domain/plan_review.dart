@@ -127,13 +127,7 @@ abstract final class PlanReview {
       Replacement? proposal;
       if (issues.isNotEmpty) {
         proposal = DailyEngine.replace(
-          WardrobeSnapshot(
-            garments: snapshot.garments,
-            wears: [...snapshot.wears, ...projected],
-            cleanings: snapshot.cleanings,
-            policies: snapshot.policies,
-            preferences: snapshot.preferences,
-          ),
+          snapshot.withWears([...snapshot.wears, ...projected]),
           request(index),
           d.items,
           replace: {

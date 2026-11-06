@@ -48,6 +48,10 @@ String? noteText(BuildContext context, SuggestionNote note) {
       },
     ),
     OptionalLayerNote() => l10n.noteOptionalLayer,
+    SavedOutfitNote(:final outfit) => switch (outfit.name) {
+      final name? => l10n.noteSavedOutfit(name),
+      null => l10n.noteSavedOutfitUnnamed,
+    },
     MissingRole(:final role) => l10n.suggestionsMissing(
       l10n.outfitRoleLabel(role.id),
     ),

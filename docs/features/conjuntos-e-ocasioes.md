@@ -11,7 +11,9 @@ Estado: necessária no MVP.
 - **Vesti hoje → Usar um conjunto** preenche a escolha com as peças disponíveis do conjunto (avisa as que ficaram de fora). A utilização fica registada à parte: editar ou eliminar o conjunto depois não a altera.
 - Dados: tabela `outfits` com `items` em JSON (`[{garment_id, role}]`), escrita por `apply_outfit_operation` (`create_outfit`, `edit_outfit` campo a campo, `delete_outfit`), sincronizada pelo stream `user_outfits`.
 - Backup (formato v3): os conjuntos entram e são recuperados com as peças novas.
-- Por fazer: guardar uma proposta do motor, usar no planeamento e propor substituição.
+- **Da sugestão para o conjunto (2026-11-06):** “Guardar como conjunto” em “Sugestões para hoje” guarda as peças e papéis da sugestão (sem a camada opcional), com a ocasião escolhida.
+- **No motor:** os conjuntos guardados são propostos quando as peças servem e passam à frente de outros iguais em avisos, no dia e na semana ([motor](motor-de-combinacoes.md)).
+- Por fazer: propor uma substituição dentro de um conjunto guardado quando uma peça falta (hoje o conjunto simplesmente não entra).
 
 ## Objetivo
 
