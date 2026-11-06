@@ -174,6 +174,12 @@ final class SurfaceMixNote extends SuggestionNote {
   final int textured;
 }
 
+/// Uma peça descontraída com outra arranjada. Põe o conjunto atrás de
+/// outro igual em tudo menos nas preferências.
+final class FormalityMixNote extends SuggestionNote {
+  const FormalityMixNote();
+}
+
 /// O conjunto é (ou contém) um conjunto guardado; com [swaps], é o
 /// conjunto com uma peça trocada porque a dele não serve hoje.
 final class SavedOutfitNote extends SuggestionNote {

@@ -79,6 +79,15 @@ class AttributesEditor extends StatelessWidget {
           value: value.windOk,
           onChanged: (v) => onChanged(value.copyWith(windOk: () => v)),
         ),
+        _Choice(
+          title: l10n.garmentFormality,
+          keyPrefix: 'formality',
+          values: Formality.values,
+          idOf: (v) => v.id,
+          label: (v) => l10n.formalityLabel(v.id),
+          selected: value.formality,
+          onSelected: (v) => onChanged(value.copyWith(formality: () => v)),
+        ),
         _Title(l10n.garmentOccasions),
         Wrap(
           spacing: 8,

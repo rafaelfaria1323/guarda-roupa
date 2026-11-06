@@ -41,6 +41,17 @@ enum Warmth {
   static Warmth? fromId(String? id) => _byId(values, id, (v) => v.id);
 }
 
+/// Formalidade de uma peça ou de uma referência (inspirações).
+enum Formality {
+  relaxed('relaxed'),
+  smartCasual('smart_casual'),
+  dressy('dressy');
+
+  const Formality(this.id);
+  final String id;
+  static Formality? fromId(String? id) => _byId(values, id, (v) => v.id);
+}
+
 /// Ocasiões iniciais confirmadas (docs/features/conjuntos-e-ocasioes.md).
 enum Occasion {
   casual('casual'),
@@ -66,6 +77,7 @@ final class GarmentAttributes {
     this.warmth,
     this.rainOk,
     this.windOk,
+    this.formality,
     this.occasions = const {},
     this.material,
     this.care,
@@ -81,6 +93,7 @@ final class GarmentAttributes {
   /// Adequação conhecida a chuva / vento; `null` = não se sabe.
   final bool? rainOk;
   final bool? windOk;
+  final Formality? formality;
   final Set<Occasion> occasions;
 
   /// Texto da etiqueta, quando conhecido.
@@ -95,6 +108,7 @@ final class GarmentAttributes {
     'warmth': warmth?.id,
     'rain_ok': rainOk,
     'wind_ok': windOk,
+    'formality': formality?.id,
     'occasions': [
       for (final o in Occasion.values)
         if (occasions.contains(o)) o.id,
@@ -110,6 +124,7 @@ final class GarmentAttributes {
     Warmth? Function()? warmth,
     bool? Function()? rainOk,
     bool? Function()? windOk,
+    Formality? Function()? formality,
     Set<Occasion>? occasions,
     String? Function()? material,
     String? Function()? care,
@@ -119,6 +134,7 @@ final class GarmentAttributes {
     warmth: warmth == null ? this.warmth : warmth(),
     rainOk: rainOk == null ? this.rainOk : rainOk(),
     windOk: windOk == null ? this.windOk : windOk(),
+    formality: formality == null ? this.formality : formality(),
     occasions: occasions ?? this.occasions,
     material: material == null ? this.material : material(),
     care: care == null ? this.care : care(),
@@ -134,6 +150,7 @@ final class GarmentAttributes {
         warmth: warmth,
         rainOk: rainOk,
         windOk: windOk,
+        formality: formality,
         occasions: Set.unmodifiable(occasions),
         material: text(material),
         care: text(care),
@@ -147,6 +164,7 @@ final class GarmentAttributes {
       other.warmth == warmth &&
       other.rainOk == rainOk &&
       other.windOk == windOk &&
+      other.formality == formality &&
       other.occasions.length == occasions.length &&
       other.occasions.containsAll(occasions) &&
       other.material == material &&
@@ -159,6 +177,7 @@ final class GarmentAttributes {
     warmth,
     rainOk,
     windOk,
+    formality,
     Object.hashAllUnordered(occasions),
     material,
     care,

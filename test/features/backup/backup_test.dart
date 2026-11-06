@@ -138,6 +138,7 @@ void main() {
           attributes: const GarmentAttributes(
             warmth: Warmth.warm,
             rainOk: false,
+            formality: Formality.relaxed,
             occasions: {Occasion.evening},
             material: 'Lã',
           ),

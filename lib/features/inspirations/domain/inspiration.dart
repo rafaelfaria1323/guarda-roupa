@@ -1,22 +1,7 @@
 import '../../wardrobe/domain/garment_attributes.dart';
 import '../../wardrobe/domain/garment_photo.dart';
 
-/// Formalidade de uma referência (docs/features/inspiracoes-e-estilo.md).
-enum Formality {
-  relaxed('relaxed'),
-  smartCasual('smart_casual'),
-  dressy('dressy');
-
-  const Formality(this.id);
-  final String id;
-
-  static Formality? fromId(String? id) {
-    for (final f in values) {
-      if (f.id == id) return f;
-    }
-    return null;
-  }
-}
+export '../../wardrobe/domain/garment_attributes.dart' show Formality;
 
 /// Silhueta do look de referência (docs/features/inspiracoes-e-estilo.md).
 enum Proportion {

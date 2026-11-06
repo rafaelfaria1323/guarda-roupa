@@ -86,6 +86,15 @@ abstract final class OutfitHarmony {
     return (patterned: patterned, textured: textured);
   }
 
+  /// Uma peça descontraída e outra arranjada no mesmo conjunto (ex.:
+  /// sweatshirt com calças de fato). Casual cuidado liga com as duas;
+  /// formalidade por indicar não conta.
+  static bool formalityClash(Iterable<Garment> items) {
+    final levels = {for (final g in items) ?g.attributes.formality};
+    return levels.contains(Formality.relaxed) &&
+        levels.contains(Formality.dressy);
+  }
+
   /// Quanto o conjunto tem "a competir": cada padrão e cada textura forte
   /// além do primeiro. 0 = nada a competir.
   static int load(({int patterned, int textured}) s) =>

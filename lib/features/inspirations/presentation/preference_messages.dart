@@ -4,7 +4,6 @@ import '../../../core/domain/result.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../wardrobe/domain/garment_attributes.dart';
 import '../../wardrobe/domain/reference_color.dart';
-import '../domain/inspiration.dart';
 import '../domain/inspiration_repository.dart';
 import '../domain/style_preference.dart';
 

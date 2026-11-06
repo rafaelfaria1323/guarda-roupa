@@ -10,10 +10,10 @@ Dart puro em `lib/features/engine/domain/` (`DailyEngine.suggest`), sem UI nem p
 - **Modelos:** top principal + parte de baixo + calçado, ou peça única + calçado. A t-shirt chega como top único. Casaco só quando o conforto o pede (frio com top leve/médio) ou como camada opcional à parte (ameno, ou chuva/vento com um casaco adequado).
 - **Obrigatório:** só peças não arquivadas e disponíveis; nenhuma peça em dois papéis; uma peça com ocasiões indicadas que não incluem a pedida fica de fora. Sem ocasiões indicadas é desconhecido: entra com nota.
 - **Ordem de cada papel, sem pesos:** conforto (serve › serve com casaco › desconhecido › não serve), chuva/vento (casaco e calçado), rotatividade (elegíveis primeiro, P-06), preferências (gosto − evito), menos usadas em 30 dias, usadas há mais tempo, seed. Uma peça confortável mas dentro do intervalo de rotatividade fica à frente de uma elegível que não serve.
-- **Preferências:** cor (RGB de referência), padrão e textura, nas ocasiões da preferência (vazio = sempre). Combinações de cor contam no conjunto (ver abaixo); a formalidade ainda não entra.
+- **Preferências:** cor (RGB de referência), padrão, textura e formalidade (2026-11-06), em cada peça, nas ocasiões da preferência (vazio = sempre). Combinações de cor contam no conjunto (ver abaixo).
 - **Lavagem (P-07):** só aviso.
 - **Conjuntos guardados (2026-11-06):** o motor propõe também os conjuntos guardados da ocasião pedida (sem ocasiões = sempre; sem ocasião pedida = todos), se as peças servirem hoje: disponíveis, não arquivadas e da ocasião. Se **só uma** não serve (a lavar, arquivada, apagada ou de outra ocasião), entra no lugar dela a melhor do mesmo papel que não é do conjunto, com a nota “Do teu conjunto Sexta, com Preta em vez de Azul”; com duas ou mais em falta já não é o mesmo conjunto e não entra. O casaco decide-o o tempo, como nos outros; camadas intermédias e acessórios ainda não entram. Um conjunto que contém todas as peças de um guardado (sem contar o casaco) leva a nota “Um dos teus conjuntos” e conta como **mais uma preferência**: passa à frente de outro igual em avisos, nunca de um com menos avisos (uma peça a lavar ou dentro da rotatividade continua a pesar). Vale também na semana e nas trocas.
-- **Conjuntos:** o i-ésimo conjunto junta a i-ésima peça de cada papel; repetidos saem. Ordem: completos, menos avisos, mais preferências (das peças e da combinação de cor), menos padrões/texturas a competir, peças mais bem ordenadas, seed (FNV-1a, igual em todas as plataformas).
+- **Conjuntos:** o i-ésimo conjunto junta a i-ésima peça de cada papel; repetidos saem. Ordem: completos, menos avisos, mais preferências (das peças e da combinação de cor), formalidade coerente, menos padrões/texturas a competir, peças mais bem ordenadas, seed (FNV-1a, igual em todas as plataformas).
 - **Resultado:** peças/papéis com notas (ocasião, conforto, chuva/vento, rotatividade, uso recente, preferências, lavagem), camada opcional, papéis em falta e estado: válido, parcial (falta calçado ou casaco), nada encontrado (há peças mas nenhuma serve, com o motivo por papel: indisponível ou outra ocasião) e dados insuficientes (não há peças para nenhum modelo). Sem condições, diz que não aplicou regras de conforto.
 
 ### "Sugestões para hoje" (2026-11-03)
@@ -39,11 +39,12 @@ Cartão em Hoje (antes Planeador), por baixo de "Vesti hoje":
 - **Sem cor indicada numa peça:** a combinação fica por saber. Não se descreve nem conta para preferências.
 - **Ordem:** as combinações só pesam com uma preferência "Gosto"/"Evito" de combinação (Estilo › Preferências, nas ocasiões dela): +1 ou −1, somado às preferências das peças, com a nota da preferência no conjunto. Sem preferência, aparecem só como descrição ("Cores: base neutra").
 - **Padrões e texturas:** padrão por indicar ou liso não conta. Cada padrão além do primeiro, e cada textura forte (marcada ou com pelo) além da primeira, soma um ponto de "competição". O conjunto fica atrás de outro igual em tudo o resto, com a nota "Mais de um padrão: podem competir". Nunca é excluído nem conta como aviso.
+- **Formalidade (2026-11-06):** uma peça descontraída e outra arranjada no mesmo conjunto (ex.: sweatshirt com calças de fato) põem-no atrás de outro igual em tudo menos nas preferências, com a nota "Uma peça descontraída com outra arranjada: podem não ligar". Casual cuidado liga com as duas; formalidade por indicar não conta. Nunca é excluído nem conta como aviso. A ocasião ainda não pede uma formalidade (o trabalho é smart casual, P-19, e uma saída pode ser descontraída).
 - **Limite:** os pares continuam a ser a i-ésima peça de cada papel. A harmonia ordena estes conjuntos, mas não procura outros pares.
 
 As notas do conjunto aparecem em "Sugestões para hoje". Só o papel em falta fica a laranja escuro, à vista; as outras ficam em "Porquê este".
 
-Ainda não: formalidade do conjunto, contraste desejado, acessórios, camada intermédia, diversidade na semana.
+Ainda não: formalidade pedida pela ocasião, contraste desejado, acessórios, camada intermédia, diversidade na semana.
 
 ## Objetivo
 
