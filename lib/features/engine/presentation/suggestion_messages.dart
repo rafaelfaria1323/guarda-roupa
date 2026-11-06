@@ -15,6 +15,8 @@ String? noteText(BuildContext context, SuggestionNote note) {
   String date(DateTime d) => material.formatShortDate(d);
   return switch (note) {
     OccasionUnknown() => l10n.noteOccasionUnknown,
+    OccasionMatches(:final occasion, byFormality: true) =>
+      l10n.noteOccasionByFormality(l10n.occasionLabel(occasion.id)),
     OccasionMatches(:final occasion) => l10n.noteOccasionMatches(
       l10n.occasionLabel(occasion.id),
     ),

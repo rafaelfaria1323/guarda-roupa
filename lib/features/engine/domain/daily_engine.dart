@@ -414,10 +414,7 @@ final class _Context {
     final occasion = request.occasion;
     final fitting = [
       for (final g in usable)
-        if (occasion == null ||
-            g.attributes.occasions.isEmpty ||
-            g.attributes.occasions.contains(occasion))
-          g,
+        if (occasion == null || _servesOccasion(g, occasion) != false) g,
     ];
     final cause = owned.isEmpty
         ? GapCause.none
@@ -425,6 +422,15 @@ final class _Context {
         ? GapCause.unavailable
         : GapCause.otherOccasions;
     return _Pool(slot, cause, [for (final g in fitting) _entry(g, slot)]);
+  }
+
+  /// Se a peça serve para [o]: pelas ocasiões marcadas ou, sem elas, pela
+  /// formalidade ([Occasion.formalities]). `null` = não se sabe.
+  static bool? _servesOccasion(Garment g, Occasion o) {
+    final a = g.attributes;
+    if (a.occasions.isNotEmpty) return a.occasions.contains(o);
+    if (a.formality case final f?) return o.formalities.contains(f);
+    return null;
   }
 
   /// Ordena depois de se saber se há casacos (o frio depende disso).
@@ -457,11 +463,14 @@ final class _Context {
     final notes = <SuggestionNote>[];
 
     if (request.occasion case final o?) {
-      notes.add(
-        g.attributes.occasions.isEmpty
-            ? const OccasionUnknown()
-            : OccasionMatches(o),
-      );
+      notes.add(switch (_servesOccasion(g, o)) {
+        null => const OccasionUnknown(),
+        _ when g.attributes.occasions.isEmpty => OccasionMatches(
+          o,
+          byFormality: true,
+        ),
+        _ => OccasionMatches(o),
+      });
     }
 
     ComfortFit? fit;

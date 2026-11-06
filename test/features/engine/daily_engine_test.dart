@@ -236,6 +236,61 @@ void main() {
         GapCause.otherOccasions,
       );
     });
+
+    test('ocasião pela formalidade quando a peça não tem ocasiões', () {
+      final relaxed = g(
+        'hoodie',
+        GarmentCategory.top,
+        formality: Formality.relaxed,
+      );
+      final smart = g(
+        'polo',
+        GarmentCategory.shirt,
+        formality: Formality.smartCasual,
+      );
+      final w = run([
+        relaxed,
+        smart,
+        jeans,
+        sneakers,
+      ], occasion: Occasion.workCasual);
+      final ids = [for (final c in w.candidates) ...c.items]
+          .map((i) => i.garment.id.value)
+          .toSet();
+      expect(
+        ids,
+        isNot(contains('hoodie')),
+        reason: 'descontraído no trabalho',
+      );
+      final note = notesOf(
+        w.candidates.first,
+        'polo',
+      ).whereType<OccasionMatches>().single;
+      expect(note.byFormality, isTrue);
+
+      // Ao dia a dia serve qualquer formalidade.
+      final c = run([relaxed, jeans, sneakers], occasion: Occasion.casual);
+      expect(
+        notesOf(c.candidates.single, 'hoodie').whereType<OccasionMatches>(),
+        hasLength(1),
+      );
+
+      // As ocasiões marcadas prevalecem.
+      final marked = g(
+        'hoodie',
+        GarmentCategory.top,
+        formality: Formality.relaxed,
+        occasions: {Occasion.workCasual},
+      );
+      final m = run([marked, jeans, sneakers], occasion: Occasion.workCasual);
+      expect(
+        notesOf(
+          m.candidates.single,
+          'hoodie',
+        ).whereType<OccasionMatches>().single.byFormality,
+        isFalse,
+      );
+    });
   });
 
   group('rotatividade e lavagem', () {
