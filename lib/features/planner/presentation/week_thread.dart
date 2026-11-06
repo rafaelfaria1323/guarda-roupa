@@ -26,12 +26,12 @@ class WeekThread extends StatelessWidget {
 
   /// A cor do dia: o que foi vestido, senão o que está planeado, dando
   /// preferência à parte de cima ou à peça única.
-  Color? _knotColor(WeekDayView d) {
+  Color? _knotColor(WeekDayView d, AppColors colors) {
     final ids = d.wear?.garmentIds ?? [];
     if (ids.isNotEmpty) {
       for (final id in ids) {
         if (garments[id] case final g?) {
-          return GarmentCutout.mainColor(g) ?? AppColors.onSurfaceMuted;
+          return GarmentCutout.mainColor(g) ?? colors.onSurfaceMuted;
         }
       }
     }
@@ -49,16 +49,17 @@ class WeekThread extends StatelessWidget {
         items.first;
     final g = garments[main.garmentId];
     return (g == null ? null : GarmentCutout.mainColor(g)) ??
-        AppColors.onSurfaceMuted;
+        colors.onSurfaceMuted;
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final colors = AppColors.of(context);
     final knots = [
       for (final d in days)
         (
-          color: _knotColor(d),
+          color: _knotColor(d, colors),
           today: d.day == today,
           label: d.day == today
               ? l10n.weekToday.toLowerCase()
@@ -77,6 +78,7 @@ class WeekThread extends StatelessWidget {
           painter: _ThreadPainter(
             knots: knots,
             labelStyle: Theme.of(context).textTheme.labelSmall!,
+            colors: colors,
           ),
         ),
       ),
@@ -87,10 +89,15 @@ class WeekThread extends StatelessWidget {
 typedef _Knot = ({Color? color, bool today, String label});
 
 class _ThreadPainter extends CustomPainter {
-  _ThreadPainter({required this.knots, required this.labelStyle});
+  _ThreadPainter({
+    required this.knots,
+    required this.labelStyle,
+    required this.colors,
+  });
 
   final List<_Knot> knots;
   final TextStyle labelStyle;
+  final AppColors colors;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -117,7 +124,7 @@ class _ThreadPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2
         ..strokeCap = StrokeCap.round
-        ..color = AppColors.accent.withValues(alpha: 0.55),
+        ..color = colors.accent.withValues(alpha: 0.55),
     );
 
     for (final (i, k) in knots.indexed) {
@@ -132,16 +139,16 @@ class _ThreadPainter extends CustomPainter {
             Paint()
               ..style = PaintingStyle.stroke
               ..strokeWidth = k.today ? 2 : 1.2
-              ..color = k.today ? AppColors.onSurface : AppColors.outline,
+              ..color = k.today ? colors.onSurface : colors.outline,
           );
         }
       } else {
-        canvas.drawCircle(c, radius, Paint()..color = AppColors.background);
+        canvas.drawCircle(c, radius, Paint()..color = colors.background);
         _dashedCircle(
           canvas,
           c,
           radius,
-          k.today ? AppColors.onSurface : const Color(0xFF9C9A93),
+          k.today ? colors.onSurface : colors.faint,
         );
       }
       final tp = TextPainter(
@@ -150,7 +157,7 @@ class _ThreadPainter extends CustomPainter {
           style: labelStyle.copyWith(
             fontSize: 11,
             fontWeight: k.today ? FontWeight.w700 : FontWeight.w500,
-            color: k.today ? AppColors.onSurface : AppColors.onSurfaceMuted,
+            color: k.today ? colors.onSurface : colors.onSurfaceMuted,
           ),
         ),
         textDirection: TextDirection.ltr,
@@ -179,6 +186,7 @@ class _ThreadPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_ThreadPainter old) =>
+      old.colors != colors ||
       old.knots.length != knots.length ||
       [
         for (final (i, k) in knots.indexed)

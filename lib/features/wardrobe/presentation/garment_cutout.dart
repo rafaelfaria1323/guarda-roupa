@@ -32,6 +32,7 @@ class GarmentCutout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final photos = garment.photos;
     final radius = BorderRadius.circular(size * 0.14);
     final Widget body;
@@ -42,7 +43,7 @@ class GarmentCutout extends StatelessWidget {
         variant: size > 120 ? PhotoVariant.main : PhotoVariant.thumb,
       );
     } else {
-      final color = mainColor(garment) ?? AppColors.surfaceMuted;
+      final color = mainColor(garment) ?? colors.surfaceMuted;
       final light = color.computeLuminance() > 0.6;
       body = ColoredBox(
         color: color,
@@ -51,8 +52,9 @@ class GarmentCutout extends StatelessWidget {
           child: Icon(
             Icons.checkroom,
             size: size * 0.42,
+            // Sobre a cor da peça: o cinzento escuro do tema claro.
             color: light
-                ? AppColors.onSurfaceMuted
+                ? AppColors.light.onSurfaceMuted
                 : Colors.white.withValues(alpha: 0.85),
           ),
         ),
@@ -63,10 +65,10 @@ class GarmentCutout extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: radius,
-          border: Border.all(color: AppColors.surface, width: 3),
-          boxShadow: const [
+          border: Border.all(color: colors.surface, width: 3),
+          boxShadow: [
             BoxShadow(
-              color: Color(0x2E3C321E),
+              color: colors.shadow,
               blurRadius: 16,
               offset: Offset(0, 8),
             ),

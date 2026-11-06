@@ -466,6 +466,7 @@ class _GarmentTile extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final garment = units.first;
+    final colors = AppColors.of(context);
     final laundry = ref.watch(laundryStatesProvider);
     final category = l10n.categoryLabel(garment.category.id);
     final twins = units.length > 1;
@@ -473,15 +474,12 @@ class _GarmentTile extends ConsumerWidget {
     if (twins) {
       final available = units.where((g) => g.isCandidate).length;
       status = garment.isArchived
-          ? (l10n.garmentArchived, AppColors.onSurfaceMuted)
+          ? (l10n.garmentArchived, colors.onSurfaceMuted)
           : available < units.length
-          ? (
-              l10n.wardrobeTwinsAvailable(available, units.length),
-              AppColors.care,
-            )
+          ? (l10n.wardrobeTwinsAvailable(available, units.length), colors.care)
           : null;
     } else {
-      status = garmentStatus(l10n, garment, laundry?[garment.id]);
+      status = garmentStatus(l10n, colors, garment, laundry?[garment.id]);
     }
     return SizedBox(
       key: twins
@@ -560,20 +558,21 @@ class _GarmentTile extends ConsumerWidget {
 /// Só o que foge ao normal: "disponível" não se escreve.
 (String, Color)? garmentStatus(
   AppLocalizations l10n,
+  AppColors colors,
   Garment garment,
   LaundryState? laundry,
 ) {
   final availability = garment.availability;
   final inCare = !availability.isAvailable;
   return garment.isArchived
-      ? (l10n.garmentArchived, AppColors.onSurfaceMuted)
+      ? (l10n.garmentArchived, colors.onSurfaceMuted)
       : availability != Availability.available
       ? (
           l10n.availabilityLabel(availability.id),
-          inCare ? AppColors.care : AppColors.onSurfaceMuted,
+          inCare ? colors.care : colors.onSurfaceMuted,
         )
       : (laundry?.washRecommended ?? false)
-      ? (l10n.laundryRecommendedShort, AppColors.care)
+      ? (l10n.laundryRecommendedShort, colors.care)
       : null;
 }
 
@@ -586,6 +585,7 @@ class _StatusLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = AppColors.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
@@ -601,9 +601,9 @@ class _StatusLine extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.labelSmall?.copyWith(
-              color: color == AppColors.care
-                  ? AppColors.onCareSoft
-                  : AppColors.onSurfaceMuted,
+              color: color == colors.care
+                  ? colors.onCareSoft
+                  : colors.onSurfaceMuted,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -677,7 +677,12 @@ class _TwinsSheetState extends ConsumerState<_TwinsSheet> {
               title: Text(l10n.wardrobeTwinUnit(i + 1)),
               subtitle: Text(
                 [
-                  garmentStatus(l10n, g, laundry?[g.id])?.$1 ??
+                  garmentStatus(
+                        l10n,
+                        AppColors.of(context),
+                        g,
+                        laundry?[g.id],
+                      )?.$1 ??
                       l10n.availabilityLabel(Availability.available.id),
                   switch (lastWorn[g.id]) {
                     final day? => l10n.wardrobeTwinLastWorn(

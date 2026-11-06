@@ -31,6 +31,8 @@ Tokens (`lib/app/theme.dart`, `AppColors`):
 | Contorno / separador | `#D5D0C6` / `#E4DFD5` | Pílulas por selecionar, divisões |
 | Lavandaria | `#D9822B` / texto `#8A4B12` | "a lavar", "a secar" |
 
+**Modo escuro.** Em Definições › Aspeto escolhe-se Automático (segue o telemóvel), Claro ou Escuro; a escolha fica só no aparelho. O escuro usa a mesma estrutura de tokens (`AppColors.dark`): fundo `#151413`, superfície `#211F1D`, texto `#EDEAE4` / `#A9A69F`, índigo claro `#9AA6FF` com texto `#111A5C`, lavandaria `#E99A4E`. As cores das peças não mudam. Um teste confirma o contraste do texto nos dois temas.
+
 Letra: **DM Sans** no texto e na interface; **Fraunces** (serifada) só em títulos grandes. Ambas OFL, incluídas como assets estáticos em `assets/fonts/` (geradas com `tool/fonts/instance_fonts.py`). Não depender só da cor para comunicar estados.
 
 ## Ecrã Hoje (v2, aplicado)

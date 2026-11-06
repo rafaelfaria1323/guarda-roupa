@@ -212,7 +212,7 @@ class _WeatherLine extends ConsumerWidget {
           key: const Key('weather-fetched'),
           style: small?.copyWith(
             color: value.freshness == ForecastFreshness.stale
-                ? AppColors.onCareSoft
+                ? AppColors.of(context).onCareSoft
                 : null,
           ),
         ),
@@ -415,7 +415,7 @@ class _SuggestionCandidateViewState extends State<SuggestionCandidateView> {
       color: theme.colorScheme.onSurfaceVariant,
       height: 1.45,
     );
-    const warn = TextStyle(color: AppColors.onCareSoft);
+    final warn = TextStyle(color: AppColors.of(context).onCareSoft);
 
     final warnings = <Widget>[
       for (final note in candidate.notes)

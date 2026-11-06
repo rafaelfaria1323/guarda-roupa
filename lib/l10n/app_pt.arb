@@ -1935,5 +1935,14 @@
   },
   "shoppingCopied": "Pesquisa copiada. Cola-a no navegador.",
   "stylistAskLook": "Pedir ao stylist um look assim",
-  "stylistLookHint": "O Gemini monta um conjunto parecido com esta inspiração, só com as tuas peças, e explica o que bate certo e o que muda."
+  "stylistLookHint": "O Gemini monta um conjunto parecido com esta inspiração, só com as tuas peças, e explica o que bate certo e o que muda.",
+  "themeTitle": "Aspeto",
+  "themeMode": "{mode, select, light{Claro} dark{Escuro} other{Automático}}",
+  "@themeMode": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  }
 }

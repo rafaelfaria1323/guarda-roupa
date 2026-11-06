@@ -5,17 +5,19 @@ import 'theme.dart';
 /// Logótipo "fio": um fio que desenha um "f", com um ponto.
 /// Os traços seguem o ícone da app (viewBox 76×76).
 class FioMark extends StatelessWidget {
-  const FioMark({this.size = 32, this.color = AppColors.accent, super.key});
+  const FioMark({this.size = 32, this.color, super.key});
 
   final double size;
-  final Color color;
+
+  /// `null` = o destaque do tema.
+  final Color? color;
 
   @override
   Widget build(BuildContext context) => Semantics(
     label: 'fio',
     child: CustomPaint(
       size: Size.square(size),
-      painter: _FioMarkPainter(color),
+      painter: _FioMarkPainter(color ?? AppColors.of(context).accent),
     ),
   );
 }
@@ -68,7 +70,7 @@ class FioWordmark extends StatelessWidget {
             fontFamily: displayFont,
             fontWeight: FontWeight.w600,
             fontSize: size * 0.85,
-            color: AppColors.onSurface,
+            color: AppColors.of(context).onSurface,
             height: 1,
           ),
         ),
