@@ -6,6 +6,7 @@ import 'package:guarda_roupa/app/app.dart';
 import 'package:guarda_roupa/app/config.dart';
 import 'package:guarda_roupa/features/account_sync/application/providers.dart';
 import 'package:guarda_roupa/features/account_sync/domain/auth_service.dart';
+import 'package:guarda_roupa/features/planner/application/plan_providers.dart';
 import 'package:powersync/powersync.dart';
 
 import 'fake_auth.dart';
@@ -22,12 +23,15 @@ const testConfig = AppConfig(
 
 /// Arranca a app real com uma base PowerSync real (SQLite em ficheiro) e
 /// autenticação falsa. Sem sincronização: as operações ficam pendentes.
+/// A semana sozinha fica desligada salvo [autopilot]: escreveria na base
+/// em segundo plano e bloquearia as escritas do próprio teste.
 Future<({FakeAuthService auth, PowerSyncDatabase db})> pumpApp(
   WidgetTester tester, {
   Size size = phone,
   AuthUser? user = const AuthUser(id: 'user-a', email: 'a@example.com'),
   AppConfig config = testConfig,
   List<Override> overrides = const [],
+  bool autopilot = false,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -44,6 +48,7 @@ Future<({FakeAuthService auth, PowerSyncDatabase db})> pumpApp(
         appConfigProvider.overrideWithValue(config),
         authServiceProvider.overrideWithValue(auth),
         databaseOpenerProvider.overrideWithValue((_) async => db),
+        weekAutopilotEnabledProvider.overrideWithValue(autopilot),
         ...overrides,
       ],
       child: const GuardaRoupaApp(),

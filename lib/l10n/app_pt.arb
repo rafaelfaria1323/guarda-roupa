@@ -821,8 +821,8 @@
   "noteWash": "lavar recomendado",
   "noteOptionalLayer": "se quiseres",
   "weekTitle": "A tua semana",
-  "weekGenerate": "Planear a semana",
-  "weekGenerated": "{proposed, plural, =0{Nenhum dia novo proposto.} =1{1 dia proposto.} other{{proposed} dias propostos.}} {notFound, plural, =0{} =1{1 dia sem conjunto possível.} other{{notFound} dias sem conjunto possível.}}",
+  "weekGenerate": "Planear de novo",
+  "weekGenerated": "{proposed, plural, =0{Nenhum dia novo planeado.} =1{1 dia planeado.} other{{proposed} dias planeados.}} {notFound, plural, =0{} =1{1 dia sem conjunto possível.} other{{notFound} dias sem conjunto possível.}}",
   "@weekGenerated": {
     "placeholders": {
       "proposed": {
@@ -1309,5 +1309,27 @@
   "colorDetailTag": "detalhe",
   "@colorDetailTag": {
     "description": "Cor que ocupa pouco da peça (menos de 10 %), como uma estrela ou uma fivela."
-  }
+  },
+  "weekAutoPlanned": "{count, plural, =1{Planeei 1 dia da semana.} other{Planeei {count} dias da semana.}} Muda o que quiseres.",
+  "@weekAutoPlanned": {
+    "description": "Aviso depois de o fio encher sozinho os dias por planear.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "weekAutoChanged": "Mudei {day}: {change}.",
+  "@weekAutoChanged": {
+    "description": "Aviso de uma troca aplicada sozinha no plano (peça suja, tempo).",
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "weekAutoUndo": "Desfazer"
 }

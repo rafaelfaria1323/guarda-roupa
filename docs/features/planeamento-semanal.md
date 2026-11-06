@@ -15,7 +15,8 @@ Estado: necessária no MVP de planeamento; um conjunto por dia inicialmente.
   - Cada dia diz o estado (`planned`, `pinned`, `skipped`, `notFound` com as lacunas) e que peças principais repete. Uma repetição permitida é identificada, nunca escondida.
   - A ordem é cronológica, por isso as regras de intervalo só precisam de olhar para trás. A pesquisa devolve quantas semanas parciais avaliou: é limitada e não promete o ótimo global.
 - Secção “A tua semana” em Hoje (`WeekPlanCard`): primeiro o fio da semana (`WeekThread`, um nó por dia com a cor da peça principal; tracejado se por decidir), depois um cartão por dia, de hoje a 6 dias depois, com a ocasião (lista com “A decidir”), “Pode não acontecer” (provisório), as peças e o estado (Por planear, Proposto, Aceite, Vestido, Não usado).
-  - “Planear a semana” corre a pesquisa com a previsão de cada dia (o tempo indicado à mão vale para hoje) e grava como **propostos** só os dias ainda não aceites. Dias aceites entram como escolha fixada; aceites vazios ficam fora da pesquisa.
+  - **Semana sozinha** (decisão do utilizador a 2026-11-06, `WeekAutopilot` à volta da app): com peças disponíveis, os dias por planear enchem-se sozinhos, já **aceites**, com a previsão de cada dia (o tempo indicado à mão vale para hoje) e um aviso “Planeei N dias”. Os dias já planeados entram como escolha fixada. Cada combinação de dias vazios e peças é tentada uma vez por sessão.
+  - “Planear de novo” refaz todos os dias por vestir, menos os aceites vazios, os vestidos e os passados; os dias com peças entram como ponto de partida.
   - Por dia: aceitar, alterar (volta a proposto), deixar vazio (dias provisórios) e, hoje, “Vesti isto hoje”, que abre “Vesti hoje” com as peças por confirmar e liga a utilização à entrada (`plan_entry_id`). Só aí o dia passa a Vestido.
   - Repetições e dias sem conjunto possível aparecem no cartão do dia; uma proposta pendente de outro dispositivo mostra o que muda, com “Aplicar” ou “Manter o atual”.
   - Dias confirmados ou passados não se editam.
@@ -23,8 +24,9 @@ Estado: necessária no MVP de planeamento; um conjunto por dia inicialmente.
   - Problemas por peça: arquivada ou eliminada; indisponível (a lavar, a secar, precisa de limpeza); lavagem recomendada pelas utilizações reais (P-07); aquecimento desadequado à previsão atual; calçado ou casaco que não é para a chuva ou o vento; frio que pede um casaco que o dia não tem.
   - A rotatividade não é um problema: a repetição já foi identificada ao planear.
   - A proposta troca **só as peças com problemas** (as outras são escolhas a preservar) pela primeira do mesmo papel na ordem do motor diário, de preferência sem avisos. As substitutas veem as reservas dos dias anteriores. No frio junta-se um casaco; sem alternativa, a proposta diz que papel fica por escolher.
-  - O cartão do dia mostra “Mudou desde o plano”, o porquê e a diferença (“Trocar X por Y”, “Juntar Z”). “Aplicar alteração” grava a troca e mantém a ocasião e o estado. “Manter o plano” esconde a proposta nesta sessão, mas os avisos ficam.
-  - Nada se reescreve sozinho. Dias confirmados ou passados não se reveem.
+  - Uma troca com peça de substituição **aplica-se sozinha** (2026-11-06), mantém a ocasião e o estado e mostra um aviso (“Mudei quarta: trocar X por Y”) com “Desfazer”. Desfazer volta ao plano anterior e a mesma troca não se repete na sessão; os avisos do dia ficam.
+  - Sem alternativa, o cartão do dia mostra “Mudou desde o plano”, o porquê e a diferença. “Aplicar alteração” grava o que houver; “Manter o plano” esconde a proposta nesta sessão, mas os avisos ficam.
+  - Dias confirmados ou passados não se reveem. Planear nunca conta como uso: só “Vesti hoje” (P-08).
 
 ## Objetivo
 

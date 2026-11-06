@@ -49,6 +49,17 @@ void main() {
     await settle(tester, minRounds: 10);
   }
 
+  /// Com peças no Armário, os dias por planear enchem-se sozinhos.
+  Future<void> autoPlanned(WidgetTester tester) async {
+    await tester.scrollUntilVisible(
+      day(0, 'state'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    // O aviso só aparece depois de gravados todos os dias.
+    await settleUntil(tester, find.textContaining('Planeei 7 dias'));
+  }
+
   Future<void> generate(WidgetTester tester, String outcome) async {
     await tap(tester, find.byKey(const Key('week-generate')));
     await settleUntil(tester, find.text(outcome));
@@ -57,10 +68,11 @@ void main() {
   String text(WidgetTester tester, Finder finder) =>
       tester.widget<Text>(finder).data!;
 
-  testWidgets('planear a semana, aceitar, deixar o fim de semana vazio e '
-      'confirmar hoje', (tester) async {
+  testWidgets('a semana planeia-se sozinha; alterar, deixar o fim de semana '
+      'vazio, planear de novo e confirmar hoje', (tester) async {
     final app = await pumpApp(
       tester,
+      autopilot: true,
       overrides: [
         // Segunda-feira, 9/11.
         clockProvider.overrideWithValue(
@@ -71,18 +83,18 @@ void main() {
         ),
       ],
     );
-    await seed(tester, app.db);
     await tester.scrollUntilVisible(
       day(0, 'state'),
       200,
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('A tua semana'), findsOne);
-    expect(text(tester, day(0, 'state')), 'Por planear');
+    expect(text(tester, day(0, 'state')), 'Por planear', reason: 'sem peças');
 
-    await generate(tester, '7 dias propostos.');
+    await seed(tester, app.db);
+    await autoPlanned(tester);
     for (var i = 0; i < 7; i++) {
-      expect(text(tester, day(i, 'state')), 'Proposto');
+      expect(text(tester, day(i, 'state')), 'Aceite');
       expect(text(tester, day(i, 'items')), contains('Ténis'));
     }
     // Úteis no trabalho; fim de semana a decidir e provisório (P-19).
@@ -100,17 +112,16 @@ void main() {
     expect(tester.widget<FilterChip>(day(5, 'tentative')).selected, isTrue);
     expect(tester.widget<FilterChip>(day(0, 'tentative')).selected, isFalse);
 
-    // Terça fica; sábado fica vazio.
-    final tuesday = text(tester, day(1, 'items'));
-    await tap(tester, day(1, 'accept'));
-    expect(text(tester, day(1, 'state')), 'Aceite');
+    // Alterar volta a proposto; sábado fica vazio.
+    await tap(tester, day(1, 'reopen'));
+    expect(text(tester, day(1, 'state')), 'Proposto');
     await tap(tester, day(5, 'leave-empty'));
     expect(text(tester, day(5, 'state')), 'Aceite');
     expect(text(tester, day(5, 'items')), 'Fica vazio.');
 
-    // Voltar a planear só mexe nos dias propostos.
-    await generate(tester, '5 dias propostos.');
-    expect(text(tester, day(1, 'items')), tuesday);
+    // Planear de novo refaz os dias por vestir, menos o que ficou vazio.
+    await generate(tester, '6 dias planeados.');
+    expect(text(tester, day(1, 'state')), 'Aceite');
     expect(text(tester, day(5, 'items')), 'Fica vazio.');
 
     // Planear não é usar; "Vesti isto hoje" com as peças por confirmar.
@@ -134,6 +145,7 @@ void main() {
   ) async {
     final app = await pumpApp(
       tester,
+      autopilot: true,
       overrides: [
         clockProvider.overrideWithValue(
           FixedClock(DateTime.utc(2026, 11, 9, 12)),
@@ -144,7 +156,7 @@ void main() {
       ],
     );
     await seed(tester, app.db);
-    await generate(tester, '7 dias propostos.');
+    await autoPlanned(tester);
 
     await tap(tester, day(2, 'occasion'));
     await tester.tap(find.text('A decidir').last);
@@ -180,10 +192,11 @@ void main() {
     );
   });
 
-  testWidgets('uma peça planeada vai para lavar: avisa, propõe a troca e só '
-      'aplica depois de confirmar', (tester) async {
+  testWidgets('uma peça planeada vai para lavar: troca-se sozinha, com '
+      'aviso e desfazer', (tester) async {
     final app = await pumpApp(
       tester,
+      autopilot: true,
       overrides: [
         clockProvider.overrideWithValue(
           FixedClock(DateTime.utc(2026, 11, 9, 12)),
@@ -194,7 +207,7 @@ void main() {
       ],
     );
     await seed(tester, app.db);
-    await generate(tester, '7 dias propostos.');
+    await autoPlanned(tester);
     expect(day(2, 'changed'), findsNothing);
 
     // A t-shirt de quarta vai para lavar.
@@ -210,18 +223,25 @@ void main() {
         Availability.washing,
       );
     });
+    await settleUntil(tester, find.byKey(const Key('week-auto-changed')));
+    final after = text(tester, day(2, 'items'));
+    expect(after, isNot(contains(shirt)));
+    expect(after, contains('Ténis'));
+    expect(text(tester, day(2, 'state')), 'Aceite');
+    expect(
+      find.textContaining('$shirt está indisponível (a lavar)'),
+      findsNothing,
+      reason: 'a troca resolveu',
+    );
+
+    // Desfazer volta ao plano e não se volta a aplicar; o aviso fica.
+    await tester.tap(find.text('Desfazer'));
     await settleUntil(tester, day(2, 'changed'));
+    expect(text(tester, day(2, 'items')), before);
     expect(
       find.textContaining('$shirt está indisponível (a lavar)'),
       findsWidgets,
     );
-    expect(text(tester, day(2, 'items')), before, reason: 'nada se reescreve');
-
-    await tap(tester, day(2, 'change-apply'));
-    await settleUntil(tester, day(2, 'changed'), gone: true);
-    final after = text(tester, day(2, 'items'));
-    expect(after, isNot(contains(shirt)));
-    expect(after, contains('Ténis'));
-    expect(text(tester, day(2, 'state')), 'Proposto');
+    expect(day(2, 'change-apply'), findsNothing);
   });
 }

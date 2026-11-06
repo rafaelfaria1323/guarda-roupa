@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,11 +19,12 @@ import '../../wear/presentation/today_wear_card.dart';
 import '../application/plan_providers.dart';
 import '../domain/plan_entry.dart';
 import '../domain/plan_repository.dart';
+import 'week_autopilot.dart';
 import 'week_thread.dart';
 
 /// "Esta semana" (incremento 6, P-19): um cartão por dia com a ocasião, se
-/// é provisório, as peças e o estado. Planear a semana só propõe; aceitar
-/// fixa o dia; só "Vesti hoje" conta como uso.
+/// é provisório, as peças e o estado. O que se faz sozinho está em
+/// [WeekAutopilot]. Só "Vesti hoje" conta como uso (P-08).
 class WeekPlanCard extends ConsumerStatefulWidget {
   const WeekPlanCard({super.key});
 
@@ -36,7 +39,9 @@ class _WeekPlanCardState extends ConsumerState<WeekPlanCard> {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     setState(() => _busy = true);
+    final busy = ref.read(weekPlanningBusyProvider.notifier)..set(true);
     final outcome = await generateWeek(ref);
+    busy.set(false);
     if (!mounted) return;
     setState(() => _busy = false);
     final text = switch (outcome) {
@@ -124,29 +129,6 @@ class _DayTile extends ConsumerWidget {
   }
 
   /// A diferença entre o dia como está e a proposta.
-  static List<String> _changeLines(
-    AppLocalizations l10n,
-    List<OutfitItem> current,
-    Replacement proposal,
-    Map<GarmentId, Garment> garments,
-  ) {
-    String name(GarmentId id) => garmentLabel(l10n, garments[id]);
-    final kept = {for (final i in proposal.items) i.garmentId};
-    final removed = [
-      for (final i in current)
-        if (!kept.contains(i.garmentId)) i,
-    ];
-    return [
-      for (final a in proposal.added)
-        if (removed.where((r) => r.role == a.role).firstOrNull case final r?)
-          '· ${l10n.weekChangeSwap(name(r.garmentId), name(a.garmentId))}'
-        else
-          '· ${l10n.weekChangeAdd(name(a.garmentId))}',
-      for (final role in proposal.dropped)
-        '· ${l10n.weekChangeDrop(l10n.outfitRoleLabel(role.id).toLowerCase())}',
-    ];
-  }
-
   Future<void> _save(
     BuildContext context,
     WidgetRef ref,
@@ -307,7 +289,7 @@ class _DayTile extends ConsumerWidget {
                 if (r.proposal case final p?
                     when editable &&
                         !ignored.contains(dayChangeKey(view.day, p))) ...[
-                  for (final line in _changeLines(
+                  for (final line in dayChangeLines(
                     l10n,
                     draft.items,
                     p,
@@ -439,4 +421,28 @@ class _DayTile extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// As linhas "troca X por Y" de uma proposta, para o cartão e o aviso.
+List<String> dayChangeLines(
+  AppLocalizations l10n,
+  List<OutfitItem> current,
+  Replacement proposal,
+  Map<GarmentId, Garment> garments,
+) {
+  String name(GarmentId id) => garmentLabel(l10n, garments[id]);
+  final kept = {for (final i in proposal.items) i.garmentId};
+  final removed = [
+    for (final i in current)
+      if (!kept.contains(i.garmentId)) i,
+  ];
+  return [
+    for (final a in proposal.added)
+      if (removed.where((r) => r.role == a.role).firstOrNull case final r?)
+        '· ${l10n.weekChangeSwap(name(r.garmentId), name(a.garmentId))}'
+      else
+        '· ${l10n.weekChangeAdd(name(a.garmentId))}',
+    for (final role in proposal.dropped)
+      '· ${l10n.weekChangeDrop(l10n.outfitRoleLabel(role.id).toLowerCase())}',
+  ];
 }
