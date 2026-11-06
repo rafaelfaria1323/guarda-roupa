@@ -302,68 +302,77 @@ void main() {
     expect(find.text('Camisa de linho'), findsOneWidget);
   });
 
-  testWidgets('atalho direto: aviso no Armário, abre a caixa e usa a peça', (
-    tester,
-  ) async {
+  testWidgets('atalho direto: a peça entra sozinha no Armário', (tester) async {
     final importer = FakeImporter()
       ..inboxItems.add(
-        InboxItem(id: 'i1', preview: sample, createdAt: DateTime(2026)),
+        InboxItem(
+          id: 'i1',
+          preview: ProductPreview(
+            storeName: 'Zara',
+            url: 'https://www.zara.com/pt/pt/casaco-p1.html',
+            viaShortcut: true,
+            name: 'CASACO EM PELE',
+            brand: 'ZARA',
+            description: 'Casaco em pele.',
+            material: '100% pele',
+            images: const ['https://static.zara.net/a.jpg'],
+            variants: const [
+              ImportVariant(color: 'Preto', size: 'M'),
+              ImportVariant(color: 'Preto', size: 'L'),
+            ],
+          ),
+          createdAt: DateTime(2026),
+        ),
       );
     final app = await pumpApp(
       tester,
       overrides: [productImporterProvider.overrideWithValue(importer)],
     );
     await openWardrobe(tester);
-    expect(find.text('1 peça enviada pelo atalho do iPhone'), findsOneWidget);
-
-    // O aviso abre a peça nova já com a importação aberta.
-    await tester.tap(find.byKey(const Key('wardrobe-inbox')));
-    await settle(tester);
-    expect(find.byType(ImportLinkScreen), findsOneWidget);
-    expect(find.text('1 peça enviada pelo atalho'), findsOneWidget);
-
-    await tester.tap(find.byKey(const Key('import-inbox-i1')));
-    await tester.pumpAndSettle();
-    expect(importer.previews, isEmpty, reason: 'já vem lida');
-    expect(find.text('Zara · site novo'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.byKey(const Key('import-use')),
-      200,
-      scrollable: find
-          .descendant(
-            of: find.byType(ImportLinkScreen),
-            matching: find.byType(Scrollable),
-          )
-          .first,
+    await settleUntil(
+      tester,
+      find.text(
+        '1 peça do atalho no Armário. Confirma a categoria e as cores no cartão.',
+      ),
     );
-    await tester.ensureVisible(find.byKey(const Key('import-use')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('import-use')));
-    await settleUntil(tester, find.byKey(const Key('garment-save')));
-    await settle(tester);
+
+    expect(importer.images, ['https://static.zara.net/a.jpg']);
     expect(importer.discarded, ['i1']);
-
-    await chooseCategoryAndSave(tester);
+    expect(importer.previews, isEmpty);
     final payload = await created(tester, app.db);
-    expect(payload['name'], 'Camisa de linho');
+    expect(payload['name'], 'CASACO EM PELE');
+    expect(payload['brand'], 'ZARA');
+    expect(payload['category'], 'coat');
     expect(
-      find.byKey(const Key('wardrobe-inbox')),
-      findsNothing,
-      reason: 'a caixa ficou vazia',
+      payload['notes'],
+      'Casaco em pele.\n\nCor na loja: Preto\nhttps://www.zara.com/pt/pt/casaco-p1.html',
     );
+    final ops = (await tester.runAsync(() => pendingOperations(app.db)))!;
+    expect(ops.map((o) => o['kind']), ['create', 'attach_photo']);
+    expect(find.byKey(const Key('wardrobe-inbox')), findsNothing);
+
+    // Ao voltar à app vinda do Safari, entram as que chegaram entretanto.
+    importer.inboxItems.add(
+      InboxItem(id: 'i2', preview: sample, createdAt: DateTime(2026)),
+    );
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await settleUntil(tester, find.textContaining('1 peça do atalho'));
+    expect(importer.discarded, ['i1', 'i2']);
   });
 
   testWidgets('atalho direto: descartar tira a peça da caixa', (tester) async {
-    final importer = FakeImporter()
-      ..inboxItems.addAll([
-        InboxItem(id: 'i1', preview: sample, createdAt: DateTime(2026)),
-        InboxItem(id: 'i2', preview: sample, createdAt: DateTime(2026)),
-      ]);
+    final importer = FakeImporter();
     await pumpApp(
       tester,
       overrides: [productImporterProvider.overrideWithValue(importer)],
     );
     await openWardrobe(tester);
+    // Chegam depois de o Armário ter olhado para a caixa.
+    importer.inboxItems.addAll([
+      InboxItem(id: 'i1', preview: sample, createdAt: DateTime(2026)),
+      InboxItem(id: 'i2', preview: sample, createdAt: DateTime(2026)),
+    ]);
     await tester.tap(find.text('Adicionar peça'));
     await settle(tester);
     await tester.tap(find.byKey(const Key('garment-import')));
@@ -420,15 +429,6 @@ void main() {
     tester.state<NavigatorState>(find.byType(Navigator).last).pop();
     await tester.pumpAndSettle();
     expect(find.text('1 peça enviada pelo atalho'), findsOneWidget);
-
-    // E ao voltar à app vinda do Safari.
-    importer.inboxItems.add(
-      InboxItem(id: 'i2', preview: sample, createdAt: DateTime(2026)),
-    );
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
-    await tester.pumpAndSettle();
-    expect(find.text('2 peças enviadas pelo atalho'), findsOneWidget);
   });
 
   testWidgets('sem Supabase configurado, o botão não aparece', (tester) async {

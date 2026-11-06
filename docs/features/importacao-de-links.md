@@ -76,7 +76,13 @@ O atalho não tem sessão, por isso autentica-se com uma **chave pessoal** criad
 - **Pedido:** `POST /functions/v1/import-product?apikey=<chave publicável>` com `x-fio-key` e o JSON do script. A `apikey` vai no link porque é configuração pública e o atalho não tem outra forma de a ter.
 - **Na função:** valida o JSON (as mesmas regras do `page`), passa o link pelas regras de rede, lê o produto do HTML remontado e entrega a pré-visualização a `submit_import_inbox()` como anónimo. Responde em **texto simples em português**, para a notificação do atalho: "Enviada para o fio: …", chave inválida (401), sem acesso (403), quota (429), caixa cheia (409), página sem produto (422).
 - **Na base** (`submit_import_inbox`): a chave identifica o dono; vale a allowlist dele e **a mesma quota** das importações com sessão (30/hora, 200/dia). No máximo 20 peças à espera; cada uma expira ao fim de 7 dias. As imagens oferecidas ficam autorizadas enquanto a peça espera.
-- **Na app:** o Armário mostra "N peças enviadas pelo atalho do iPhone"; tocar abre a peça nova com a importação aberta. As peças da caixa aparecem no topo de Importar de um link; tocar mostra a pré-visualização (sem novo pedido), "Usar na peça nova" ou "Preencher à mão" tiram-na da caixa e o caixote descarta-a.
+- **Na app — entram sozinhas no Armário (decisão do utilizador a 2026-11-06):** quando o Armário abre ou a app volta ao primeiro plano, cada peça da caixa passa a cartão, como se tivesse sido introduzida à mão (`shortcut_inbox.dart`). O que não vier da loja fica por omissão e muda-se depois no cartão:
+  - **categoria** pelo nome do produto (`category_from_text.dart`, palavras em português, inglês e espanhol; senão "Outro");
+  - **cores** da foto de capa, sem modelo e por confirmar (`confirmed: false`);
+  - **foto:** só a primeira imagem, porque cada cópia gasta quota;
+  - nome, marca e material da loja; nas **notas**, a descrição, a cor da loja quando só há uma e o link (o tamanho fica para o utilizador).
+  Cada peça sai da caixa depois de criada; se falhar, fica para a próxima vez. Um aviso diz quantas entraram. Para as importações por link, com a pré-visualização, mantém-se a regra de confirmar no formulário.
+- **Ainda à mão, se preciso:** as peças que estejam na caixa também aparecem no topo de Importar de um link (usar ou descartar).
 - **Riscos:** quem tiver a chave só consegue pôr peças na caixa do dono, dentro da quota e do limite de 20; não lê nada. Uma chave perdida desliga-se na app.
 
 ### Estado por loja (uso real)
