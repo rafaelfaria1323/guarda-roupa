@@ -1266,15 +1266,6 @@
       }
     }
   },
-  "wardrobeSeeAll": "Ver todas",
-  "wardrobeSeeAllGroup": "Ver todas: {group}",
-  "@wardrobeSeeAllGroup": {
-    "placeholders": {
-      "group": {
-        "type": "String"
-      }
-    }
-  },
   "garmentEditAction": "Editar",
   "garmentUseSentence": "{count, plural, =0{Ainda não foi usada.} =1{Usada 1 vez, {last}.} other{Usada {count} vezes, a última {last}.}}",
   "@garmentUseSentence": {
@@ -1960,5 +1951,25 @@
       }
     }
   },
-  "profileOpenSettings": "Abrir as definições"
+  "profileOpenSettings": "Abrir as definições",
+  "wardrobeAllGroups": "Todas",
+  "wardrobeGroupCount": "{label} ({count})",
+  "@wardrobeGroupCount": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wardrobeWornTimes": "{count, plural, =0{nunca usada} =1{1× usada} other{{count}× usada}}",
+  "@wardrobeWornTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

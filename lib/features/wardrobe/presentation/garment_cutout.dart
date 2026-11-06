@@ -12,6 +12,7 @@ class GarmentCutout extends StatelessWidget {
     required this.garment,
     this.size = 96,
     this.angle = 0,
+    this.variant,
     super.key,
   });
 
@@ -20,6 +21,9 @@ class GarmentCutout extends StatelessWidget {
 
   /// Rotação em radianos, para o flat-lay não parecer uma grelha.
   final double angle;
+
+  /// A versão da foto; por omissão, a principal só acima de 120 px.
+  final PhotoVariant? variant;
 
   /// A cor que ocupa mais da peça, ou `null` se não houver cores.
   static Color? mainColor(Garment garment) {
@@ -40,7 +44,8 @@ class GarmentCutout extends StatelessWidget {
       body = GarmentPhotoView(
         photo: photos.first,
         size: size,
-        variant: size > 120 ? PhotoVariant.main : PhotoVariant.thumb,
+        variant:
+            variant ?? (size > 120 ? PhotoVariant.main : PhotoVariant.thumb),
       );
     } else {
       final color = mainColor(garment) ?? colors.surfaceMuted;

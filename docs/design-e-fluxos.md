@@ -51,17 +51,21 @@ De cima para baixo, sem cartões à volta (`PlannerScreen`):
 
 Os textos longos de ajuda (o que conta como uso, as regras da semana) saíram do ecrã; as regras continuam nas features.
 
-## Ecrã Armário (v2, aplicado)
+## Ecrã Armário (v3, aplicado)
 
-`WardrobeScreen`, de cima para baixo:
+`WardrobeScreen` segue o ecrã "wardrobe_gallery" do Stitch (2026-11-06), sem marca, tamanho, preço nem favoritos. De cima para baixo:
 
 1. Título "Armário" na barra e uma frase com o total: "8 peças · 2 a lavar ou a secar" (a segunda parte só aparece quando há peças nesse estado).
-2. Pesquisa em pílula branca (nome, marca ou notas) e, numa linha que desliza, os filtros: tipo, disponibilidade, ocasião e "Arquivadas" no fim.
-3. **Sem filtros:** prateleiras por tipo (Tops, Partes de baixo, Calçado…), cada uma com o título, quantas peças tem e as peças recortadas (`GarmentCutout`) numa linha que desliza. "Ver todas" (com mais de 3 peças) filtra por esse tipo.
-4. **Com pesquisa ou filtros:** as mesmas peças em grelha.
-5. Cada peça mostra o nome e, só quando foge ao normal, um ponto e uma palavra: a laranja para "A lavar", "A secar" e "Lavar recomendado"; a cinzento para outras disponibilidades e "Arquivada". "Disponível" não se escreve.
+2. Pesquisa em pílula branca (nome, marca ou notas) e, numa linha que desliza, os filtros: "Todas (8)", cada tipo com quantas peças tem ("Tops (3)"), disponibilidade, ocasião e "Arquivadas" no fim. As contas são do Armário todo, sem arquivadas.
+3. **Grelha de cartões**, dois por linha num telemóvel (mais em ecrãs largos). Cada cartão tem a peça recortada (`GarmentCutout`) num fundo de linho, em 4:5, e por baixo:
+   - o tipo em maiúsculas pequenas e, à direita, quantas vezes foi usada ("3× usada", "nunca usada");
+   - o nome;
+   - o material, quando está preenchido.
+4. Sobre a foto, só quando foge ao normal, um selo com um ponto e uma palavra: a laranja para "A lavar", "A secar" e "Lavar recomendado"; a cinzento para outras disponibilidades e "Arquivada". "Disponível" não se escreve.
    Peças iguais aparecem uma vez, com o selo "×N" e, se nem todas estiverem disponíveis, "2 de 3 disponíveis"; tocar abre uma folha com cada unidade (estado e última vez vestida) e "Juntar mais uma igual" ([peças iguais](features/guarda-roupa.md#peças-iguais)).
-6. Botão "Adicionar peça" em pílula índigo, com o texto à vista (mais claro do que só "+").
+5. Botão "Adicionar peça" em pílula verde, com o texto à vista.
+
+As prateleiras por tipo (v2) saíram: os filtros com contagem fazem o mesmo trabalho.
 
 ## Ecrã Peça (v2, aplicado)
 
