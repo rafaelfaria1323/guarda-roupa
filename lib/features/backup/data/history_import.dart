@@ -17,14 +17,17 @@ import '../../wardrobe/domain/garment.dart';
 import '../../wardrobe/domain/garment_attributes.dart';
 import '../domain/backup.dart';
 
-/// Recupera o histórico de um backup para as peças acabadas de importar
-/// (ids novos em [newIds]), dentro da transação da recuperação.
+/// Recupera o histórico de um backup para as peças da conta ([newIds]: o id
+/// de cada peça do backup na conta, nova ou que já lá estava), dentro da
+/// transação da recuperação. O [history] já vem filtrado pelo
+/// `RestorePlan`: sem o que a conta já tem nem o que foi desfeito ou
+/// apagado depois do backup.
 ///
 /// Utilizações e limpezas ficam com ids novos e seguem pela fila normal
 /// (`record_wear`, `record_cleaning`, `set_policy`), pela ordem em que
 /// foram registadas: assim o servidor mantém a ordem entre uma utilização
-/// e uma limpeza do mesmo dia. Só corre num destino vazio, por isso não
-/// duplica utilizações de uma conta existente. Os conjuntos também ficam
+/// e uma limpeza do mesmo dia. Um valor de lavagem/rotatividade que a
+/// conta já tem fica como está. Os conjuntos também ficam
 /// com ids novos (`create_outfit`), tal como as inspirações e preferências
 /// (`create_inspiration`, `create_preference`). Estas podem já existir sem
 /// peças: uma inspiração igual ou uma preferência com o mesmo alvo não se
@@ -39,6 +42,7 @@ abstract final class HistoryImport {
     required Map<GarmentId, GarmentId> newIds,
     required DateTime now,
     Map<(String, PhotoVariant), Uint8List> photoFiles = const {},
+    Map<String, String> knownInspirations = const {},
   }) async {
     final stamp = GarmentRow.iso(now.toUtc());
 
@@ -132,28 +136,22 @@ abstract final class HistoryImport {
         'SELECT 1 FROM care_policies WHERE id = ?',
         [id],
       );
-      if (exists == null) {
-        await tx.execute(
-          'INSERT INTO care_policies (id, owner_id, scope, target, '
-          'laundry_after, rotation_days, updated_at) '
-          'VALUES (?, ?, ?, ?, ?, ?, ?)',
-          [
-            id,
-            ownerId,
-            p.scope.id,
-            target,
-            p.laundryAfter,
-            p.rotationDays,
-            stamp,
-          ],
-        );
-      } else {
-        await tx.execute(
-          'UPDATE care_policies SET laundry_after = ?, rotation_days = ?, '
-          'updated_at = ? WHERE id = ?',
-          [p.laundryAfter, p.rotationDays, stamp, id],
-        );
-      }
+      // O que a conta já tem fica como está.
+      if (exists != null) continue;
+      await tx.execute(
+        'INSERT INTO care_policies (id, owner_id, scope, target, '
+        'laundry_after, rotation_days, updated_at) '
+        'VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [
+          id,
+          ownerId,
+          p.scope.id,
+          target,
+          p.laundryAfter,
+          p.rotationDays,
+          stamp,
+        ],
+      );
       // Os dois campos, para ficar igual ao backup (null = predefinido).
       await operation(id, 'set_policy', {
         'scope': p.scope.id,
@@ -204,6 +202,7 @@ abstract final class HistoryImport {
       history: history,
       stamp: stamp!,
       photoFiles: photoFiles,
+      knownInspirations: knownInspirations,
     );
   }
 
@@ -213,6 +212,7 @@ abstract final class HistoryImport {
     required BackupHistory history,
     required String stamp,
     required Map<(String, PhotoVariant), Uint8List> photoFiles,
+    required Map<String, String> knownInspirations,
   }) async {
     Future<void> operation(
       String entityId,
@@ -232,7 +232,7 @@ abstract final class HistoryImport {
         if (PowerSyncInspirationRepository.fromRow(row) case final i?)
           jsonEncode(PowerSyncInspirationRepository.columns(i.toDraft())): i.id,
     };
-    final inspirationIds = <String, String>{};
+    final inspirationIds = {...knownInspirations};
     for (final i in history.inspirations) {
       final fields = PowerSyncInspirationRepository.columns(i.toDraft());
       final key = jsonEncode(fields);

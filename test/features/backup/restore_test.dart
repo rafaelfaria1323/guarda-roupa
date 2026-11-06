@@ -6,6 +6,7 @@ import 'package:guarda_roupa/core/domain/result.dart';
 import 'package:guarda_roupa/features/account_sync/data/operation_upload_queue.dart';
 import 'package:guarda_roupa/features/backup/data/backup_exporter.dart';
 import 'package:guarda_roupa/features/backup/data/backup_restorer.dart';
+import 'package:guarda_roupa/features/backup/data/restore_plan.dart';
 import 'package:guarda_roupa/features/backup/domain/backup.dart';
 import 'package:guarda_roupa/features/care/data/powersync_care_repository.dart';
 import 'package:guarda_roupa/features/care/domain/care_policies.dart';
@@ -87,11 +88,14 @@ void main() {
     await fillSource();
     final zip = await backupOfSource();
 
-    final contents = ok(await restorer().inspect(zip));
-    expect(contents.summary.garments, 2);
+    final preview = ok(await restorer().inspect(zip));
+    expect(preview.contents.summary.garments, 2);
     expect(await all(targetRepo), isEmpty, reason: 'inspecionar não escreve');
 
-    expect(ok(await restorer().apply(contents)), 2);
+    expect(
+      ok(await restorer().apply(preview, restoreRemoved: true)).newGarments,
+      hasLength(2),
+    );
 
     final before = {for (final g in await all(sourceRepo)) g.name: g};
     final after = {for (final g in await all(targetRepo)) g.name: g};
@@ -135,6 +139,7 @@ void main() {
     ok(
       await restorer().apply(
         ok(await restorer().inspect(await backupOfSource())),
+        restoreRemoved: true,
       ),
     );
     final server = ScriptedUploader();
@@ -148,31 +153,146 @@ void main() {
     expect(await target.getAll('SELECT * FROM sync_conflicts'), isEmpty);
   });
 
-  test('conta com peças: recusa e não escreve nada', () async {
+  test('conta com peças: junta só o que falta, sem mexer no resto', () async {
     await fillSource();
     final zip = await backupOfSource();
-    ok(
+    final mine = ok(
       await targetRepo.addGarment(
-        const GarmentDraft(category: GarmentCategory.shirt),
+        const GarmentDraft(category: GarmentCategory.shirt, name: 'Minha'),
       ),
     );
-    final r = await restorer().inspect(zip);
-    expect(failureOf(r), isA<AccountNotEmpty>());
-    expect(await all(targetRepo), hasLength(1));
+    final preview = ok(await restorer().inspect(zip));
+    expect(preview.accountEmpty, isFalse);
+    final plan = preview.plan(restoreRemoved: false);
+    expect(plan.newGarments, hasLength(2));
+    expect(plan.present, isEmpty);
+    ok(await restorer().apply(preview, restoreRemoved: false));
+    final names = {for (final g in await all(targetRepo)) g.name};
+    expect(names, {'Minha', 'Grossa', 'Velha'});
+    expect(
+      (await all(targetRepo)).firstWhere((g) => g.id == mine.id).updatedAt,
+      mine.updatedAt,
+      reason: 'o que já lá estava fica como está',
+    );
   });
 
-  test('conta vazia que fica com peças antes de confirmar: recusa', () async {
+  test('o mesmo backup outra vez não duplica nada', () async {
+    final clock = FixedClock(DateTime.utc(2026, 11, 3, 12));
+    final wear = PowerSyncWearRepository(
+      db: source,
+      ownerId: 'user-a',
+      clock: clock,
+    );
     await fillSource();
-    final contents = ok(await restorer().inspect(await backupOfSource()));
+    final g = (await all(sourceRepo)).first;
+    ok(await wear.recordWear(CalendarDay(2026, 11, 2), {g.id}));
+    final zip = await backupOfSource();
+
+    ok(
+      await restorer().apply(
+        ok(await restorer().inspect(zip)),
+        restoreRemoved: true,
+      ),
+    );
+    final again = ok(await restorer().inspect(zip));
+    final plan = again.plan(restoreRemoved: true);
+    expect(plan.nothingToAdd, isTrue);
+    expect(plan.present, hasLength(2), reason: 'reconhecidas pela criação');
+    ok(await restorer().apply(again, restoreRemoved: true));
+    expect(await all(targetRepo), hasLength(2));
+    expect(await target.getAll('SELECT * FROM wear_events'), hasLength(1));
+  });
+
+  test('na própria conta: apagadas só voltam se marcadas; o desfeito não '
+      'volta', () async {
+    final clock = FixedClock(DateTime.utc(2026, 11, 3, 12));
+    final wear = PowerSyncWearRepository(
+      db: source,
+      ownerId: 'user-a',
+      clock: clock,
+    );
+    final self = BackupRestorer(
+      db: source,
+      ownerId: 'user-a',
+      accountSynced: true,
+    );
+    final keep = ok(
+      await sourceRepo.addGarment(
+        const GarmentDraft(category: GarmentCategory.jeans, name: 'Fica'),
+      ),
+    );
+    final gone = ok(
+      await sourceRepo.addGarment(
+        const GarmentDraft(category: GarmentCategory.coat, name: 'Ida'),
+      ),
+    );
+    final worn = ok(await wear.recordWear(CalendarDay(2026, 11, 2), {keep.id}));
+    final zip = await backupOfSource();
+    ok(await sourceRepo.deleteGarment(gone.id));
+    ok(await wear.voidWear(worn.id));
+
+    final preview = ok(await self.inspect(zip));
+    final plan = preview.plan(restoreRemoved: false);
+    expect(plan.present.keys, [keep.id]);
+    expect(plan.removedGarments.map((g) => g.name), ['Ida']);
+    expect(plan.newGarments, isEmpty);
+    expect(plan.history.wears, isEmpty, reason: 'foi desfeita');
+    expect(plan.nothingToAdd, isTrue);
+
+    ok(await self.apply(preview, restoreRemoved: true));
+    final names = [for (final g in await all(sourceRepo)) g.name]..sort();
+    expect(names, ['Fica', 'Ida']);
+    final back = (await all(sourceRepo)).firstWhere((g) => g.name == 'Ida');
+    expect(back.id, isNot(gone.id), reason: 'id novo');
+  });
+
+  test('com cloud: o servidor diz o que foi apagado; sem rede, só para conta '
+      'vazia', () async {
+    await fillSource();
+    final zip = await backupOfSource();
+    final grossa = (await all(sourceRepo))
+        .firstWhere((g) => g.name == 'Grossa');
+    final asked = <RemovableTable>[];
+    BackupRestorer cloud(RemoteRemovedLookup lookup) => BackupRestorer(
+      db: target,
+      ownerId: 'user-b',
+      accountSynced: true,
+      remoteRemoved: lookup,
+    );
+    Future<Set<String>> offline(RemovableTable t, List<String> ids) =>
+        throw Exception('offline');
+
+    expect(ok(await cloud(offline).inspect(zip)).accountEmpty, isTrue);
+
     ok(
       await targetRepo.addGarment(
         const GarmentDraft(category: GarmentCategory.shirt),
       ),
     );
-    final r = await restorer().apply(contents);
-    expect(failureOf(r), isA<AccountNotEmpty>());
-    expect(await all(targetRepo), hasLength(1));
-    expect(await pendingOperations(target), hasLength(1));
+    expect(failureOf(await cloud(offline).inspect(zip)), isA<NeedsNetwork>());
+
+    final preview = ok(
+      await cloud((t, ids) async {
+        asked.add(t);
+        return t == RemovableTable.garments ? {grossa.id.value} : {};
+      }).inspect(zip),
+    );
+    expect(asked, contains(RemovableTable.garments));
+    expect(
+      preview.plan(restoreRemoved: false).removedGarments.map((g) => g.name),
+      ['Grossa'],
+    );
+    expect(preview.plan(restoreRemoved: false).newGarments, hasLength(1));
+    expect(preview.plan(restoreRemoved: true).newGarments, hasLength(2));
+  });
+
+  test('a conta muda entre o preview e confirmar: volta a comparar', () async {
+    await fillSource();
+    final preview = ok(await restorer().inspect(await backupOfSource()));
+    ok(await restorer().apply(preview, restoreRemoved: true));
+    final second = ok(await restorer().apply(preview, restoreRemoved: true));
+    expect(second.newGarments, isEmpty);
+    expect(await all(targetRepo), hasLength(2));
   });
 
   test('antes da primeira sincronização não se sabe se está vazia', () async {
@@ -194,9 +314,12 @@ void main() {
       ),
     );
     ok(await sourceRepo.deleteGarment(g.id));
-    final contents = ok(await restorer().inspect(await backupOfSource()));
-    expect(contents.garments, isEmpty);
-    expect(ok(await restorer().apply(contents)), 0);
+    final preview = ok(await restorer().inspect(await backupOfSource()));
+    expect(preview.contents.garments, isEmpty);
+    expect(
+      ok(await restorer().apply(preview, restoreRemoved: true)).newGarments,
+      isEmpty,
+    );
     expect(await all(targetRepo), isEmpty);
   });
 
@@ -230,11 +353,15 @@ void main() {
     ok(await care.setGarmentLaundry(gone, 1));
     ok(await sourceRepo.deleteGarment(gone));
 
-    final contents = ok(await restorer().inspect(await backupOfSource()));
-    expect(contents.summary.wears, 2, reason: 'desfeitas ficam de fora');
-    expect(contents.summary.cleanings, 1);
-    expect(contents.history.policies, hasLength(2));
-    ok(await restorer().apply(contents));
+    final preview = ok(await restorer().inspect(await backupOfSource()));
+    expect(
+      preview.contents.summary.wears,
+      2,
+      reason: 'desfeitas ficam de fora',
+    );
+    expect(preview.contents.summary.cleanings, 1);
+    expect(preview.contents.history.policies, hasLength(2));
+    ok(await restorer().apply(preview, restoreRemoved: true));
 
     final ids = {for (final g in await all(targetRepo)) g.name: g.id.value};
     final wears = await target.getAll(
@@ -307,9 +434,9 @@ void main() {
     );
     ok(await sourceRepo.archiveGarment(old));
 
-    final contents = ok(await restorer().inspect(await backupOfSource()));
-    expect(contents.summary.outfits, 1);
-    ok(await restorer().apply(contents));
+    final preview = ok(await restorer().inspect(await backupOfSource()));
+    expect(preview.contents.summary.outfits, 1);
+    ok(await restorer().apply(preview, restoreRemoved: true));
 
     final ids = {for (final g in await all(targetRepo)) g.name: g.id};
     final restored = await PowerSyncOutfitRepository(
@@ -405,10 +532,10 @@ void main() {
         ),
       );
 
-      final contents = ok(await restorer().inspect(await backupOfSource()));
-      expect(contents.summary.inspirations, 2);
-      expect(contents.summary.preferences, 2);
-      ok(await restorer().apply(contents));
+      final preview = ok(await restorer().inspect(await backupOfSource()));
+      expect(preview.contents.summary.inspirations, 2);
+      expect(preview.contents.summary.preferences, 2);
+      ok(await restorer().apply(preview, restoreRemoved: true));
 
       final inspirations = await to.watchInspirations().first;
       expect(inspirations, hasLength(2));
@@ -452,9 +579,9 @@ void main() {
     );
     final original = ok(await from.setImage(i.id, photo(9))).image!;
 
-    final contents = ok(await restorer().inspect(await backupOfSource()));
-    expect(contents.summary.inspirationImages, 1);
-    ok(await restorer().apply(contents));
+    final preview = ok(await restorer().inspect(await backupOfSource()));
+    expect(preview.contents.summary.inspirationImages, 1);
+    ok(await restorer().apply(preview, restoreRemoved: true));
 
     final to = PowerSyncInspirationRepository(db: target, ownerId: 'user-b');
     final restored = (await to.watchInspirations().first).single;

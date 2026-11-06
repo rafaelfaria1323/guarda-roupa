@@ -8,8 +8,10 @@ import '../application/backup_providers.dart';
 import '../data/backup_restorer.dart';
 import '../domain/backup.dart';
 
-/// Recuperar: escolher ficheiro → verificar (ficheiro e destino) → preview
-/// → confirmar → aplicar numa transação. Até confirmar nada é alterado.
+/// Recuperar: escolher ficheiro → verificar o ficheiro e comparar com a
+/// conta → preview (o que se acrescenta; peças apagadas depois do backup só
+/// se marcadas) → confirmar → juntar numa transação. Até confirmar nada é
+/// alterado.
 class RestoreBackupTile extends ConsumerStatefulWidget {
   const RestoreBackupTile({super.key});
 
@@ -38,93 +40,146 @@ class _RestoreBackupTileState extends ConsumerState<RestoreBackupTile> {
     final inspected = await restorer.inspect(zip);
     if (!mounted) return;
     setState(() => _busy = false);
-    final BackupContents contents;
+    final RestorePreview preview;
     switch (inspected) {
       case Ok(:final value):
-        contents = value;
+        preview = value;
       case Err(:final failure):
         return _explain(failure);
     }
 
-    if (!await _confirm(contents.summary) || !mounted) return;
+    final restoreRemoved = await _confirm(preview);
+    if (restoreRemoved == null || !mounted) return;
     setState(() => _busy = true);
-    final applied = await restorer.apply(contents);
+    final applied = await restorer.apply(
+      preview,
+      restoreRemoved: restoreRemoved,
+    );
     if (!mounted) return;
     setState(() => _busy = false);
     switch (applied) {
-      case Ok(value: final count):
+      case Ok(value: final plan):
         messenger.showSnackBar(
-          SnackBar(content: Text(l10n.backupRestored(count))),
+          SnackBar(content: Text(l10n.backupRestored(plan.newGarments.length))),
         );
       case Err(:final failure):
         await _explain(failure);
     }
   }
 
-  Future<bool> _confirm(BackupSummary summary) async {
+  /// `null` se cancelar; senão, se recupera também as peças apagadas
+  /// depois do backup.
+  Future<bool?> _confirm(RestorePreview preview) {
     final l10n = AppLocalizations.of(context);
-    final ok = await showDialog<bool>(
+    final summary = preview.contents.summary;
+    var restoreRemoved = preview.accountEmpty;
+    return showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.backupPreviewTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.backupPreviewDate(summary.exportedAt.toLocal())),
-            const SizedBox(height: 8),
-            Text(l10n.backupPreviewCounts(summary.garments, summary.photos)),
-            if (summary.wears > 0 || summary.cleanings > 0) ...[
-              const SizedBox(height: 8),
-              Text(
-                l10n.backupPreviewHistory(summary.wears, summary.cleanings),
-                key: const Key('backup-preview-history'),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final plan = preview.plan(restoreRemoved: restoreRemoved);
+          final h = plan.history;
+          final removed = preview.withRemoved.removedGarments.length;
+          final images = h.inspirations.where((i) => i.image != null).length;
+          return AlertDialog(
+            title: Text(l10n.backupPreviewTitle),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.backupPreviewDate(summary.exportedAt.toLocal())),
+                  if (plan.newGarments.isNotEmpty || plan.present.isEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.backupPreviewCounts(
+                        plan.newGarments.length,
+                        plan.photos,
+                      ),
+                      key: const Key('backup-preview-counts'),
+                    ),
+                  ],
+                  if (plan.present.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.backupPreviewPresent(plan.present.length),
+                      key: const Key('backup-preview-present'),
+                    ),
+                  ],
+                  if (removed > 0)
+                    CheckboxListTile(
+                      key: const Key('backup-restore-removed'),
+                      contentPadding: EdgeInsets.zero,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      value: restoreRemoved,
+                      onChanged: (v) =>
+                          setDialogState(() => restoreRemoved = v ?? false),
+                      title: Text(l10n.backupPreviewRemoved(removed)),
+                    ),
+                  if (h.wears.isNotEmpty || h.cleanings.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.backupPreviewHistory(
+                        h.wears.length,
+                        h.cleanings.length,
+                      ),
+                      key: const Key('backup-preview-history'),
+                    ),
+                  ],
+                  if (h.outfits.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.backupPreviewOutfits(h.outfits.length),
+                      key: const Key('backup-preview-outfits'),
+                    ),
+                  ],
+                  if (h.inspirations.isNotEmpty ||
+                      h.preferences.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.backupPreviewStyle(
+                        h.inspirations.length,
+                        h.preferences.length,
+                      ),
+                      key: const Key('backup-preview-style'),
+                    ),
+                    if (images > 0)
+                      Text(
+                        l10n.backupPreviewStyleImages(images),
+                        key: const Key('backup-preview-style-images'),
+                      ),
+                  ],
+                  if (summary.pendingOperations > 0) ...[
+                    const SizedBox(height: 8),
+                    Text(l10n.backupPreviewPending(summary.pendingOperations)),
+                  ],
+                  const SizedBox(height: 8),
+                  Text(
+                    plan.nothingToAdd
+                        ? l10n.backupPreviewNothing
+                        : l10n.backupPreviewHow,
+                    key: const Key('backup-preview-how'),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(l10n.cancel),
+              ),
+              FilledButton(
+                key: const Key('backup-restore-confirm'),
+                onPressed: plan.nothingToAdd
+                    ? null
+                    : () => Navigator.pop(context, restoreRemoved),
+                child: Text(l10n.backupRestoreConfirm),
               ),
             ],
-            if (summary.outfits > 0) ...[
-              const SizedBox(height: 8),
-              Text(
-                l10n.backupPreviewOutfits(summary.outfits),
-                key: const Key('backup-preview-outfits'),
-              ),
-            ],
-            if (summary.inspirations > 0 || summary.preferences > 0) ...[
-              const SizedBox(height: 8),
-              Text(
-                l10n.backupPreviewStyle(
-                  summary.inspirations,
-                  summary.preferences,
-                ),
-                key: const Key('backup-preview-style'),
-              ),
-              if (summary.inspirationImages > 0)
-                Text(
-                  l10n.backupPreviewStyleImages(summary.inspirationImages),
-                  key: const Key('backup-preview-style-images'),
-                ),
-            ],
-            if (summary.pendingOperations > 0) ...[
-              const SizedBox(height: 8),
-              Text(l10n.backupPreviewPending(summary.pendingOperations)),
-            ],
-            const SizedBox(height: 8),
-            Text(l10n.backupPreviewHow),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            key: const Key('backup-restore-confirm'),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.backupRestoreConfirm),
-          ),
-        ],
+          );
+        },
       ),
     );
-    return ok ?? false;
   }
 
   Future<void> _explain(RestoreProblem problem) {
@@ -134,7 +189,7 @@ class _RestoreBackupTileState extends ConsumerState<RestoreBackupTile> {
       InvalidBackupFile(problem: UnsupportedBackupVersion()) =>
         l10n.backupNewerVersion,
       InvalidBackupFile() => l10n.backupCorrupt,
-      AccountNotEmpty() => l10n.backupAccountNotEmpty,
+      NeedsNetwork() => l10n.backupNeedsNetwork,
       AccountNotSyncedYet() => l10n.backupNotSynced,
       RestoreFailed() => l10n.backupRestoreFailed,
     };

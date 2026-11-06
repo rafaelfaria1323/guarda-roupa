@@ -140,6 +140,6 @@ Não criar índices para todas as colunas. Confirmar com queries e perfis reais.
 
 Assets imutáveis podem ser deduplicados por conteúdo, sem fundir peças físicas. Apagar uma referência não apaga imediatamente um asset ainda usado por outra entidade.
 
-O backup contém IDs e ficheiros, não URLs temporárias nem tokens. A recuperação tem de preservar identidade e não reenviar eventos históricos como novas utilizações.
+O backup contém IDs e ficheiros, não URLs temporárias nem tokens. A recuperação tem de preservar identidade e não reenviar eventos históricos como novas utilizações. Para juntar a uma conta com dados (P-11), a app lê no Supabase, pela RLS (`*_select_own`), os ids do backup com `deleted_at`/`voided_at` preenchido em `garments`, `wear_events`, `cleaning_events`, `outfits`, `inspirations` e `style_preferences`: essas linhas não chegam ao dispositivo pelo stream.
 
 Ver [Backups](features/backups-e-recuperacao.md) e [Plano E2E](plano-e2e.md).

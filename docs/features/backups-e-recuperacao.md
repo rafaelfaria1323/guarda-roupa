@@ -1,13 +1,13 @@
 # Feature — Backups e recuperação
 
-Estado: necessária na base utilizável; recuperação sobre conta sincronizada existente exige protocolo aprovado.
+Estado: necessária na base utilizável. Recuperação por cima de uma conta com dados: **juntar** (P-11, decidido pelo utilizador a 2026-11-06), implementado.
 
 Implementado (2026-11-03): exportação e verificação do formato v5 (lê também v1 a v4).
 
 - **Conteúdo:** `manifest.json` (formato, versão, `exported_at`, contagens, `pending_operations` e a lista de ficheiros com caminho, MIME, tamanho e SHA-256), `data/garments.json` com as colunas do servidor, sem `owner_id`, `data/history.json` (desde a v2), `data/outfits.json` (desde a v3), `data/style.json` (desde a v4) e `photos/{id}/main.jpg|thumb.jpg` (fotografias das peças e, desde a v5, imagens das inspirações).
 - **Histórico (v2):** utilizações (“Vesti hoje”) e limpezas ativas — as desfeitas ficam de fora — e os valores de lavagem/rotatividade escolhidos por categoria e por peça. Só entra o que refere peças exportadas: uma utilização com uma peça entretanto eliminada fica só com as restantes. O plano (`plan_entry_id`) não entra. Um backup v1 continua a ser lido (sem histórico); um v2 sem `data/history.json`, ou com histórico que refira peças que não estão no ficheiro, datas inválidas ou valores fora dos limites, é rejeitado por inteiro.
 - **Conjuntos (v3):** os conjuntos guardados ativos, com nome, ocasiões e peças/papéis. Peças eliminadas saem do conjunto; um conjunto que fique sem peças fica de fora. Peças arquivadas mantêm-se. Na recuperação, os conjuntos ganham ids novos e apontam para as peças novas (`create_outfit`). Um v2 continua a ser lido (sem conjuntos); um v3 sem `data/outfits.json`, ou com um conjunto inválido (as mesmas regras do servidor) ou que refira peças que não estão no ficheiro, é rejeitado por inteiro.
-- **Estilo (v4):** as inspirações (com proporções; um v4 sem `proportions` lê-se como "nenhuma") e as preferências de estilo ativas. Uma preferência cuja inspiração já foi eliminada vai sem origem. Na recuperação ganham ids novos e a origem aponta para a inspiração nova (`create_inspiration`, `create_preference`). Como o destino só tem de estar sem peças, pode já ter estilo: uma inspiração igual reutiliza-se e uma preferência com o mesmo assunto, valor e contexto não se repete (fica a do destino). Um v3 continua a ser lido (sem estilo); um v4 sem `data/style.json`, ou com uma inspiração ou preferência inválida (as mesmas regras do servidor) ou com uma origem que não está no ficheiro, é rejeitado por inteiro.
+- **Estilo (v4):** as inspirações (com proporções; um v4 sem `proportions` lê-se como "nenhuma") e as preferências de estilo ativas. Uma preferência cuja inspiração já foi eliminada vai sem origem. Na recuperação ganham ids novos e a origem aponta para a inspiração nova (`create_inspiration`, `create_preference`). O destino pode já ter estilo: uma inspiração igual reutiliza-se e uma preferência com o mesmo assunto, valor e contexto não se repete (fica a do destino). Um v3 continua a ser lido (sem estilo); um v4 sem `data/style.json`, ou com uma inspiração ou preferência inválida (as mesmas regras do servidor) ou com uma origem que não está no ficheiro, é rejeitado por inteiro.
 - **Imagens das inspirações (v5):** cada inspiração leva o objeto `image` (ou `null`) e os ficheiros em `photos/`, verificados como as fotos das peças (tamanho e SHA-256); uma imagem em falta, alterada ou ficheiros sem dono rejeitam o ficheiro. Sobe para v5 porque um leitor v4 recusaria esses ficheiros. Na exportação, uma imagem que não está neste dispositivo é descarregada; se não for possível, a exportação falha como nas fotos. Na recuperação a imagem ganha id novo, fica neste dispositivo e segue como `set_inspiration_image` depois de `create_inspiration` (a fila envia os ficheiros antes). Uma inspiração reutilizada (igual a uma do destino) fica com a imagem que já tinha. O preview diz quantas imagens de inspirações traz; não contam como fotografias de peças. Um v4 continua a ser lido (sem imagens).
 - **Snapshot:** é lido numa transação de leitura. As peças eliminadas ficam de fora.
 - **Fotografias:** as que faltam neste dispositivo são descarregadas e verificadas pelo hash. Se faltar alguma, a exportação falha.
@@ -21,23 +21,33 @@ Implementado (2026-11-03): exportação e verificação do formato v5 (lê tamb�
 - **Gravação:** usa o "Guardar como" do sistema (`file_saver`), que no Android grava fora da pasta privada (SAF). Na Web, a mensagem diz que a transferência começou, não que o ficheiro ficou guardado.
 - **Memória:** o ZIP é construído todo em memória, o que é suficiente para algumas centenas de peças com até 5 fotos cada.
 
-Recuperação (primeiro modo, só para destino vazio):
+Recuperação (juntar ao que a conta tem; P-11, 2026-11-06):
 
 - **Percurso:** Definições › Recuperar backup › escolher o ZIP (`file_selector`).
-- **Antes de mostrar o preview, valida o ficheiro** com o leitor acima.
-- **Valida também o destino:**
-  - a conta não pode ter peças;
-  - com cloud, a primeira sincronização tem de ter terminado, porque antes disso não se sabe se a conta está vazia.
-- **Preview:** data, contagens de peças, fotografias, histórico, conjuntos, estilo e imagens das inspirações, e as alterações que ainda não estavam sincronizadas na exportação.
+- **Antes de mostrar o preview, valida o ficheiro** com o leitor acima. Com cloud, a primeira sincronização tem de ter terminado, porque antes disso não se sabe o que a conta tem.
+- **Juntar, nunca substituir:** só se acrescenta o que falta. O que a conta já tem fica como está, mesmo que tenha sido editado depois do backup (estado, fotos, nome, valores de lavagem/rotatividade). Nada é apagado.
+- **Peças já na conta:** são reconhecidas pelo mesmo id ou, se já tinham sido recuperadas antes com id novo, pela mesma data de criação, categoria e nome. Ficam como estão, e o histórico do backup liga-se a elas.
+- **Sem ressurreição silenciosa:**
+  - peças apagadas nesta conta depois do backup aparecem no preview com uma caixa “Recuperar também N peças apagadas depois do backup”. Desmarcada numa conta com peças; marcada numa conta vazia, porque quem esvazia a conta para recuperar quer tudo de volta. Se forem recuperadas, ganham id novo;
+  - utilizações e limpezas desfeitas, e conjuntos, inspirações e preferências apagados depois do backup, não voltam.
+  - Como as linhas apagadas saem do stream do PowerSync, a app pergunta ao Supabase (com a RLS do utilizador) que ids do backup estão apagados ou desfeitos, e junta o que ainda está neste dispositivo por enviar. Sem rede, numa conta com peças, recusa e pede rede; numa conta vazia segue (é o primeiro modo de antes).
+- **Sem duplicar:** uma utilização, limpeza ou conjunto com o mesmo id não se repete. Também não se repete quando a conta já tem o mesmo conteúdo com as mesmas peças: uma utilização no mesmo dia com as mesmas peças, uma limpeza da mesma peça no mesmo dia, um conjunto com as mesmas peças e papéis. Inspirações iguais e preferências com o mesmo alvo também não se repetem. Uma utilização ou conjunto com peças apagadas que não se recuperam fica só com as restantes, e sai se ficar sem nenhuma.
+- **Preview:**
+  - data;
+  - peças e fotografias novas, e quantas já estão na conta;
+  - a caixa das peças apagadas;
+  - o que entra de histórico, conjuntos, estilo e imagens das inspirações;
+  - as alterações que ainda não estavam sincronizadas na exportação.
+  - As contagens mudam com a caixa. Se não houver nada a acrescentar, o preview diz isso e o botão fica desligado.
 - **Aplicação:**
   - acontece só depois de confirmar e corre numa única transação;
-  - o destino é verificado de novo dentro da transação; se entretanto deixou de estar vazio, nada é escrito.
-  - o histórico é recriado na mesma transação com os ids novos das peças, pela ordem original de registo (o servidor mantém a ordem entre uma utilização e uma limpeza do mesmo dia), e segue pela fila normal depois das peças. Como só há recuperação para destino vazio, não duplica utilizações de uma conta existente.
-- **IDs novos para peças e fotografias:** nada ressuscita uma peça eliminada nem colide com IDs que o servidor já conhece, mesmo quando o backup é desta mesma conta.
+  - a comparação com a conta repete-se dentro da transação, por isso o que mudou desde o preview conta, e confirmar duas vezes não duplica nada;
+  - o histórico é recriado na mesma transação pela ordem original de registo (o servidor mantém a ordem entre uma utilização e uma limpeza do mesmo dia) e segue pela fila normal depois das peças.
+- **IDs novos para o que é criado (peças, fotografias, histórico):** nada ressuscita um id apagado nem colide com IDs que o servidor já conhece.
   - Mantém a data de criação original.
   - O estado (disponibilidade, arquivo) e as fotografias entram como operações normais: `create`, `set_availability`, `attach_photo`, `archive`. A fila envia os ficheiros antes de ligar as fotos.
 
-Bloqueado até P-11: recuperar por cima de uma conta com dados (juntar ou substituir).
+Fora do âmbito: substituir (apagar a conta e pôr o backup no lugar). Não foi pedido; para isso, apagar as peças à mão e recuperar.
 
 ## Objetivo
 
@@ -78,9 +88,7 @@ Ficheiro apenas na pasta privada Android não é um backup externo. Na Web, inic
 5. Confirmar catálogo, imagens, planos e histórico depois de reabrir.
 6. Retomar sync apenas com semântica definida.
 
-No primeiro modo, recomendar destino vazio e autenticado. Recuperar por cima de uma conta com dados não é “apagar a base local e voltar a sincronizar”.
-
-Até P-11 estar fechada, bloquear merge/substituição cloud existente. Não propagar eventos antigos como novas utilizações, restaurar tokens ou ressuscitar deletes em segredo.
+Recuperar por cima de uma conta com dados não é “apagar a base local e voltar a sincronizar”: junta-se pelas regras acima (P-11). Não propagar eventos antigos como novas utilizações, restaurar tokens ou ressuscitar deletes em segredo.
 
 ## Tecnologia e alternativas
 

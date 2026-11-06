@@ -149,30 +149,17 @@ final class PowerSyncWardrobeRepository implements WardrobeRepository {
     });
   }
 
-  /// Recuperação de backup: todas as peças numa só transação, e só se não
-  /// houver nenhuma peça nesta conta (destino vazio). Devolve `false` sem
-  /// escrever nada se houver.
+  /// Recuperação de backup: cria [garments] dentro da transação [tx] da
+  /// recuperação e devolve o id novo de cada peça do backup.
   ///
   /// IDs novos para peças e fotos: um backup não ressuscita peças eliminadas
   /// nem colide com o que o servidor já conhece. Para a cloud são operações
   /// normais (create, estado, arquivo e fotos), enviadas pela fila.
-  ///
-  /// [then] corre na mesma transação, com o id novo de cada peça do backup
-  /// (ex.: para recuperar o histórico); se falhar, nada fica escrito.
-  Future<bool> importGarments(
+  Future<Map<GarmentId, GarmentId>> insertImported(
+    SqliteWriteContext tx,
     List<Garment> garments,
-    Map<(String, PhotoVariant), Uint8List> photoFiles, {
-    Future<void> Function(
-      SqliteWriteContext tx,
-      Map<GarmentId, GarmentId> newIds,
-    )?
-    then,
-  }) => _db.writeTransaction((tx) async {
-    final existing = await tx.get(
-      'SELECT count(*) AS n FROM garments WHERE deleted_at IS NULL',
-    );
-    if (existing['n'] != 0) return false;
-
+    Map<(String, PhotoVariant), Uint8List> photoFiles,
+  ) async {
     final newIds = <GarmentId, GarmentId>{};
     for (final source in garments) {
       final now = DateTime.now();
@@ -235,9 +222,8 @@ final class PowerSyncWardrobeRepository implements WardrobeRepository {
         });
       }
     }
-    await then?.call(tx, newIds);
-    return true;
-  });
+    return newIds;
+  }
 
   /// Uma alteração por atributo diferente, com o valor de base para o
   /// servidor detetar conflitos campo a campo.
