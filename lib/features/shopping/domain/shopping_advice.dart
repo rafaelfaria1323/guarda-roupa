@@ -1,5 +1,6 @@
 import '../../../core/domain/result.dart';
 import '../../inspirations/domain/inspiration.dart';
+import '../../inspirations/domain/inspiration_brief.dart';
 import '../../photo_ai/domain/photo_reader.dart';
 import '../../wardrobe/domain/garment.dart';
 import '../../wardrobe/domain/garment_category.dart';
@@ -113,18 +114,7 @@ Map<String, Object?> shoppingBrief(
         ],
       },
   ],
-  'inspirations': [
-    for (final i in inspirations.take(40))
-      {
-        'title': ?i.title,
-        'palette': [for (final rgb in i.palette) nearestReference(rgb).id],
-        'formality': ?i.formality?.id,
-        'patterns': [for (final p in i.patterns) p.id],
-        'textures': [for (final t in i.textures) t.id],
-        'occasions': [for (final o in i.occasions) o.id],
-        'proportions': [for (final p in i.proportions) p.id],
-      },
-  ],
+  'inspirations': [for (final i in inspirations.take(40)) inspirationBrief(i)],
   'gaps': [
     for (final g in gaps)
       {

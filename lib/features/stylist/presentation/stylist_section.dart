@@ -7,6 +7,8 @@ import '../../../core/domain/result.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../engine/application/suggestion_providers.dart';
 import '../../engine/presentation/today_suggestions_card.dart';
+import '../../inspirations/application/inspiration_providers.dart';
+import '../../inspirations/domain/inspiration.dart';
 import '../../outfits/application/outfit_providers.dart';
 import '../../outfits/domain/outfit.dart';
 import '../../outfits/presentation/outfit_messages.dart';
@@ -18,9 +20,13 @@ import '../domain/stylist.dart';
 /// "Pedir ao stylist" (docs/features/ia-gemini.md): por baixo da sugestão
 /// do motor, só com o Gemini ligado. O Gemini escolhe um conjunto entre as
 /// peças disponíveis e explica porquê; a app confirma antes de mostrar. Se
-/// falhar, a sugestão do motor continua lá em cima.
+/// falhar, a sugestão do motor continua lá em cima. Leva as inspirações
+/// guardadas; com [inspiration] (em "Montar com o que tenho") pede um look
+/// parecido com essa.
 class StylistSection extends ConsumerStatefulWidget {
-  const StylistSection({super.key});
+  const StylistSection({super.key, this.inspiration});
+
+  final Inspiration? inspiration;
 
   @override
   ConsumerState<StylistSection> createState() => _StylistSectionState();
@@ -56,6 +62,8 @@ class _StylistSectionState extends ConsumerState<StylistSection> {
       request,
       ask: ask,
       previous: _current,
+      inspirations: ref.read(inspirationsProvider).value ?? const [],
+      target: widget.inspiration,
     );
     if (!brief.isEnough) {
       setState(() => _error = l10n.stylistTooFew);
@@ -115,6 +123,7 @@ class _StylistSectionState extends ConsumerState<StylistSection> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final pick = _pick;
+    final look = widget.inspiration != null;
     final muted = theme.textTheme.bodyMedium?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
     );
@@ -134,7 +143,13 @@ class _StylistSectionState extends ConsumerState<StylistSection> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.auto_awesome_outlined),
-            label: Text(_loading ? l10n.stylistThinking : l10n.stylistAsk),
+            label: Text(
+              _loading
+                  ? l10n.stylistThinking
+                  : look
+                  ? l10n.stylistAskLook
+                  : l10n.stylistAsk,
+            ),
           )
         else ...[
           Text(l10n.stylistTitle, style: theme.textTheme.titleMedium),
@@ -222,7 +237,7 @@ class _StylistSectionState extends ConsumerState<StylistSection> {
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
-              l10n.stylistHint,
+              look ? l10n.stylistLookHint : l10n.stylistHint,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),

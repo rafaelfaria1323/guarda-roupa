@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guarda_roupa/features/engine/domain/comfort.dart';
 import 'package:guarda_roupa/features/engine/domain/suggestion.dart';
+import 'package:guarda_roupa/features/inspirations/domain/inspiration.dart';
 import 'package:guarda_roupa/features/inspirations/domain/style_preference.dart';
 import 'package:guarda_roupa/features/outfits/domain/outfit.dart';
 import 'package:guarda_roupa/features/stylist/domain/stylist.dart';
@@ -87,6 +88,51 @@ void main() {
     expect(json['ask'], 'mais arranjado');
     expect(brief(ask: '   ').json['ask'], isNull);
     expect(b.isEnough, isTrue);
+  });
+
+  test('leva as inspirações e, com um look alvo, a ocasião dele', () {
+    Inspiration insp(String id, {Set<Occasion> occasions = const {}}) =>
+        Inspiration(
+          id: id,
+          title: 'Look $id',
+          sourceUrl: 'https://exemplo.pt/$id',
+          notes: 'privado',
+          palette: [ReferenceColor.navy.rgb],
+          formality: Formality.dressy,
+          occasions: occasions,
+          createdAt: DateTime(2026),
+          updatedAt: DateTime(2026),
+        );
+    final all = [
+      for (var i = 0; i < 25; i++) insp('i$i'),
+      insp('night', occasions: {Occasion.evening}),
+    ];
+    final plain = StylistBrief.build(snapshot, request, inspirations: all);
+    final sent = plain.json['inspirations']! as List;
+    expect(sent, hasLength(StylistBrief.maxInspirations));
+    expect(sent.first, {
+      'title': 'Look i0',
+      'palette': [ReferenceColor.navy.id],
+      'formality': Formality.dressy.id,
+      'patterns': <Object>[],
+      'textures': <Object>[],
+      'occasions': <Object>[],
+      'proportions': <Object>[],
+    });
+    expect(plain.json['target'], isNull);
+    expect(plain.json['occasion'], Occasion.workCasual.id);
+    expect(plain.json.toString(), isNot(contains('privado')));
+    expect(plain.json.toString(), isNot(contains('exemplo.pt')));
+
+    final look = StylistBrief.build(
+      snapshot,
+      request,
+      inspirations: [all.last, ...all.take(3)],
+      target: all.last,
+    );
+    expect((look.json['target']! as Map)['title'], 'Look night');
+    expect(look.json['inspirations']! as List, hasLength(3));
+    expect(look.json['occasion'], Occasion.evening.id);
   });
 
   test('a resposta só vale com peças mandadas e papéis certos', () {

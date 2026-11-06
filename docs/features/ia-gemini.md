@@ -24,14 +24,16 @@ A foto ao espelho (ver o que se vestiu) ficou de fora por decisão do utilizador
 
 Em **Hoje › Sugestões para hoje**, por baixo da sugestão do motor, aparece **Pedir ao stylist** quando o Gemini está ligado.
 
-1. A app manda **só texto**: as peças disponíveis (não arquivadas, sem estar a lavar), cada uma com categoria, nome, cores, padrão, textura, aquecimento, formalidade, corte, comprimento, ocasiões, chuva/vento e quantas vezes se usou nos últimos 30 dias. Junta a ocasião escolhida, o tempo (sensação, chuva, vento, sol) e as preferências ("gosto"/"evito"). Nunca vão fotos, marcas, preços nem notas. Até 150 peças, as menos usadas primeiro; os ids são curtos (`p1`, `p2`…) e só a app sabe a que peça correspondem.
+1. A app manda **só texto**: as peças disponíveis (não arquivadas, sem estar a lavar), cada uma com categoria, nome, cores, padrão, textura, aquecimento, formalidade, corte, comprimento, ocasiões, chuva/vento e quantas vezes se usou nos últimos 30 dias. Junta a ocasião escolhida, o tempo (sensação, chuva, vento, sol), as preferências ("gosto"/"evito") e as 20 inspirações mais recentes, só com as etiquetas confirmadas (título, cores, formalidade, padrões, texturas, ocasiões, proporções). O Gemini puxa o conjunto para essa linha quando serve para o dia. Nunca vão fotos, imagens ou links das inspirações, marcas, preços nem notas. Até 150 peças, as menos usadas primeiro; os ids são curtos (`p1`, `p2`…) e só a app sabe a que peça correspondem.
 2. O Gemini escolhe um conjunto (cada peça com o papel: top, camada, casaco, parte de baixo, peça única, calçado, acessório), dá-lhe um nome curto e explica porquê em pt-PT.
 3. A função só aceita ids que foram mandados. A app volta a verificar: papéis que a categoria permite, um só top/parte de baixo/calçado (um segundo top de malha passa a camada), parte de cima e de baixo ou peça única. Se não servir, diz "não montou um conjunto completo" e não mostra nada. Os avisos do dia (chuva, frio, peça a precisar de limpeza) são os do motor (`DailyEngine.assess`).
 4. Depois: **Vestir isto** (abre "Vesti hoje" com as peças por confirmar; só guardar conta como uso), **Guardar como conjunto** (com o nome do stylist), **Outra ideia** (manda a anterior para não a repetir) e **Pedir mudança** ("mais arranjado", "sem ténis"), que ajusta a ideia atual.
 5. Se falhar (sem chave, sem quota, sem rede), aparece a mensagem e a sugestão do motor continua lá em cima.
 
+**Um look assim** (2026-11-06): em **Montar com o que tenho**, por baixo dos conjuntos do motor, aparece **Pedir ao stylist um look assim**. A inspiração vai como alvo (`target`, as mesmas etiquetas) e o Gemini tenta que o conjunto fique o mais parecido possível, sem esquecer o tempo; no "porquê" diz o que bate certo e o que muda. Se a inspiração tiver uma só ocasião, é essa a que vai. O resto (verificação, botões, falhas) é igual.
+
 - **App:** `lib/features/stylist/` (`StylistBrief`, `reviewStylistReply`, `SupabaseStylist`, `StylistSection`).
-- **Função `stylist`** (`supabase/functions/stylist/`): valida o pedido (2 a 200 peças, campos conhecidos, texto curto) antes de gastar quota, usa a mesma quota (`claim_photo_ai_quota`) e responde com um esquema JSON. O código comum com `describe-photo` está em `supabase/functions/_shared/gemini.ts`.
+- **Função `stylist`** (`supabase/functions/stylist/`): valida o pedido (2 a 200 peças, até 20 inspirações e um alvo, campos conhecidos, texto curto) antes de gastar quota, usa a mesma quota (`claim_photo_ai_quota`) e responde com um esquema JSON. O código comum com `describe-photo` está em `supabase/functions/_shared/gemini.ts`.
 
 ## Peças que faziam falta
 
@@ -39,7 +41,7 @@ No Resumo do armário, o Gemini sugere peças a comprar com marcas e uma pesquis
 
 ## Privacidade e limites
 
-- O stylist e as ideias de compra só recebem texto das peças (com a marca), nunca fotos.
+- O stylist e as ideias de compra só recebem texto: das peças (as ideias de compra também com a marca) e das etiquetas das inspirações, nunca fotos, imagens, links ou notas.
 - A foto do aparelho só quando o utilizador adiciona fotos ou toca num botão do Gemini, e só com a opção ligada. Não fica guardada no servidor da app.
 - Na versão grátis da API, a Google pode usar o conteúdo para melhorar os produtos dela. O ecrã das Definições pede para evitar fotos com pessoas.
 - Limite da app: 60 pedidos por hora e 300 por dia por pessoa, somando fotos e stylist (`claim_photo_ai_quota`). A quota grátis do Gemini muda com o tempo e por modelo; quando acaba, a função responde "busy" e a app avisa.

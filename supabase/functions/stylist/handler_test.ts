@@ -64,6 +64,35 @@ Deno.test('só peças mandadas, sem repetir, com papéis conhecidos', async () =
   });
 });
 
+Deno.test('inspirações e look alvo seguem só como etiquetas', async () => {
+  const d = deps();
+  const insp = { title: 'Linho', palette: ['white', 'beige'], image: 'x', url: 'https://a.b' };
+  const res = await handle(
+    post({
+      garments,
+      inspirations: Array.from({ length: 25 }, () => insp),
+      target: { title: 'Noite', formality: 'dressy', notes: 'segredo' },
+    }),
+    d,
+  );
+  assertEquals(res.status, 200);
+  const brief = JSON.parse(d.prompts[0].slice(d.prompts[0].indexOf('{')));
+  assertEquals(brief.inspirations.length, 20);
+  assertEquals(brief.inspirations[0], {
+    title: 'Linho',
+    palette: ['white', 'beige'],
+    formality: null,
+    patterns: [],
+    textures: [],
+    occasions: [],
+    proportions: [],
+  });
+  assertEquals(brief.target.title, 'Noite');
+  assertEquals(brief.target.formality, 'dressy');
+  assertEquals(brief.target.notes, undefined);
+  assertEquals(d.prompts[0].includes('segredo'), false);
+});
+
 Deno.test('pedidos inválidos não gastam quota', async () => {
   let claims = 0;
   const d = deps({

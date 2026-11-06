@@ -20,6 +20,7 @@ import '../../account_sync/application/providers.dart';
 import '../../wardrobe/domain/garment.dart';
 import '../../wardrobe/domain/garment_photo.dart';
 import '../../wear/application/wear_providers.dart';
+import '../../stylist/presentation/stylist_section.dart';
 import '../application/inspiration_providers.dart';
 import '../domain/inspiration.dart';
 
@@ -208,6 +209,7 @@ class _InspirationLookScreenState extends ConsumerState<InspirationLookScreen> {
         ..._imageStatus(context, inspiration, canCompare: canCompare),
         const SizedBox(height: 12),
         ..._result(context, result, inspiration),
+        StylistSection(inspiration: inspiration),
         const SizedBox(height: 16),
         Text(l10n.lookFootnote, style: theme.textTheme.bodySmall),
       ],
