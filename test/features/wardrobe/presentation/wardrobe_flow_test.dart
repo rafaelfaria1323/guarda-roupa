@@ -13,7 +13,10 @@ Finder inList(String text) => find.descendant(
     (w) =>
         w is ListTile ||
         (w.key is ValueKey<String> &&
-            (w.key! as ValueKey<String>).value.startsWith('garment-tile-')),
+            ((w.key! as ValueKey<String>).value.startsWith('garment-tile-') ||
+                (w.key! as ValueKey<String>).value.startsWith(
+                  'garment-twins-',
+                ))),
   ),
   matching: find.text(text),
 );
@@ -171,14 +174,20 @@ void main() {
     await tester.tap(find.byType(PopupMenuButton<void Function()>));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Duplicar'));
-    await settleUntil(tester, find.text('Cópia criada.'));
+    await settleUntil(
+      tester,
+      find.text('Cópia criada, com as mesmas fotografias.'),
+    );
     // Abre a cópia; ao voltar há duas peças.
     expect(find.text('Editar peça'), findsOneWidget);
     await tester.tap(find.byType(BackButton));
     await settle(tester);
     await closeDetail(tester);
 
-    expect(find.text('Polo verde'), findsNWidgets(2));
+    // Duas peças iguais: juntas no Armário, cada uma com a sua ficha.
+    expect(inList('Polo verde'), findsOneWidget);
+    expect(find.byKey(const Key('garment-twins-count')), findsOneWidget);
+    expect(find.text('×2'), findsOneWidget);
   });
 
   testWidgets(

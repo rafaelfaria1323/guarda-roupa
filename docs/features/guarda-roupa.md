@@ -2,7 +2,7 @@
 
 Estado: necessária no MVP. Implementação recomendada nos incrementos 1–2.
 
-Implementado (2026-11-03): criar/editar/duplicar/arquivar/eliminar (tombstone, com confirmação e limpeza das fotos), disponibilidade, pesquisa sem acentos, filtros por grupo de categoria e disponibilidade, categoria escolhida à mão ou, com o modelo de IA local, entre as 3 sugeridas pela foto ([IA local](ia-local.md#poc-implementada-2026-11-04)), cores de uma paleta de 26 cores de referência, com Prateado e Dourado para metais e Verde-menta, Turquesa, Terracota e Lilás (2026-11-06), com proporção aproximada (passos de 5%, soma ≤ 100%; abaixo de 10% é um detalhe; confirmadas pelo utilizador; podem ser sugeridas pela foto e ficam marcadas até confirmar, ver [fotografias](fotografias-e-ficheiros.md)) e fotografias. Detalhes opcionais (secção “Detalhes”; nada escolhido = “não sei”): padrão, textura superficial, aquecimento, adequação a chuva e vento (sim/não/não sei), ocasiões iniciais (casual, trabalho (smart casual), noite/saída; também como filtro da lista) e material/cuidados como texto da etiqueta. Ecrã Armário (visual fio v2, 2026-11-05): prateleiras por tipo com as peças recortadas e, com pesquisa ou filtros, uma grelha ([design](../design-e-fluxos.md#ecrã-armário-v2-aplicado)). Ficha da peça em modo de ver (uso, disponibilidade em chips, últimas vezes, "Vou vestir hoje"), com "Editar" para o formulário ([design](../design-e-fluxos.md#ecrã-peça-v2-aplicado)). Por fazer: composição estruturada (percentagens por fibra) e símbolos de cuidados.
+Implementado (2026-11-03): criar/editar/duplicar/arquivar/eliminar (tombstone, com confirmação e limpeza das fotos), disponibilidade, pesquisa sem acentos, filtros por grupo de categoria e disponibilidade, categoria escolhida à mão ou, com o modelo de IA local, entre as 3 sugeridas pela foto ([IA local](ia-local.md#poc-implementada-2026-11-04)), cores de uma paleta de 26 cores de referência, com Prateado e Dourado para metais e Verde-menta, Turquesa, Terracota e Lilás (2026-11-06), com proporção aproximada (passos de 5%, soma ≤ 100%; abaixo de 10% é um detalhe; confirmadas pelo utilizador; podem ser sugeridas pela foto e ficam marcadas até confirmar, ver [fotografias](fotografias-e-ficheiros.md)) e fotografias. Detalhes opcionais (secção “Detalhes”; nada escolhido = “não sei”): padrão, textura superficial, aquecimento, adequação a chuva e vento (sim/não/não sei), ocasiões iniciais (casual, trabalho (smart casual), noite/saída; também como filtro da lista) e material/cuidados como texto da etiqueta. Ecrã Armário (visual fio v2, 2026-11-05): prateleiras por tipo com as peças recortadas e, com pesquisa ou filtros, uma grelha ([design](../design-e-fluxos.md#ecrã-armário-v2-aplicado)). Ficha da peça em modo de ver (uso, disponibilidade em chips, últimas vezes, "Vou vestir hoje"), com "Editar" para o formulário ([design](../design-e-fluxos.md#ecrã-peça-v2-aplicado)). [Peças iguais](#peças-iguais) (2026-11-06): criar várias de uma vez, vê-las juntas no Armário e escolher o grupo no “Vesti hoje”. Por fazer: composição estruturada (percentagens por fibra) e símbolos de cuidados.
 
 ## Objetivo e dados
 
@@ -26,10 +26,20 @@ Padrão, textura e composição não são o mesmo atributo. “Malha” visível
 2. Corrigir sugestões de categoria/cor antes ou depois de guardar.
 3. Pesquisar/filtrar por categoria, disponibilidade e contexto.
 4. Arquivar peças sem perder histórico.
-5. Duplicar dados de uma peça semelhante, criando um novo ID e histórico vazio.
+5. Duplicar dados de uma peça semelhante, criando um novo ID e histórico vazio (as fotografias copiam-se, ver [Peças iguais](#peças-iguais)).
 6. Mostrar dados guardados localmente e estado da sincronização.
 
 Não exigir um número conhecido de peças nem impor um limite de 100. Uma peça sem dados suficientes pode existir no catálogo; o motor explica eventuais limitações para a usar.
+
+## Peças iguais
+
+Várias unidades da mesma peça (ex.: três t-shirts brancas iguais) continuam a ser **peças distintas**: cada uma tem id, disponibilidade, utilizações, lavagens e rotação próprias ([produto](../produto.md)). O que muda é só a forma de as criar e mostrar:
+
+- **Criar:** no formulário de peça nova, “Quantas tens iguais?” (1 a 10) cria essas peças de uma vez, com os mesmos dados e as mesmas fotos.
+- **Duplicar** (menu da peça) e **“Juntar mais uma igual”** criam mais uma unidade e copiam as fotografias com ids novos: cada uma pode depois ter as suas, e apagar uma não apaga as da outra. Uma foto que só está no Storage descarrega-se (com verificação do SHA-256); sem rede fica de fora.
+- **Iguais** = mesma categoria, nome e marca (sem contar maiúsculas e espaços), mesmas cores, os mesmos detalhes e o mesmo estado de arquivo (`GarmentTwins`). Uma peça sem nome nem cores fica sempre sozinha. Não há coluna nova: o grupo calcula-se.
+- **Armário:** o grupo aparece uma vez, com “×N” e, se nem todas estiverem disponíveis, “2 de 3 disponíveis”. Tocar abre a lista das unidades, com o estado e a última vez que foi vestida; tocar numa abre a sua ficha. Mudar o nome ou a cor de uma unidade separa-a do grupo.
+- **“Vesti hoje”:** o grupo é uma só linha; escolhê-lo regista a unidade disponível há mais tempo sem uso (nunca vestida primeiro; empate: a mais antiga). Desmarcar tira qualquer unidade do grupo.
 
 ## Tecnologia
 

@@ -227,7 +227,7 @@
   "garmentArchived": "Arquivada",
   "garmentSave": "Guardar",
   "garmentDuplicate": "Duplicar",
-  "garmentDuplicated": "Cópia criada.",
+  "garmentDuplicated": "Cópia criada, com as mesmas fotografias.",
   "garmentArchive": "Arquivar",
   "garmentUnarchive": "Desarquivar",
   "garmentNotFound": "Esta peça já não existe.",
@@ -1361,5 +1361,59 @@
       }
     }
   },
-  "backupPreviewNothing": "Esta conta já tem tudo o que o backup traz. Não há nada a acrescentar."
+  "backupPreviewNothing": "Esta conta já tem tudo o que o backup traz. Não há nada a acrescentar.",
+  "garmentUnits": "Quantas tens iguais?",
+  "garmentUnitsLess": "Menos uma",
+  "garmentUnitsMore": "Mais uma",
+  "garmentUnitsHint": "Ficam peças separadas, cada uma com o seu uso e lavagem. No Armário aparecem juntas.",
+  "wardrobeTwinsAvailable": "{available} de {total} disponíveis",
+  "@wardrobeTwinsAvailable": {
+    "placeholders": {
+      "available": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "wardrobeTwinsTitle": "{name} ×{count}",
+  "@wardrobeTwinsTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wardrobeTwinsHint": "Peças iguais: cada uma tem o seu uso e a sua lavagem.",
+  "wardrobeTwinUnit": "Unidade {number}",
+  "@wardrobeTwinUnit": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "wardrobeTwinLastWorn": "vestida a {date}",
+  "@wardrobeTwinLastWorn": {
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "MMMMd"
+      }
+    }
+  },
+  "wardrobeTwinNeverWorn": "ainda não vestida",
+  "wardrobeTwinsAdd": "Juntar mais uma igual",
+  "wearTwinsPick": "{count, plural, =1{1 igual} other{{count} iguais}}: uso a que está disponível há mais tempo sem uso.",
+  "@wearTwinsPick": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

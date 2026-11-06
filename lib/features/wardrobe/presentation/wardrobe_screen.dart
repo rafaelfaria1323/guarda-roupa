@@ -10,16 +10,19 @@ import '../../../core/domain/result.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../care/application/care_providers.dart';
+import '../../care/domain/laundry_policy.dart';
 import '../../account_sync/application/providers.dart';
 import '../../import/application/import_providers.dart';
 import '../../import/application/shortcut_inbox.dart';
 import '../../import/domain/product_import.dart';
+import '../application/garment_copies.dart';
 import '../application/photo_providers.dart';
 import '../domain/availability.dart';
 import '../domain/garment.dart';
 import '../domain/garment_category.dart';
 import '../domain/garment_attributes.dart';
 import '../domain/garment_filter.dart';
+import '../domain/garment_twins.dart';
 import '../domain/wardrobe_repository.dart';
 import 'garment_cutout.dart';
 import 'labels.dart';
@@ -378,7 +381,10 @@ class _Shelves extends StatelessWidget {
                   clipBehavior: Clip.none,
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [for (final g in list) _GarmentTile(garment: g)],
+                    children: [
+                      for (final units in GarmentTwins.group(list))
+                        _GarmentTile(units: units),
+                    ],
                   ),
                 ),
               ],
@@ -396,53 +402,100 @@ class _Grid extends StatelessWidget {
   final List<Garment> garments;
 
   @override
-  Widget build(BuildContext context) => GridView.builder(
-    padding: const EdgeInsets.fromLTRB(18, 12, 18, 96),
-    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-      maxCrossAxisExtent: 124,
-      mainAxisExtent: 172,
-    ),
-    itemCount: garments.length,
-    itemBuilder: (context, i) => _GarmentTile(garment: garments[i]),
-  );
+  Widget build(BuildContext context) {
+    final groups = GarmentTwins.group(garments);
+    return GridView.builder(
+      padding: const EdgeInsets.fromLTRB(18, 12, 18, 96),
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 124,
+        mainAxisExtent: 172,
+      ),
+      itemCount: groups.length,
+      itemBuilder: (context, i) => _GarmentTile(units: groups[i]),
+    );
+  }
 }
 
+/// Uma peça, ou várias iguais juntas ("×3"): o estado diz quantas estão
+/// disponíveis e tocar mostra cada unidade.
 class _GarmentTile extends ConsumerWidget {
-  const _GarmentTile({required this.garment});
+  const _GarmentTile({required this.units});
 
-  final Garment garment;
+  final List<Garment> units;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final washRecommended =
-        ref.watch(laundryStatesProvider)?[garment.id]?.washRecommended ?? false;
+    final garment = units.first;
+    final laundry = ref.watch(laundryStatesProvider);
     final category = l10n.categoryLabel(garment.category.id);
-    final availability = garment.availability;
-    final inCare = !availability.isAvailable;
-    // Só o que foge ao normal: "disponível" não se escreve.
-    final (String, Color)? status = garment.isArchived
-        ? (l10n.garmentArchived, AppColors.onSurfaceMuted)
-        : availability != Availability.available
-        ? (
-            l10n.availabilityLabel(availability.id),
-            inCare ? AppColors.care : AppColors.onSurfaceMuted,
-          )
-        : washRecommended
-        ? (l10n.laundryRecommendedShort, AppColors.care)
-        : null;
+    final twins = units.length > 1;
+    final (String, Color)? status;
+    if (twins) {
+      final available = units.where((g) => g.isCandidate).length;
+      status = garment.isArchived
+          ? (l10n.garmentArchived, AppColors.onSurfaceMuted)
+          : available < units.length
+          ? (
+              l10n.wardrobeTwinsAvailable(available, units.length),
+              AppColors.care,
+            )
+          : null;
+    } else {
+      status = garmentStatus(l10n, garment, laundry?[garment.id]);
+    }
     return SizedBox(
-      key: Key('garment-tile-${garment.id.value}'),
+      key: twins
+          ? Key('garment-twins-${garment.id.value}')
+          : Key('garment-tile-${garment.id.value}'),
       width: 112,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => context.push(AppRoutes.garment(garment.id)),
+        onTap: () => twins
+            ? showModalBottomSheet<void>(
+                context: context,
+                useRootNavigator: true,
+                showDragHandle: true,
+                isScrollControlled: true,
+                builder: (_) => _TwinsSheet(ids: [for (final g in units) g.id]),
+              )
+            : context.push(AppRoutes.garment(garment.id)),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(6, 6, 6, 8),
           child: Column(
             children: [
-              GarmentCutout(garment: garment, size: 88),
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  GarmentCutout(garment: garment, size: 88),
+                  if (twins)
+                    Positioned(
+                      right: -4,
+                      top: -4,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2,
+                          ),
+                          child: Text(
+                            '×${units.length}',
+                            key: const Key('garment-twins-count'),
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: theme.colorScheme.onPrimary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
               const SizedBox(height: 8),
               Text(
                 garment.name ?? category,
@@ -456,36 +509,168 @@ class _GarmentTile extends ConsumerWidget {
               ),
               if (status case (final label, final color)) ...[
                 const SizedBox(height: 2),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const SizedBox.square(dimension: 6),
-                    ),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: color == AppColors.care
-                              ? AppColors.onCareSoft
-                              : AppColors.onSurfaceMuted,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                _StatusLine(label: label, color: color),
               ],
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Só o que foge ao normal: "disponível" não se escreve.
+(String, Color)? garmentStatus(
+  AppLocalizations l10n,
+  Garment garment,
+  LaundryState? laundry,
+) {
+  final availability = garment.availability;
+  final inCare = !availability.isAvailable;
+  return garment.isArchived
+      ? (l10n.garmentArchived, AppColors.onSurfaceMuted)
+      : availability != Availability.available
+      ? (
+          l10n.availabilityLabel(availability.id),
+          inCare ? AppColors.care : AppColors.onSurfaceMuted,
+        )
+      : (laundry?.washRecommended ?? false)
+      ? (l10n.laundryRecommendedShort, AppColors.care)
+      : null;
+}
+
+class _StatusLine extends StatelessWidget {
+  const _StatusLine({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          child: const SizedBox.square(dimension: 6),
+        ),
+        const SizedBox(width: 4),
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: color == AppColors.care
+                  ? AppColors.onCareSoft
+                  : AppColors.onSurfaceMuted,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// As unidades de um grupo de peças iguais, cada uma com o seu estado e
+/// a última vez que foi vestida. Daqui abre-se cada uma ou junta-se mais
+/// uma igual (com as mesmas fotos).
+class _TwinsSheet extends ConsumerStatefulWidget {
+  const _TwinsSheet({required this.ids});
+
+  final List<GarmentId> ids;
+
+  @override
+  ConsumerState<_TwinsSheet> createState() => _TwinsSheetState();
+}
+
+class _TwinsSheetState extends ConsumerState<_TwinsSheet> {
+  bool _adding = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final repo = ref.watch(wardrobeRepositoryProvider);
+    final all = ref.watch(allGarmentsProvider).value ?? const <Garment>[];
+    final laundry = ref.watch(laundryStatesProvider);
+    final lastWorn = ref.watch(lastWornProvider);
+    final byId = {for (final g in all) g.id: g};
+    // Inclui as que se juntaram entretanto (mesmo grupo).
+    final first = byId[widget.ids.first];
+    final key = first == null ? null : GarmentTwins.key(first);
+    final units = [
+      for (final g in all)
+        if (widget.ids.contains(g.id) ||
+            (key != null && GarmentTwins.key(g) == key))
+          g,
+    ];
+    if (units.isEmpty) return const SizedBox(height: 120);
+    final label =
+        units.first.name ?? l10n.categoryLabel(units.first.category.id);
+    return SafeArea(
+      child: ListView(
+        key: const Key('garment-twins-sheet'),
+        shrinkWrap: true,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 4),
+            child: Text(
+              l10n.wardrobeTwinsTitle(label, units.length),
+              style: theme.textTheme.titleLarge,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+            child: Text(
+              l10n.wardrobeTwinsHint,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          for (final (i, g) in units.indexed)
+            ListTile(
+              key: Key('garment-twin-${g.id.value}'),
+              leading: GarmentCutout(garment: g, size: 40),
+              title: Text(l10n.wardrobeTwinUnit(i + 1)),
+              subtitle: Text(
+                [
+                  garmentStatus(l10n, g, laundry?[g.id])?.$1 ??
+                      l10n.availabilityLabel(Availability.available.id),
+                  switch (lastWorn[g.id]) {
+                    final day? => l10n.wardrobeTwinLastWorn(
+                      day.toLocalDateTime(),
+                    ),
+                    null => l10n.wardrobeTwinNeverWorn,
+                  },
+                ].join(' · '),
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.pop(context);
+                unawaited(context.push(AppRoutes.garment(g.id)));
+              },
+            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+            child: OutlinedButton.icon(
+              key: const Key('garment-twins-add'),
+              onPressed: repo == null || _adding
+                  ? null
+                  : () async {
+                      setState(() => _adding = true);
+                      await duplicateWithPhotos(ref, repo, units.last);
+                      if (mounted) setState(() => _adding = false);
+                    },
+              icon: const Icon(Icons.add),
+              label: Text(l10n.wardrobeTwinsAdd),
+            ),
+          ),
+        ],
       ),
     );
   }

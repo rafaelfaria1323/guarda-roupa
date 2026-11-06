@@ -10,6 +10,7 @@ import '../domain/care_repository.dart';
 import '../domain/cleaning_event.dart';
 import '../domain/laundry_policy.dart';
 import '../domain/rotation_policy.dart';
+import '../../wear/domain/calendar_day.dart';
 import '../../wear/domain/wear_event.dart';
 
 final careRepositoryProvider = Provider<CareRepository?>((ref) {
@@ -42,6 +43,19 @@ final allGarmentsProvider = StreamProvider<List<Garment>>((ref) {
   final repo = ref.watch(wardrobeRepositoryProvider);
   return repo?.watchGarments(const GarmentFilter(includeArchived: true)) ??
       const Stream.empty();
+});
+
+/// Último dia em que cada peça foi vestida (só as que já foram).
+final lastWornProvider = Provider<Map<GarmentId, CalendarDay>>((ref) {
+  final wears = ref.watch(allWearsProvider).value ?? const <WearEvent>[];
+  final last = <GarmentId, CalendarDay>{};
+  for (final w in wears) {
+    for (final g in w.garmentIds) {
+      final seen = last[g];
+      if (seen == null || w.wornOn.isAfter(seen)) last[g] = w.wornOn;
+    }
+  }
+  return last;
 });
 
 /// Estado de lavagem de cada peça; `null` enquanto carrega.

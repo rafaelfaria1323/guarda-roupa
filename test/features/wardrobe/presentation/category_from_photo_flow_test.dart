@@ -60,6 +60,10 @@ void main() {
 
     await tester.tap(find.byKey(const Key('category-suggestion-shirt')));
     await tester.pump();
+    await tester.ensureVisible(
+      find.byKey(const Key('garment-category'), skipOffstage: false),
+    );
+    await tester.pump();
     expect(
       find.descendant(
         of: find.byKey(const Key('garment-category')),

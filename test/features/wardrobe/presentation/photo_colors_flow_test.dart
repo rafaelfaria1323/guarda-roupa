@@ -15,10 +15,15 @@ final _photo = find.byType(Image);
 // A lista do formulário: a última (a do guarda-roupa fica por baixo) e não
 // o Scrollable de um campo de texto.
 // Fica ao centro, longe da snackbar.
-Future<void> scrollTo(WidgetTester tester, Finder finder) async {
+/// [delta] negativo sobe (as fotos ficam no topo do formulário).
+Future<void> scrollTo(
+  WidgetTester tester,
+  Finder finder, {
+  double delta = 200,
+}) async {
   await tester.scrollUntilVisible(
     finder,
-    200,
+    delta,
     scrollable: find
         .descendant(
           of: find.byType(ListView).last,
@@ -47,8 +52,7 @@ void main() {
     // Sem foto não há o que sugerir.
     expect(find.byKey(const Key('colors-from-photo')), findsNothing);
 
-    await tester.ensureVisible(find.byKey(const Key('photo-gallery')));
-    await tester.pump();
+    await scrollTo(tester, find.byKey(const Key('photo-gallery')), delta: -200);
     await tester.tap(find.byKey(const Key('photo-gallery')));
     await settleUntil(tester, _photo);
 
@@ -143,8 +147,7 @@ void main() {
 
     await tester.tap(find.text('Adicionar peça'));
     await settle(tester);
-    await tester.ensureVisible(find.byKey(const Key('photo-gallery')));
-    await tester.pump();
+    await scrollTo(tester, find.byKey(const Key('photo-gallery')), delta: -200);
     await tester.tap(find.byKey(const Key('photo-gallery')));
     await settleUntil(tester, _photo);
 
@@ -172,8 +175,7 @@ void main() {
 
     await tester.tap(find.text('Adicionar peça'));
     await settle(tester);
-    await tester.ensureVisible(find.byKey(const Key('photo-gallery')));
-    await tester.pump();
+    await scrollTo(tester, find.byKey(const Key('photo-gallery')), delta: -200);
     await tester.tap(find.byKey(const Key('photo-gallery')));
     await settleUntil(tester, _photo);
 

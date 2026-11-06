@@ -56,6 +56,7 @@ Os textos longos de ajuda (o que conta como uso, as regras da semana) saíram do
 3. **Sem filtros:** prateleiras por tipo (Tops, Partes de baixo, Calçado…), cada uma com o título, quantas peças tem e as peças recortadas (`GarmentCutout`) numa linha que desliza. "Ver todas" (com mais de 3 peças) filtra por esse tipo.
 4. **Com pesquisa ou filtros:** as mesmas peças em grelha.
 5. Cada peça mostra o nome e, só quando foge ao normal, um ponto e uma palavra: a laranja para "A lavar", "A secar" e "Lavar recomendado"; a cinzento para outras disponibilidades e "Arquivada". "Disponível" não se escreve.
+   Peças iguais aparecem uma vez, com o selo "×N" e, se nem todas estiverem disponíveis, "2 de 3 disponíveis"; tocar abre uma folha com cada unidade (estado e última vez vestida) e "Juntar mais uma igual" ([peças iguais](features/guarda-roupa.md#peças-iguais)).
 6. Botão "Adicionar peça" em pílula índigo, com o texto à vista (mais claro do que só "+").
 
 ## Ecrã Peça (v2, aplicado)

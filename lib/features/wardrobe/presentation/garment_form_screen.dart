@@ -9,6 +9,7 @@ import '../../../app/router.dart';
 import '../../../core/domain/result.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../account_sync/application/providers.dart';
+import '../application/garment_copies.dart';
 import '../application/photo_providers.dart';
 import '../data/photo_processor.dart';
 import '../domain/availability.dart';
@@ -66,6 +67,9 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
 
   /// Fotos de uma peça nova, ligadas depois de a guardar.
   final _pending = <ProcessedPhoto>[];
+
+  /// Peça nova: quantas unidades iguais criar (peças distintas).
+  var _units = 1;
 
   WardrobeRepository? _repo;
   Stream<Garment?>? _garment;
@@ -130,6 +134,16 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
       for (final photo in _pending) {
         result = await repo.addPhoto(created.id, photo);
         if (result is Err) break;
+      }
+      // As outras unidades: peças iguais, cada uma com o seu histórico.
+      for (var i = 1; i < _units && result is Ok; i++) {
+        result = await repo.addGarment(_draft());
+        if (result case Ok(value: final unit)) {
+          for (final photo in _pending) {
+            result = await repo.addPhoto(unit.id, photo);
+            if (result is Err) break;
+          }
+        }
       }
     }
     if (!mounted) return;
@@ -574,7 +588,7 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
               itemBuilder: (context) => [
                 PopupMenuItem(
                   value: () => _run(
-                    () => repo.duplicateGarment(garment.id),
+                    () => duplicateWithPhotos(ref, repo, garment),
                     done: l10n.garmentDuplicated,
                     onOk: (copy) =>
                         context.pushReplacement(AppRoutes.editGarment(copy.id)),
@@ -693,6 +707,40 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
               textCapitalization: TextCapitalization.sentences,
               validator: _maxLength(GarmentRules.maxNameLength),
             ),
+            if (garment == null) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(child: Text(l10n.garmentUnits)),
+                  IconButton(
+                    key: const Key('garment-units-less'),
+                    tooltip: l10n.garmentUnitsLess,
+                    onPressed: _units > 1
+                        ? () => setState(() => _units--)
+                        : null,
+                    icon: const Icon(Icons.remove_circle_outline),
+                  ),
+                  Text(
+                    '$_units',
+                    key: const Key('garment-units'),
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  IconButton(
+                    key: const Key('garment-units-more'),
+                    tooltip: l10n.garmentUnitsMore,
+                    onPressed: _units < GarmentRules.maxUnits
+                        ? () => setState(() => _units++)
+                        : null,
+                    icon: const Icon(Icons.add_circle_outline),
+                  ),
+                ],
+              ),
+              if (_units > 1)
+                Text(
+                  l10n.garmentUnitsHint,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+            ],
             const SizedBox(height: 16),
             TextFormField(
               key: const Key('garment-brand'),

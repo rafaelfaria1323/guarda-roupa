@@ -8,6 +8,7 @@ import '../../account_sync/application/providers.dart';
 import '../../wardrobe/domain/availability.dart';
 import '../../wardrobe/domain/garment.dart';
 import '../../wardrobe/domain/garment_filter.dart';
+import '../../wardrobe/domain/garment_twins.dart';
 import '../../wardrobe/presentation/garment_photo_view.dart';
 import '../../care/application/care_providers.dart';
 import '../../care/domain/laundry_policy.dart';
@@ -15,6 +16,7 @@ import '../../care/domain/rotation_policy.dart';
 import '../../outfits/application/outfit_providers.dart';
 import '../../outfits/domain/outfit.dart';
 import '../application/wear_providers.dart';
+import '../domain/calendar_day.dart';
 import '../domain/wear_event.dart';
 import '../domain/wear_repository.dart';
 import 'today_wear_card.dart';
@@ -109,6 +111,7 @@ class _WearPickerScreenState extends ConsumerState<WearPickerScreen> {
     final l10n = AppLocalizations.of(context);
     final rotation = ref.watch(rotationStatesProvider);
     final outfits = ref.watch(outfitsProvider).value ?? const <Outfit>[];
+    final lastWorn = ref.watch(lastWornProvider);
     return StreamBuilder<List<Garment>>(
       stream: _garments,
       builder: (context, snapshot) {
@@ -160,28 +163,62 @@ class _WearPickerScreenState extends ConsumerState<WearPickerScreen> {
                 ],
               ),
             ),
-            for (final g in sorted)
-              CheckboxListTile(
-                key: Key('wear-pick-${g.id.value}'),
-                value: _selected.contains(g.id),
-                onChanged: (on) => setState(
-                  () =>
-                      on == true ? _selected.add(g.id) : _selected.remove(g.id),
-                ),
-                title: Text(garmentLabel(l10n, g)),
-                subtitle: _subtitle(l10n, g, rotation?[g.id]),
-                secondary: g.photos.isEmpty
-                    ? const SizedBox.square(
-                        dimension: 40,
-                        child: Icon(Icons.checkroom_outlined),
-                      )
-                    : GarmentPhotoView(photo: g.photos.first, size: 40),
-              ),
+            for (final units in GarmentTwins.group(sorted))
+              if (units.length == 1)
+                _pickTile(l10n, units.single, rotation)
+              else
+                _twinsTile(l10n, units, lastWorn),
           ],
         );
       },
     );
   }
+
+  Widget _pickTile(
+    AppLocalizations l10n,
+    Garment g,
+    Map<GarmentId, RotationState>? rotation,
+  ) => CheckboxListTile(
+    key: Key('wear-pick-${g.id.value}'),
+    value: _selected.contains(g.id),
+    onChanged: (on) => setState(
+      () => on == true ? _selected.add(g.id) : _selected.remove(g.id),
+    ),
+    title: Text(garmentLabel(l10n, g)),
+    subtitle: _subtitle(l10n, g, rotation?[g.id]),
+    secondary: _thumb(g),
+  );
+
+  /// Peças iguais numa linha: escolher o grupo usa a unidade disponível
+  /// há mais tempo sem uso; desmarcar tira qualquer uma delas.
+  Widget _twinsTile(
+    AppLocalizations l10n,
+    List<Garment> units,
+    Map<GarmentId, CalendarDay> lastWorn,
+  ) {
+    final chosen = units.any((g) => _selected.contains(g.id));
+    return CheckboxListTile(
+      key: Key('wear-pick-twins-${units.first.id.value}'),
+      value: chosen,
+      onChanged: (on) => setState(() {
+        if (on == true) {
+          _selected.add(GarmentTwins.pick(units, lastWorn: lastWorn).id);
+        } else {
+          _selected.removeAll([for (final g in units) g.id]);
+        }
+      }),
+      title: Text('${garmentLabel(l10n, units.first)} ×${units.length}'),
+      subtitle: Text(l10n.wearTwinsPick(units.length)),
+      secondary: _thumb(units.first),
+    );
+  }
+
+  static Widget _thumb(Garment g) => g.photos.isEmpty
+      ? const SizedBox.square(
+          dimension: 40,
+          child: Icon(Icons.checkroom_outlined),
+        )
+      : GarmentPhotoView(photo: g.photos.first, size: 40);
 
   /// Marca as peças de um conjunto guardado (substitui a seleção). Peças
   /// que já não existem ficam de fora, com aviso; o utilizador ajusta antes
