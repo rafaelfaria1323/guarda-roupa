@@ -49,8 +49,8 @@ Ainda não: formalidade pedida pela ocasião, acessórios, camada intermédia. A
 
 ### Montar com o que tenho (2026-11-06)
 
-- `SuggestionRequest.look` (`LookTarget`): o visual de uma inspiração como alvo. Vem das etiquetas confirmadas (paleta, formalidade, padrões, texturas) e das peças que o FashionCLIP achou mais parecidas com a imagem ([inspirações](inspiracoes-e-estilo.md)).
-- **Peça:** os aspetos em comum (cor, formalidade, padrão, textura, imagem) entram na ordem de cada papel logo depois da rotatividade e antes das preferências, com a nota `LookMatch` ("Como na inspiração: …").
+- `SuggestionRequest.look` (`LookTarget`): o visual de uma inspiração como alvo. Vem das etiquetas confirmadas (paleta, formalidade, padrões, texturas, proporções pelo corte e comprimento das peças) e das peças que o FashionCLIP achou mais parecidas com a imagem ([inspirações](inspiracoes-e-estilo.md)).
+- **Peça:** os aspetos em comum (cor, formalidade, padrão, textura, proporções, imagem) entram na ordem de cada papel logo depois da rotatividade e antes das preferências, com a nota `LookMatch` ("Como na inspiração: …").
 - **Conjunto:** depois de completos e de menos avisos, primeiro o que soma mais aspetos; só depois as preferências. Os avisos e as regras obrigatórias ficam como no dia.
 - Só ordena peças que existem: a inspiração nunca é posse nem cria peças.
 

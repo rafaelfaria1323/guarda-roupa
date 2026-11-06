@@ -343,6 +343,8 @@ void main() {
       rainOk: false,
       windOk: true,
       formality: Formality.smartCasual,
+      fit: GarmentFit.relaxed,
+      length: GarmentLength.cropped,
       occasions: {Occasion.evening, Occasion.casual},
       material: ' 100% lã ',
       care: 'Lavar à mão',
@@ -365,6 +367,8 @@ void main() {
       expect(data, containsPair('rain_ok', false));
       expect(data, containsPair('wind_ok', true));
       expect(data, containsPair('formality', 'smart_casual'));
+      expect(data, containsPair('fit', 'relaxed'));
+      expect(data, containsPair('length', 'cropped'));
       expect(data, containsPair('occasions', ['casual', 'evening']));
       expect(data, containsPair('material', '100% lã'));
     });

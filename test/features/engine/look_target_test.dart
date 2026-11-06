@@ -88,6 +88,44 @@ void main() {
     });
   });
 
+  test('proporções: cada peça faz a sua parte; corte por indicar não', () {
+    final look = LookTarget(proportions: {Proportion.fittedTopRelaxedBottom});
+    Set<LookAspect> of(Garment x) => look.aspectsOf(x);
+    expect(of(g('t', GarmentCategory.tShirt, fit: GarmentFit.fitted)), {
+      LookAspect.proportion,
+    });
+    expect(of(g('j', GarmentCategory.jeans, fit: GarmentFit.relaxed)), {
+      LookAspect.proportion,
+    });
+    expect(of(g('j2', GarmentCategory.jeans, fit: GarmentFit.fitted)), isEmpty);
+    expect(of(g('t2', GarmentCategory.tShirt)), isEmpty);
+    expect(
+      of(g('s', GarmentCategory.sneakers, fit: GarmentFit.fitted)),
+      isEmpty,
+    );
+    expect(
+      LookTarget.proportionMatches(
+        Proportion.croppedTop,
+        g('c', GarmentCategory.tShirt, length: GarmentLength.cropped),
+      ),
+      isTrue,
+    );
+    expect(
+      LookTarget.proportionMatches(
+        Proportion.longLayer,
+        g('c', GarmentCategory.coat, length: GarmentLength.long),
+      ),
+      isTrue,
+    );
+    expect(
+      LookTarget.proportionMatches(
+        Proportion.longLayer,
+        g('t', GarmentCategory.tShirt, length: GarmentLength.long),
+      ),
+      isFalse,
+    );
+  });
+
   test('similarFrom: no máximo duas de cada grupo, das oito primeiras', () {
     final ranked = [
       for (var i = 0; i < 4; i++) g('t$i', GarmentCategory.tShirt),
@@ -128,6 +166,16 @@ void main() {
         ],
       );
       expect(ids(r.candidates.first).first, 't-white');
+    });
+
+    test('as proporções ordenam pelo corte', () {
+      final r = runLook([
+        g('t-a', GarmentCategory.tShirt, fit: GarmentFit.relaxed),
+        g('t-b', GarmentCategory.tShirt, fit: GarmentFit.fitted),
+        g('jeans', GarmentCategory.jeans),
+        g('shoes', GarmentCategory.sneakers),
+      ], LookTarget(proportions: {Proportion.fittedTopRelaxedBottom}));
+      expect(ids(r.candidates.first).first, 't-b');
     });
 
     test('a imagem conta como as etiquetas', () {

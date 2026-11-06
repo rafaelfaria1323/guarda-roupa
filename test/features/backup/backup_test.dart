@@ -139,6 +139,8 @@ void main() {
             warmth: Warmth.warm,
             rainOk: false,
             formality: Formality.relaxed,
+            fit: GarmentFit.fitted,
+            length: GarmentLength.long,
             occasions: {Occasion.evening},
             material: 'Lã',
           ),

@@ -26,6 +26,8 @@ Garment g(
   int? rgb,
   GarmentPattern? pattern,
   Formality? formality,
+  GarmentFit? fit,
+  GarmentLength? length,
 }) => Garment(
   id: GarmentId(id),
   category: category,
@@ -41,6 +43,8 @@ Garment g(
     windOk: windOk,
     pattern: pattern,
     formality: formality,
+    fit: fit,
+    length: length,
   ),
 );
 

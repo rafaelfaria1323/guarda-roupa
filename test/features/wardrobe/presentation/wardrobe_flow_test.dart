@@ -388,6 +388,8 @@ void main() {
     await tapKey('warmth-warm');
     await tapKey('rain-no');
     await tapKey('formality-dressy');
+    await tapKey('fit-relaxed');
+    await tapKey('length-cropped');
     await tapKey('occasion-evening');
     await tester.ensureVisible(find.byKey(const Key('garment-material')));
     await tester.enterText(find.byKey(const Key('garment-material')), 'Lã');
@@ -405,6 +407,8 @@ void main() {
     expect(data['rain_ok'], false);
     expect(data['wind_ok'], isNull);
     expect(data['formality'], 'dressy');
+    expect(data['fit'], 'relaxed');
+    expect(data['length'], 'cropped');
     expect(data['occasions'], ['evening']);
     expect(data['material'], 'Lã');
 
