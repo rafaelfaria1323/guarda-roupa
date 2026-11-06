@@ -20,6 +20,7 @@ import '../application/garment_copies.dart';
 import '../application/photo_providers.dart';
 import '../domain/availability.dart';
 import '../domain/garment.dart';
+import '../domain/garment_photo.dart';
 import '../domain/garment_category.dart';
 import '../domain/garment_attributes.dart';
 import '../domain/garment_filter.dart';
@@ -118,69 +119,97 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
   static Set<T> _toggled<T>(Set<T> set, T value, bool on) =>
       on ? {...set, value} : ({...set}..remove(value));
 
-  Widget _filters(AppLocalizations l10n) => SingleChildScrollView(
-    scrollDirection: Axis.horizontal,
-    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-    child: Row(
-      spacing: 8,
-      children: [
-        for (final group in CategoryGroup.values)
+  Widget _filters(AppLocalizations l10n) {
+    // As contas são do Armário todo (sem arquivadas), não do filtro.
+    final all = [
+      for (final g in ref.watch(allGarmentsProvider).value ?? const <Garment>[])
+        if (!g.isArchived) g,
+    ];
+    final total = GarmentTwins.group(all).length;
+    final byGroup = <CategoryGroup, int>{};
+    for (final units in GarmentTwins.group(all)) {
+      final group = units.first.category.group;
+      byGroup[group] = (byGroup[group] ?? 0) + 1;
+    }
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      child: Row(
+        spacing: 8,
+        children: [
           FilterChip(
-            key: Key('filter-group-${group.name}'),
-            label: Text(l10n.categoryGroupLabel(group.name)),
-            selected: _filter.groups.contains(group),
-            onSelected: (on) => setState(
-              () => _filter = _filter.copyWith(
-                groups: _toggled(_filter.groups, group, on),
+            key: const Key('filter-group-all'),
+            showCheckmark: false,
+            label: Text(l10n.wardrobeGroupCount(l10n.wardrobeAllGroups, total)),
+            selected: _filter.groups.isEmpty,
+            onSelected: (_) =>
+                setState(() => _filter = _filter.copyWith(groups: const {})),
+          ),
+          for (final group in CategoryGroup.values)
+            FilterChip(
+              key: Key('filter-group-${group.name}'),
+              showCheckmark: false,
+              label: Text(switch (byGroup[group]) {
+                final n? => l10n.wardrobeGroupCount(
+                  l10n.categoryGroupLabel(group.name),
+                  n,
+                ),
+                null => l10n.categoryGroupLabel(group.name),
+              }),
+              selected: _filter.groups.contains(group),
+              onSelected: (on) => setState(
+                () => _filter = _filter.copyWith(
+                  groups: _toggled(_filter.groups, group, on),
+                ),
               ),
             ),
-          ),
-        const SizedBox(height: 32, child: VerticalDivider(width: 8)),
-        for (final value in Availability.values)
-          FilterChip(
-            key: Key('filter-availability-${value.id}'),
-            avatar: Icon(availabilityIcon(value), size: 18),
-            label: Text(l10n.availabilityLabel(value.id)),
-            selected: _filter.availability.contains(value),
-            onSelected: (on) => setState(
-              () => _filter = _filter.copyWith(
-                availability: _toggled(_filter.availability, value, on),
+          const SizedBox(height: 32, child: VerticalDivider(width: 8)),
+          for (final value in Availability.values)
+            FilterChip(
+              key: Key('filter-availability-${value.id}'),
+              avatar: Icon(availabilityIcon(value), size: 18),
+              label: Text(l10n.availabilityLabel(value.id)),
+              selected: _filter.availability.contains(value),
+              onSelected: (on) => setState(
+                () => _filter = _filter.copyWith(
+                  availability: _toggled(_filter.availability, value, on),
+                ),
               ),
             ),
-          ),
-        const SizedBox(height: 32, child: VerticalDivider(width: 8)),
-        for (final value in Occasion.values)
-          FilterChip(
-            key: Key('filter-occasion-${value.id}'),
-            label: Text(l10n.occasionLabel(value.id)),
-            selected: _filter.occasions.contains(value),
-            onSelected: (on) => setState(
-              () => _filter = _filter.copyWith(
-                occasions: _toggled(_filter.occasions, value, on),
+          const SizedBox(height: 32, child: VerticalDivider(width: 8)),
+          for (final value in Occasion.values)
+            FilterChip(
+              key: Key('filter-occasion-${value.id}'),
+              label: Text(l10n.occasionLabel(value.id)),
+              selected: _filter.occasions.contains(value),
+              onSelected: (on) => setState(
+                () => _filter = _filter.copyWith(
+                  occasions: _toggled(_filter.occasions, value, on),
+                ),
               ),
             ),
+          const SizedBox(height: 32, child: VerticalDivider(width: 8)),
+          FilterChip(
+            key: const Key('filter-archived'),
+            label: Text(l10n.wardrobeShowArchived),
+            selected: _filter.includeArchived,
+            onSelected: (value) => setState(
+              () => _filter = _filter.copyWith(includeArchived: value),
+            ),
           ),
-        const SizedBox(height: 32, child: VerticalDivider(width: 8)),
-        FilterChip(
-          key: const Key('filter-archived'),
-          label: Text(l10n.wardrobeShowArchived),
-          selected: _filter.includeArchived,
-          onSelected: (value) => setState(
-            () => _filter = _filter.copyWith(includeArchived: value),
-          ),
-        ),
-        if (_filter.isActive)
-          TextButton.icon(
-            onPressed: () => setState(() {
-              _search.clear();
-              _filter = const GarmentFilter();
-            }),
-            icon: const Icon(Icons.filter_alt_off_outlined),
-            label: Text(l10n.wardrobeClearFilters),
-          ),
-      ],
-    ),
-  );
+          if (_filter.isActive)
+            TextButton.icon(
+              onPressed: () => setState(() {
+                _search.clear();
+                _filter = const GarmentFilter();
+              }),
+              icon: const Icon(Icons.filter_alt_off_outlined),
+              label: Text(l10n.wardrobeClearFilters),
+            ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -224,15 +253,8 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
                           message: l10n.wardrobeEmpty,
                           hint: l10n.wardrobeEmptyHint,
                         );
-                } else if (searching) {
-                  content = _Grid(garments: garments);
                 } else {
-                  content = _Shelves(
-                    garments: garments,
-                    onSeeAll: (group) => setState(
-                      () => _filter = _filter.copyWith(groups: {group}),
-                    ),
-                  );
+                  content = _Grid(garments: garments);
                 }
                 final inCare = (garments ?? const <Garment>[])
                     .where(
@@ -347,109 +369,40 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
   }
 }
 
-/// Prateleiras por tipo (visual fio v2): o título, quantas há e as peças
-/// numa linha que desliza.
-class _Shelves extends StatelessWidget {
-  const _Shelves({required this.garments, required this.onSeeAll});
-
-  final List<Garment> garments;
-  final ValueChanged<CategoryGroup> onSeeAll;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final byGroup = <CategoryGroup, List<Garment>>{};
-    for (final g in garments) {
-      (byGroup[g.category.group] ??= []).add(g);
-    }
-    final groups = [
-      for (final group in CategoryGroup.values)
-        if (byGroup[group] case final list?) (group, list),
-    ];
-    return ListView(
-      padding: const EdgeInsets.only(top: 8, bottom: 96),
-      children: [
-        for (final (group, list) in groups)
-          Padding(
-            key: Key('shelf-${group.name}'),
-            padding: const EdgeInsets.only(bottom: 18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 12, 0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        l10n.categoryGroupLabel(group.name),
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontSize: 19,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${list.length}',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const Spacer(),
-                      if (list.length > 3)
-                        TextButton(
-                          key: Key('shelf-${group.name}-all'),
-                          onPressed: () => onSeeAll(group),
-                          child: Text(
-                            l10n.wardrobeSeeAll,
-                            semanticsLabel: l10n.wardrobeSeeAllGroup(
-                              l10n.categoryGroupLabel(group.name),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 6),
-                // Não preguiçoso: um armário pessoal tem dezenas de peças
-                // por tipo, não milhares.
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 18),
-                  clipBehavior: Clip.none,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      for (final units in GarmentTwins.group(list))
-                        _GarmentTile(units: units),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-/// Resultados de uma pesquisa ou filtro: as mesmas peças, em grelha.
+/// Todas as peças em cartões (design do Stitch): a foto com o estado por
+/// cima e, por baixo, o tipo, quantas vezes foi usada, o nome e o material.
 class _Grid extends StatelessWidget {
   const _Grid({required this.garments});
 
   final List<Garment> garments;
 
+  /// Largura máxima de um cartão; num telemóvel ficam dois por linha.
+  static const _maxTileWidth = 240.0;
+  static const _gap = 12.0;
+  static const _side = 20.0;
+
   @override
   Widget build(BuildContext context) {
     final groups = GarmentTwins.group(garments);
-    return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(18, 12, 18, 96),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 124,
-        mainAxisExtent: 172,
-      ),
-      itemCount: groups.length,
-      itemBuilder: (context, i) => _GarmentTile(units: groups[i]),
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth - 2 * _side;
+        final columns = (width / _maxTileWidth).ceil().clamp(2, 6);
+        final tile = (width - (columns - 1) * _gap) / columns;
+        return GridView.builder(
+          padding: const EdgeInsets.fromLTRB(_side, 12, _side, 96),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            crossAxisSpacing: _gap,
+            mainAxisSpacing: _gap,
+            // A foto (4:5) e três linhas de texto.
+            mainAxisExtent: tile * 5 / 4 + 80 * textScale,
+          ),
+          itemCount: groups.length,
+          itemBuilder: (context, i) => _GarmentTile(units: groups[i]),
+        );
+      },
     );
   }
 }
@@ -468,6 +421,7 @@ class _GarmentTile extends ConsumerWidget {
     final garment = units.first;
     final colors = AppColors.of(context);
     final laundry = ref.watch(laundryStatesProvider);
+    final wearCounts = ref.watch(wearCountsProvider);
     final category = l10n.categoryLabel(garment.category.id);
     final twins = units.length > 1;
     final (String, Color)? status;
@@ -481,13 +435,18 @@ class _GarmentTile extends ConsumerWidget {
     } else {
       status = garmentStatus(l10n, colors, garment, laundry?[garment.id]);
     }
-    return SizedBox(
+    final worn = units.fold(0, (sum, g) => sum + (wearCounts[g.id] ?? 0));
+    final material = garment.attributes.material;
+    final muted = theme.textTheme.labelSmall?.copyWith(
+      color: colors.onSurfaceMuted,
+      fontWeight: FontWeight.w600,
+    );
+    return Card(
       key: twins
           ? Key('garment-twins-${garment.id.value}')
           : Key('garment-tile-${garment.id.value}'),
-      width: 112,
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
         onTap: () => twins
             ? showModalBottomSheet<void>(
                 context: context,
@@ -497,59 +456,133 @@ class _GarmentTile extends ConsumerWidget {
                 builder: (_) => _TwinsSheet(ids: [for (final g in units) g.id]),
               )
             : context.push(AppRoutes.garment(garment.id)),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(6, 6, 6, 8),
-          child: Column(
-            children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  GarmentCutout(garment: garment, size: 88),
-                  if (twins)
-                    Positioned(
-                      right: -4,
-                      top: -4,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 7,
-                            vertical: 2,
-                          ),
-                          child: Text(
-                            '×${units.length}',
-                            key: const Key('garment-twins-count'),
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              color: theme.colorScheme.onPrimary,
-                              fontWeight: FontWeight.w700,
-                            ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AspectRatio(
+              aspectRatio: 4 / 5,
+              child: ColoredBox(
+                color: colors.surfaceMuted,
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: LayoutBuilder(
+                        builder: (context, box) => Center(
+                          child: GarmentCutout(
+                            garment: garment,
+                            size: box.biggest.shortestSide * 0.74,
+                            // Numa grelha de dezenas, a versão pequena.
+                            variant: PhotoVariant.thumb,
                           ),
                         ),
                       ),
                     ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                garment.name ?? category,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  fontSize: 13,
-                  height: 1.2,
+                    if (status case (final label, final color))
+                      Positioned(
+                        left: 8,
+                        top: 8,
+                        right: twins ? 48 : 8,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: _StatusBadge(label: label, color: color),
+                        ),
+                      ),
+                    if (twins)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            child: Text(
+                              '×${units.length}',
+                              key: const Key('garment-twins-count'),
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: theme.colorScheme.onPrimary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
-              if (status case (final label, final color)) ...[
-                const SizedBox(height: 2),
-                _StatusLine(label: label, color: color),
-              ],
-            ],
-          ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          category.toUpperCase(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: muted?.copyWith(letterSpacing: 0.6),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        l10n.wardrobeWornTimes(worn),
+                        key: const Key('garment-worn'),
+                        style: muted,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    garment.name ?? category,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleMedium?.copyWith(height: 1.2),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    material ?? '',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colors.onSurfaceMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+/// O estado da peça sobre a foto: um ponto colorido e o nome do estado.
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.surface.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        child: _StatusLine(label: label, color: color),
       ),
     );
   }

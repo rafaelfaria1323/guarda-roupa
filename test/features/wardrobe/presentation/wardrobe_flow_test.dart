@@ -232,10 +232,28 @@ void main() {
     await addGarment(tester, category: 'T-shirt', name: 'Branca');
     await addGarment(tester, category: 'Calções', name: 'Brancos');
 
+    // Cada tipo diz quantas peças tem; o cartão diz quantas vezes foi usada.
+    expect(find.text('Todas (2)'), findsOneWidget);
+    expect(find.text('Partes de baixo (1)'), findsOneWidget);
+    expect(find.text('nunca usada'), findsNWidgets(2));
+
+    await tester.ensureVisible(find.byKey(const Key('filter-group-bottom')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('filter-group-bottom')));
     await settle(tester);
     expect(inList('Brancos'), findsOneWidget);
     expect(inList('Branca'), findsNothing);
+
+    // "Todas" volta a mostrar tudo.
+    await tester.ensureVisible(find.byKey(const Key('filter-group-all')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('filter-group-all')));
+    await settle(tester);
+    expect(inList('Branca'), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('filter-group-bottom')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('filter-group-bottom')));
+    await settle(tester);
 
     await tester.ensureVisible(
       find.byKey(const Key('filter-availability-washing')),

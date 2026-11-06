@@ -58,6 +58,18 @@ final lastWornProvider = Provider<Map<GarmentId, CalendarDay>>((ref) {
   return last;
 });
 
+/// Quantas vezes cada peça foi vestida (só as que já foram).
+final wearCountsProvider = Provider<Map<GarmentId, int>>((ref) {
+  final wears = ref.watch(allWearsProvider).value ?? const <WearEvent>[];
+  final counts = <GarmentId, int>{};
+  for (final w in wears) {
+    for (final g in w.garmentIds.toSet()) {
+      counts[g] = (counts[g] ?? 0) + 1;
+    }
+  }
+  return counts;
+});
+
 /// Estado de lavagem de cada peça; `null` enquanto carrega.
 final laundryStatesProvider = Provider<Map<GarmentId, LaundryState>?>((ref) {
   final garments = ref.watch(allGarmentsProvider).value;
