@@ -16,6 +16,7 @@ import 'features/import/application/import_providers.dart';
 import 'features/import/data/supabase_product_importer.dart';
 import 'features/reminders/application/reminder_providers.dart';
 import 'features/reminders/data/supabase_reminder_backend.dart';
+import 'features/shopping/application/shopping_providers.dart';
 import 'features/stylist/application/stylist_providers.dart';
 import 'features/stylist/data/supabase_stylist.dart';
 import 'features/wardrobe/application/photo_providers.dart';
@@ -31,6 +32,11 @@ Future<void> main() async {
       publishableKey: config.supabasePublishableKey,
     );
     final client = Supabase.instance.client;
+    final stylist = SupabaseStylist(
+      supabaseUrl: config.supabaseUrl,
+      apiKey: config.supabasePublishableKey,
+      accessToken: () => client.auth.currentSession?.accessToken,
+    );
     overrides
       ..add(authServiceProvider.overrideWithValue(SupabaseAuthService(client)))
       ..add(
@@ -54,15 +60,10 @@ Future<void> main() async {
           ),
         ),
       )
-      ..add(
-        stylistProvider.overrideWithValue(
-          SupabaseStylist(
-            supabaseUrl: config.supabaseUrl,
-            apiKey: config.supabasePublishableKey,
-            accessToken: () => client.auth.currentSession?.accessToken,
-          ),
-        ),
-      )
+      ..addAll([
+        stylistProvider.overrideWithValue(stylist),
+        shoppingAdvisorProvider.overrideWithValue(stylist),
+      ])
       ..add(
         reminderBackendProvider.overrideWithValue(
           SupabaseReminderBackend(

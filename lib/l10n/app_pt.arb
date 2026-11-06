@@ -1852,5 +1852,86 @@
   "stylistChangeHint": "Ex.: mais arranjado, sem ténis",
   "stylistChangeSend": "Pedir",
   "stylistIncomplete": "O stylist não montou um conjunto completo. Tenta outra vez.",
-  "stylistTooFew": "Ainda não há peças disponíveis que cheguem."
+  "stylistTooFew": "Ainda não há peças disponíveis que cheguem.",
+  "shoppingTitle": "Peças que faziam falta",
+  "shoppingHint": "Pelo que tens e pelas tuas inspirações. São só ideias: nada se compra nem se adiciona sozinho.",
+  "shoppingNone": "Não encontrei faltas evidentes.",
+  "shoppingGroup": "{group, select, top{partes de cima} bottom{partes de baixo} onePiece{peças únicas} outerwear{casacos} footwear{calçado} accessory{acessórios} other{peças}}",
+  "@shoppingGroup": {
+    "placeholders": {
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "shoppingMissingGroup": "Ainda não tens {group}",
+  "@shoppingMissingGroup": {
+    "placeholders": {
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "shoppingOnlyLight": "Só tons claros em {group}: faltava um escuro, como {color}",
+  "@shoppingOnlyLight": {
+    "placeholders": {
+      "group": {
+        "type": "String"
+      },
+      "color": {
+        "type": "String"
+      }
+    }
+  },
+  "shoppingOnlyDark": "Só tons escuros em {group}: faltava um claro, como {color}",
+  "@shoppingOnlyDark": {
+    "placeholders": {
+      "group": {
+        "type": "String"
+      },
+      "color": {
+        "type": "String"
+      }
+    }
+  },
+  "shoppingInspirationColor": "Uma peça em {color}: está nas tuas inspirações e não tens nada nesta cor",
+  "@shoppingInspirationColor": {
+    "placeholders": {
+      "color": {
+        "type": "String"
+      }
+    }
+  },
+  "shoppingDressy": "Algo mais arranjado em {group}: as tuas inspirações pedem-no",
+  "@shoppingDressy": {
+    "placeholders": {
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "shoppingFewBottoms": "Mais uma parte de baixo: tens muitas partes de cima para poucas de baixo",
+  "shoppingFromInspirations": "Em: {names}",
+  "@shoppingFromInspirations": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "shoppingDismiss": "Não me interessa",
+  "shoppingHave": "Já tenho",
+  "shoppingAsk": "Sugerir peças e marcas",
+  "shoppingAskAgain": "Outras ideias",
+  "shoppingBudget": "Até (por peça)",
+  "shoppingBudgetHint": "O Gemini sugere marcas ao nível das tuas, mais baratas e mais caras. Cada marca abre uma pesquisa: confirma lá o preço e se existe.",
+  "shoppingTier": "{tier, select, same{ao teu nível} cheaper{mais barata} pricier{mais cara} other{}}",
+  "@shoppingTier": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "shoppingCopied": "Pesquisa copiada. Cola-a no navegador."
 }

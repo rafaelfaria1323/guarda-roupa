@@ -23,6 +23,7 @@ Decisão do utilizador: um ecrã para saber o que tirar ou usar mais. Abre-se pe
 - **Nunca usadas:** sem nenhuma utilização e no armário há 14 dias ou mais; as mais antigas primeiro. As mais recentes só se contam (“2 peças novas ainda por estrear”).
 - Cada peça abre a ficha, onde se arquiva ou se escolhe “Vou vestir hoje”. Sem utilizações registadas, o ecrã explica como se enche.
 - Os limites (30, 60, 14 dias, 5 peças) são valores técnicos iniciais, a rever com o uso.
+- **Peças que faziam falta** (2026-11-06): no fim do resumo, pelas peças e inspirações; com o Gemini, ideias com marcas. Ver [peças que faziam falta](pecas-em-falta.md).
 
 ## Valores decididos (P-06)
 

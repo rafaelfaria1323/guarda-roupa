@@ -106,3 +106,74 @@ Deno.test('pickOf', () => {
     { name: null, items: [{ id: 'p1', role: 'one_piece' }], why: null },
   );
 });
+
+Deno.test('compras: limpa o pedido e só devolve ideias com marca', async () => {
+  const d = deps({
+    generate: (prompt) => {
+      d.prompts.push(prompt);
+      return Promise.resolve({
+        text: JSON.stringify({
+          ideas: [
+            {
+              category: 'sneakers',
+              color: 'black',
+              title: '  Ténis pretos   em pele ',
+              why: 'Vão com a ganga.',
+              search: 'ténis pretos pele',
+              brands: [
+                { name: 'COS', tier: 'same' },
+                { name: 'COS', tier: 'same' },
+                { name: 'Primark', tier: 'cheaper' },
+                { name: 'X', tier: 'luxo' },
+              ],
+            },
+            { category: 'nave', title: 'x', search: 'x', brands: [{ name: 'A', tier: 'same' }] },
+            { category: 'jeans', title: 'Calças', search: 'calças', brands: [] },
+          ],
+        }),
+      });
+    },
+  });
+  const res = await handle(
+    post({
+      kind: 'shopping',
+      garments: [
+        { category: 'sneakers', colors: ['white'], brand: 'Uniqlo', notes: 'segredo' },
+        { category: 'jeans', colors: ['denim'], brand: 'Uniqlo' },
+      ],
+      inspirations: [{ title: 'Preto e branco', palette: ['black'], formality: 'dressy' }],
+      gaps: [{ reason: 'onlyLight', group: 'footwear', color: 'black' }, { reason: 'hack' }],
+      budget_eur: 79.6,
+      dismissed: ['idea:coat:navy'],
+    }),
+    d,
+  );
+  assertEquals(res.status, 200);
+  assertEquals(await res.json(), {
+    ideas: [{
+      category: 'sneakers',
+      color: 'black',
+      title: 'Ténis pretos em pele',
+      why: 'Vão com a ganga.',
+      search: 'ténis pretos pele',
+      brands: [{ name: 'COS', tier: 'same' }, { name: 'Primark', tier: 'cheaper' }],
+    }],
+  });
+  const sent = d.prompts[0];
+  assertEquals(sent.includes('segredo'), false);
+  assertEquals(sent.includes('"brands_owned":["Uniqlo"]'), true);
+  assertEquals(sent.includes('"budget_eur":80'), true);
+  assertEquals(sent.includes('hack'), false);
+});
+
+Deno.test('compras: peça desconhecida não gasta quota', async () => {
+  let claims = 0;
+  const d = deps({
+    claimQuota: () => {
+      claims++;
+      return Promise.resolve('ok');
+    },
+  });
+  const res = await handle(post({ kind: 'shopping', garments: [{ category: 'nave' }] }), d);
+  assertEquals([res.status, claims], [400, 0]);
+});

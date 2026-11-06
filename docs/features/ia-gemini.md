@@ -33,9 +33,13 @@ Em **Hoje › Sugestões para hoje**, por baixo da sugestão do motor, aparece *
 - **App:** `lib/features/stylist/` (`StylistBrief`, `reviewStylistReply`, `SupabaseStylist`, `StylistSection`).
 - **Função `stylist`** (`supabase/functions/stylist/`): valida o pedido (2 a 200 peças, campos conhecidos, texto curto) antes de gastar quota, usa a mesma quota (`claim_photo_ai_quota`) e responde com um esquema JSON. O código comum com `describe-photo` está em `supabase/functions/_shared/gemini.ts`.
 
+## Peças que faziam falta
+
+No Resumo do armário, o Gemini sugere peças a comprar com marcas e uma pesquisa para cada uma. Ver [peças que faziam falta](pecas-em-falta.md).
+
 ## Privacidade e limites
 
-- O stylist só recebe texto das peças, nunca fotos.
+- O stylist e as ideias de compra só recebem texto das peças (com a marca), nunca fotos.
 - A foto do aparelho só quando o utilizador adiciona fotos ou toca num botão do Gemini, e só com a opção ligada. Não fica guardada no servidor da app.
 - Na versão grátis da API, a Google pode usar o conteúdo para melhorar os produtos dela. O ecrã das Definições pede para evitar fotos com pessoas.
 - Limite da app: 60 pedidos por hora e 300 por dia por pessoa, somando fotos e stylist (`claim_photo_ai_quota`). A quota grátis do Gemini muda com o tempo e por modelo; quando acaba, a função responde "busy" e a app avisa.

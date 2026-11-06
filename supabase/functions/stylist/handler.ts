@@ -2,6 +2,7 @@
 // conjunto só com as peças que a app manda (texto, sem fotos) e explica
 // porquê. Devolve só peças e papéis válidos; a app volta a verificar.
 import type { Generated, Quota } from '../_shared/gemini.ts';
+import { ideasOf, SHOPPING_PROMPT, SHOPPING_SCHEMA, shoppingBriefOf } from './shopping.ts';
 
 export interface Deps {
   configured: boolean;
@@ -113,6 +114,7 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
   } catch {
     return json(400, { error: 'bad_request' });
   }
+  if (body?.kind === 'shopping') return await shopping(body, authorization, req, deps);
   const raw = Array.isArray(body?.garments) ? body.garments : null;
   if (raw == null || raw.length < 2 || raw.length > MAX_GARMENTS) {
     return json(400, { error: 'bad_request' });
@@ -143,6 +145,40 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
     wardrobe: garments,
   };
 
+  const out = await ask(`${PROMPT}\n${JSON.stringify(brief)}`, SCHEMA, authorization, req, deps);
+  if (out instanceof Response) return out;
+  const pick = pickOf(out, ids);
+  return pick == null ? json(502, { error: 'failed' }) : json(200, pick);
+}
+
+async function shopping(
+  body: Record<string, unknown>,
+  authorization: string,
+  req: Request,
+  deps: Deps,
+): Promise<Response> {
+  const brief = shoppingBriefOf(body);
+  if (brief == null) return json(400, { error: 'bad_request' });
+  const out = await ask(
+    `${SHOPPING_PROMPT}\n${JSON.stringify(brief)}`,
+    SHOPPING_SCHEMA,
+    authorization,
+    req,
+    deps,
+  );
+  if (out instanceof Response) return out;
+  const ideas = ideasOf(out);
+  return ideas.length === 0 ? json(502, { error: 'failed' }) : json(200, { ideas });
+}
+
+/** Gasta a quota e pede ao Gemini; um [Response] é um erro já pronto. */
+async function ask(
+  prompt: string,
+  schema: unknown,
+  authorization: string,
+  req: Request,
+  deps: Deps,
+): Promise<unknown> {
   const quota = await deps.claimQuota(authorization, req.headers.get('apikey'));
   if (quota === 'unauthorized') return json(401, { error: 'unauthorized' });
   if (quota === 'forbidden') return json(403, { error: 'forbidden' });
@@ -150,7 +186,7 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
 
   let generated: Generated;
   try {
-    generated = await deps.generate(`${PROMPT}\n${JSON.stringify(brief)}`, SCHEMA);
+    generated = await deps.generate(prompt, schema);
   } catch {
     return json(502, { error: 'failed' });
   }
@@ -159,14 +195,11 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
       error: generated.status === 429 ? 'busy' : 'failed',
     });
   }
-  let out: unknown;
   try {
-    out = JSON.parse(generated.text);
+    return JSON.parse(generated.text);
   } catch {
     return json(502, { error: 'failed' });
   }
-  const pick = pickOf(out, ids);
-  return pick == null ? json(502, { error: 'failed' }) : json(200, pick);
 }
 
 /** Só peças que foram mandadas, sem repetir, com papéis conhecidos. */
