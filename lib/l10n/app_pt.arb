@@ -1263,7 +1263,7 @@
     }
   },
   "importInboxDiscard": "Descartar",
-  "wardrobeInbox": "{count, plural, =1{1 peça enviada pelo atalho do iPhone} other{{count} peças enviadas pelo atalho do iPhone}}",
+  "wardrobeInbox": "{count, plural, =1{A pôr no Armário 1 peça do atalho…} other{A pôr no Armário {count} peças do atalho…}}",
   "@wardrobeInbox": {
     "placeholders": {
       "count": {
@@ -1297,5 +1297,13 @@
   "shortcutCopy": "Copiar",
   "shortcutCopied": "Copiado.",
   "shortcutUnavailable": "Não foi possível falar com o fio. Confirma a sessão e tenta outra vez.",
-  "importInboxRefresh": "Ver peças enviadas pelo atalho"
+  "importInboxRefresh": "Ver peças enviadas pelo atalho",
+  "wardrobeInboxAdded": "{count, plural, =1{1 peça do atalho no Armário. Confirma a categoria e as cores no cartão.} other{{count} peças do atalho no Armário. Confirma a categoria e as cores nos cartões.}}",
+  "@wardrobeInboxAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

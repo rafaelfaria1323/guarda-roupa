@@ -55,7 +55,7 @@ Para ficar com cara de app na folha de partilha: no topo do atalho, toca no nome
 1. No Safari, abre a página **de uma peça** (não uma lista nem a página inicial).
 2. **Partilhar → Importar para o fio**. Na primeira vez, o iPhone pergunta se o atalho pode aceder ao site e ao fio: **Permitir**.
 3. Aparece a notificação "Enviada para o fio".
-4. No fio, o Armário mostra **N peças enviadas pelo atalho**. Toca, escolhe a peça, a variante e as fotos e confirma no formulário. Podes mandar várias seguidas e tratar delas depois.
+4. Abre o fio: a peça entra sozinha no Armário, com o nome, a marca, a primeira foto, as cores da foto e o link nas notas. A categoria é adivinhada pelo nome ("Outro" se não souber). Abre o cartão para corrigir o que estiver mal. Podes mandar várias seguidas.
 
 ## Se não funcionar
 
@@ -64,7 +64,7 @@ Para ficar com cara de app na folha de partilha: no topo do atalho, toca no nome
 | O atalho não aparece em Partilhar | Confirmar o passo 3 ("Mostrar na folha de partilha" e "Páginas web do Safari") |
 | Erro "não é permitido executar scripts" | Passo 1 |
 | Erro "a entrada não é uma página web" | No passo 4, "Página web" tem de ser a Entrada do atalho |
-| A notificação diz "Enviada para o fio", mas o fio não mostra nada | Em Importar de um link, toca em ↻ (Ver peças enviadas pelo atalho). O fio também volta a ver quando regressas à app |
+| A notificação diz "Enviada para o fio", mas o Armário não mostra a peça | Fecha a app de vez e abre-a outra vez. Em Importar de um link, ↻ mostra as que estejam à espera |
 | "A chave do atalho não é válida" | A chave foi trocada ou desligada. Cria uma nova no fio e põe-na no cabeçalho `x-fio-key` |
 | "Já tens 20 peças por importar" | Usa ou descarta algumas em Enviadas pelo atalho |
 | "O atalho não mandou a página" | No passo 5, o corpo tem de ser Ficheiro com o Resultado do JavaScript |

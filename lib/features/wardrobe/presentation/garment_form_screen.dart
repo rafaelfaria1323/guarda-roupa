@@ -36,12 +36,9 @@ import 'labels.dart';
 
 /// Criar (`id == null`) ou editar uma peça.
 class GarmentFormScreen extends ConsumerStatefulWidget {
-  const GarmentFormScreen({this.id, this.openImport = false, super.key});
+  const GarmentFormScreen({this.id, super.key});
 
   final GarmentId? id;
-
-  /// Abre logo a importação (as peças enviadas pelo atalho).
-  final bool openImport;
 
   @override
   ConsumerState<GarmentFormScreen> createState() => _GarmentFormScreenState();
@@ -74,17 +71,6 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
   Stream<Garment?>? _garment;
 
   bool get _isNew => widget.id == null;
-
-  @override
-  void initState() {
-    super.initState();
-    if (_isNew && widget.openImport) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final importer = ref.read(productImporterProvider);
-        if (mounted && importer != null) unawaited(_import(importer));
-      });
-    }
-  }
 
   @override
   void dispose() {

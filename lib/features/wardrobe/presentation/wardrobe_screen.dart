@@ -12,6 +12,9 @@ import '../../../l10n/app_localizations.dart';
 import '../../care/application/care_providers.dart';
 import '../../account_sync/application/providers.dart';
 import '../../import/application/import_providers.dart';
+import '../../import/application/shortcut_inbox.dart';
+import '../../import/domain/product_import.dart';
+import '../application/photo_providers.dart';
 import '../domain/availability.dart';
 import '../domain/garment.dart';
 import '../domain/garment_category.dart';
@@ -49,19 +52,45 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
     unawaited(_loadInbox());
   }
 
+  /// A passar as peças do atalho para o Armário (uma vez de cada vez).
+  bool _addingInbox = false;
+
+  /// As peças que o atalho mandou entram sozinhas no Armário, com o que a
+  /// loja diz; o resto muda-se depois no cartão.
   Future<void> _loadInbox() async {
     final importer = ref.read(productImporterProvider);
-    if (importer == null) return;
-    final result = await importer.inbox();
-    if (!mounted) return;
-    if (result case Ok(value: final items)) {
+    final repo = ref.read(wardrobeRepositoryProvider);
+    if (importer == null || repo == null || _addingInbox) return;
+    final process = ref.read(photoProcessorProvider);
+    _addingInbox = true;
+    try {
+      final result = await importer.inbox();
+      if (!mounted) return;
+      final items = result is Ok<List<InboxItem>, ImportFailure>
+          ? result.value
+          : const <InboxItem>[];
+      if (items.isEmpty) return;
+      // Só depois do primeiro await: o initState já acabou.
+      final l10n = AppLocalizations.of(context);
+      final messenger = ScaffoldMessenger.of(context);
       setState(() => _inbox = items.length);
+      final created = await addInboxToWardrobe(
+        items: items,
+        importer: importer,
+        repo: repo,
+        processPhoto: process,
+        storeColor: l10n.importStoreColor,
+        size: l10n.importSize,
+      );
+      if (created > 0) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.wardrobeInboxAdded(created))),
+        );
+      }
+    } finally {
+      _addingInbox = false;
+      if (mounted) setState(() => _inbox = 0);
     }
-  }
-
-  Future<void> _openInbox() async {
-    await context.push(AppRoutes.newGarmentFromShortcut);
-    await _loadInbox();
   }
 
   @override
@@ -259,10 +288,11 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
                           margin: EdgeInsets.zero,
                           child: ListTile(
                             key: const Key('wardrobe-inbox'),
-                            leading: const Icon(Icons.phone_iphone),
+                            leading: const SizedBox.square(
+                              dimension: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
                             title: Text(l10n.wardrobeInbox(_inbox)),
-                            trailing: const Icon(Icons.chevron_right),
-                            onTap: _openInbox,
                           ),
                         ),
                       ),
