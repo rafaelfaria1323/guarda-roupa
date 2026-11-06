@@ -10,7 +10,7 @@ Estado: registo de utilizações e `RotationPolicy` implementados (incremento 3)
 - Na ficha da peça: número de utilizações e as datas mais recentes.
 - Dados: tabela `wear_events` (`worn_on` como data de calendário, `garment_ids`, `plan_entry_id`, `voided_at`) e operações `record_wear`/`void_wear` por `apply_wear_operation`, idempotentes por `op_id`. A mesma entrada de plano confirmada em dois dispositivos dá uma única utilização (`merged`); desfazer e voltar a confirmar é permitido.
 - Confirmar um plano: “Vesti isto hoje” no cartão do dia abre “Vesti hoje” com as peças planeadas por confirmar (podem ajustar-se) e grava a utilização com `plan_entry_id`.
-- Ainda sem lembretes/notificações (P-08). As utilizações e os intervalos escolhidos entram no backup ZIP (desde o formato v2) e são recuperados com os ids novos das peças.
+- Lembrete opcional “Vestiste isto?” ao fim do dia desde 2026-11-06 ([lembretes](lembretes.md)): abre o “Vesti hoje” com as peças planeadas, mas só conta depois de guardares. As utilizações e os intervalos escolhidos entram no backup ZIP (desde o formato v2) e são recuperados com os ids novos das peças.
 
 ## Resumo do armário (2026-11-06)
 

@@ -18,13 +18,17 @@ flutter build web --release \
   --no-web-resources-cdn \
   --no-wasm-dry-run
 
+# O service worker da app (lembretes) em vez do do Flutter, que hoje só se
+# desregista; o carregador do Flutter continua a registá-lo pelo mesmo nome.
+cp web/push_worker.js build/web/flutter_service_worker.js
+
 # Nada de segredos no que vai ser publicado: nem chaves secretas novas nem
 # JWT antigos (o prefixo "sb_secret_" sozinho aparece no código do Supabase).
 if grep -rlE 'sb_secret_[A-Za-z0-9_-]{16,}|eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}' build/web >/dev/null; then
   echo "build/web contém algo parecido com uma chave secreta" >&2
   exit 1
 fi
-for f in index.html sqlite3.wasm main.dart.js manifest.json _headers models/u2netp.onnx ort/ort.wasm.min.js; do
+for f in index.html flutter_service_worker.js sqlite3.wasm main.dart.js manifest.json _headers models/u2netp.onnx ort/ort.wasm.min.js; do
   [[ -f build/web/$f ]] || { echo "falta build/web/$f" >&2; exit 1; }
 done
 ls build/web/powersync_*.worker.js >/dev/null

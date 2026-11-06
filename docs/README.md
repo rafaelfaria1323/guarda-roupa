@@ -34,6 +34,7 @@ Uma recomendação de package não é uma garantia de compatibilidade com todos 
 | [Fotografias e ficheiros](features/fotografias-e-ficheiros.md) | Captura, recorte, tratamento, persistência e ficheiros privados |
 | [Conjuntos e ocasiões](features/conjuntos-e-ocasioes.md) | Conjuntos guardados, papéis das peças e classificações |
 | [Utilização e rotatividade](features/utilizacao-e-rotatividade.md) | Confirmações, histórico, intervalos e alternativas |
+| [Lembretes](features/lembretes.md) | Notificações “Vestiste isto?” e véspera, Web Push |
 | [Lavandaria](features/lavandaria.md) | Disponibilidade, recomendações de lavagem e secagem |
 | [Meteorologia](features/meteorologia.md) | Estação, previsão, conforto e funcionamento sem rede |
 | [Motor de combinações](features/motor-de-combinacoes.md) | Regras, cores, padrões, texturas, pontuação e explicações |

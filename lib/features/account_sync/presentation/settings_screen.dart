@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../engine/application/suggestion_providers.dart';
 import '../../local_ai/application/local_ai_providers.dart';
 import '../../local_ai/domain/local_model.dart';
+import '../../reminders/application/reminder_providers.dart';
+import '../../reminders/presentation/reminder_settings_screen.dart';
 import '../../../app/router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../backup/presentation/export_backup_tile.dart';
@@ -56,6 +58,17 @@ class SettingsScreen extends ConsumerWidget {
             ),
             dense: true,
           ),
+          if (ref.watch(reminderBackendProvider) != null)
+            ListTile(
+              key: const Key('reminder-settings'),
+              leading: const Icon(Icons.notifications_outlined),
+              title: Text(l10n.remindersTitle),
+              subtitle: Text(switch (ref.watch(reminderStateProvider).value) {
+                final s? => reminderSummary(l10n, s.settings),
+                null => '',
+              }),
+              onTap: () => context.push(AppRoutes.reminderSettings),
+            ),
           ListTile(
             key: const Key('weather-location'),
             leading: const Icon(Icons.place_outlined),

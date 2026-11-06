@@ -15,6 +15,7 @@ Não há estimativas de calendário sem conhecer disponibilidade e resultados da
 | 6 — Semana utilizável | Reservas, pesquisa conjunta, diversidade e alterações propostas | Motor diário e eventos | Sete datas tratadas coerentemente, ou limitações explicadas |
 | 7 — Entrada assistida por lojas | POC por loja e importador limitado | Infraestrutura estável e regras de acesso | Dados/variante confirmáveis, erros e alternativa manual |
 | 8 — IA local | POC de modelo e runtime | Dados de qualidade e licença | Precisão/desempenho úteis na PWA, sem tornar a app dependente do modelo |
+| Lembretes | Feito (2026-11-06): “Vestiste isto?” ao fim do dia (abre o “Vesti hoje” com as peças planeadas, só conta ao guardar) e aviso na véspera com a roupa e os acessórios pelo tempo; Web Push pela função `reminders` e `pg_cron`. Falta experimentar no iPhone com o fio instalado | [lembretes](features/lembretes.md) |
 | 9 — Produto comercial | Multiutilizador público, pagamentos e operação | Utilidade validada e revisão de custos | Regras das lojas, autorização e obrigações operacionais |
 | Mais tarde — Manequim 3D | Conjunto vestido num manequim 3D, com zoom e a rodar | Conjuntos e cores das peças; modelos 3D com licença | POC com moldes por categoria antes de investir em modelos |
 
@@ -37,7 +38,7 @@ Atualizado a 2026-11-06. "Feito" quer dizer implementado, com testes automático
 | 9 — Produto comercial | Por começar | — |
 | Manequim 3D | Adiado (P-20): ideia e opções registadas, POC proposta | [manequim 3D](features/manequim-3d.md) |
 
-Ações do utilizador ainda abertas (lista em [pendências](pendencias.md#ações-do-utilizador-por-fazer)): criar os secrets do Cloudflare para publicar a PWA (guia 04); experimentar links reais de lojas; executar a POC em dois dispositivos (iPhone + Chrome no Mac); IA local (P-14): experimentar o recorte, a categoria e as peças parecidas no telemóvel com fotos reais.
+Ações do utilizador ainda abertas (lista em [pendências](pendencias.md#ações-do-utilizador-por-fazer)): criar os secrets do Cloudflare para publicar a PWA (guia 04); experimentar links reais de lojas; executar a POC em dois dispositivos (iPhone + Chrome no Mac); IA local (P-14): experimentar o recorte, a categoria e as peças parecidas no telemóvel com fotos reais; ligar os lembretes no iPhone (Definições › Lembretes).
 
 ## MVP versus incremento
 

@@ -106,6 +106,17 @@ Arquivar uma peça preserva referências históricas. A eliminação definitiva 
 
 Corrigir uma utilização deve ser uma operação rastreável, não apagar silenciosamente contadores. Contadores, se materializados por desempenho, são projeções reconstruíveis e atualizadas na mesma transação.
 
+## Lembretes (2026-11-06)
+
+Tabelas só do servidor (fora do PowerSync), com RLS e sem acesso direto, a não ser ler as próprias definições. Escreve-se por RPC ([lembretes](features/lembretes.md)):
+
+| Tabela | Campos | Escrita |
+|---|---|---|
+| `reminder_settings` | `owner_id` (pk), `wear_check_at`, `eve_at` (`time`, `null` = desligado), `time_zone` (IANA, validado) | `set_reminder_settings` |
+| `push_subscriptions` | `endpoint` (pk, https), `owner_id`, `p256dh`, `auth` | `save_push_subscription` (o mesmo aparelho passa para a conta que o guardou), `remove_push_subscription`; o envio apaga os desaparecidos com `drop_push_subscriptions` |
+| `day_summaries` | `(owner_id, day)` pk, `plan_version`, `wear_body`, `eve_body` (≤ 300) | `set_day_summaries` (até 14 dias; apaga os passados). Só se usa se `plan_version` for a versão atual da entrada do plano |
+| `reminder_sends` | `(owner_id, day, kind)` pk, `kind` ∈ `wear_check`, `eve` | `claim_due_reminders`, só com o token do cron (`private.reminder_cron`) |
+
 ## Sync: campos condicionais
 
 Na opção própria: outbox durável com ID de operação, entidade, versão base, payload e estado; receção com cursor de servidor comprovado e tombstones.

@@ -1704,5 +1704,81 @@
       }
     }
   },
-  "insightsAllGood": "Nada parado nem por estrear. Bom uso do armário!"
+  "insightsAllGood": "Nada parado nem por estrear. Bom uso do armário!",
+  "reminderWearBody": "Vestiste {outfit}? Toca para confirmar.",
+  "@reminderWearBody": {
+    "placeholders": {
+      "outfit": {
+        "type": "String"
+      }
+    }
+  },
+  "reminderEveBody": "Amanhã: {outfit}.",
+  "@reminderEveBody": {
+    "placeholders": {
+      "outfit": {
+        "type": "String"
+      }
+    }
+  },
+  "reminderEveBodyExtras": "Amanhã: {outfit}. Leva também: {extras}.",
+  "@reminderEveBodyExtras": {
+    "placeholders": {
+      "outfit": {
+        "type": "String"
+      },
+      "extras": {
+        "type": "String"
+      }
+    }
+  },
+  "reminderListAnd": "{rest} e {last}",
+  "@reminderListAnd": {
+    "placeholders": {
+      "rest": {
+        "type": "String"
+      },
+      "last": {
+        "type": "String"
+      }
+    }
+  },
+  "remindersTitle": "Lembretes",
+  "remindersIntro": "A app avisa-te para não teres de te lembrar. Nada conta como usado sem confirmares.",
+  "remindersWearCheck": "Vestiste isto?",
+  "remindersWearCheckHint": "Ao fim do dia, se ainda não registaste o que vestiste. Tocas e confirmas.",
+  "remindersEve": "O que vestir amanhã",
+  "remindersEveHint": "Na véspera, com a roupa planeada e o que levar pelo tempo.",
+  "remindersAt": "Às {time}",
+  "@remindersAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "remindersThisDevice": "Este aparelho recebe os lembretes.",
+  "remindersOtherDevice": "Os lembretes estão ligados, mas este aparelho não os recebe.",
+  "remindersReceiveHere": "Receber aqui",
+  "remindersNeedsInstall": "No iPhone, os lembretes só chegam com a app no ecrã principal: no Safari, toca em Partilhar › Adicionar ao ecrã principal e abre a app por lá.",
+  "remindersUnsupported": "Este aparelho ou navegador não recebe notificações.",
+  "remindersDenied": "As notificações estão bloqueadas. Ativa-as nas definições do aparelho (Notificações › fio) e tenta de novo.",
+  "remindersFailed": "Não foi possível guardar. Verifica a ligação e tenta de novo.",
+  "remindersOff": "Desligados",
+  "remindersSummaryWear": "“Vestiste isto?” às {time}",
+  "@remindersSummaryWear": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "remindersSummaryEve": "véspera às {time}",
+  "@remindersSummaryEve": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

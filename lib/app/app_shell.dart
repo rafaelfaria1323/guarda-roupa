@@ -6,6 +6,7 @@ import '../features/account_sync/application/providers.dart';
 import '../features/account_sync/presentation/sync_status.dart';
 import '../features/local_ai/presentation/models_auto_download.dart';
 import '../features/planner/presentation/week_autopilot.dart';
+import '../features/reminders/presentation/reminder_sync.dart';
 import '../l10n/app_localizations.dart';
 import 'fio_mark.dart';
 import 'router.dart';
@@ -23,10 +24,12 @@ class AppShell extends ConsumerWidget {
     initialLocation: index == navigationShell.currentIndex,
   );
 
-  // A semana planeia-se e os modelos descarregam-se em qualquer separador.
+  // A semana planeia-se, os modelos descarregam-se e os textos dos lembretes
+  // seguem para o servidor em qualquer separador.
   @override
-  Widget build(BuildContext context, WidgetRef ref) =>
-      ModelsAutoDownload(child: WeekAutopilot(child: _scaffold(context, ref)));
+  Widget build(BuildContext context, WidgetRef ref) => ModelsAutoDownload(
+    child: WeekAutopilot(child: ReminderSync(child: _scaffold(context, ref))),
+  );
 
   Widget _scaffold(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
