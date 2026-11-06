@@ -72,6 +72,7 @@ final class DayPlan {
     this.candidate,
     this.pinned,
     this.repeats = const {},
+    this.alikePrevious = false,
     this.gaps = const [],
     this.notes = const [],
   });
@@ -84,6 +85,10 @@ final class DayPlan {
   /// Peças principais (top, parte de baixo, peça única) que já aparecem
   /// noutro dia desta semana. Permitido, mas identificado.
   final Set<GarmentId> repeats;
+
+  /// Mesmas cores principais (em cima e em baixo) do dia anterior, com
+  /// peças diferentes ou não. Permitido, mas identificado.
+  final bool alikePrevious;
   final List<RoleGap> gaps;
   final List<SuggestionNote> notes;
 
@@ -115,7 +120,8 @@ final class WeekPlanResult {
 ///   ainda não aconteceu.
 /// - Cada semana parcial compara-se por ordem explícita, sem pesos:
 ///   papéis em falta, avisos (rotatividade, conforto, …), peças principais
-///   repetidas, soma das posições no motor diário, seed.
+///   repetidas, dias seguidos com o mesmo visual ([DayPlan.alikePrevious]),
+///   soma das posições no motor diário, seed.
 /// - Com dias mais restritos (menos candidatos), a largura do beam evita
 ///   gastar cedo a única peça que outro dia precisava; não é ótimo global.
 abstract final class WeeklyPlanner {
@@ -131,6 +137,7 @@ abstract final class WeeklyPlanner {
           next.add(
             state.extend(
               DayPlan(day: dayRequest.day, status: DayPlanStatus.skipped),
+              byId,
             ),
           );
           continue;
@@ -143,7 +150,9 @@ abstract final class WeeklyPlanner {
                 status: DayPlanStatus.pinned,
                 pinned: pinned,
                 repeats: state.repeatsOf(pinned, byId),
+                alikePrevious: state.alike(pinned, byId),
               ),
+              byId,
             ),
           );
           continue;
@@ -168,6 +177,7 @@ abstract final class WeeklyPlanner {
                 gaps: result.gaps,
                 notes: result.notes,
               ),
+              byId,
               missing: 1,
             ),
           );
@@ -183,9 +193,11 @@ abstract final class WeeklyPlanner {
                 status: DayPlanStatus.planned,
                 candidate: c,
                 repeats: state.repeatsOf(items, byId),
+                alikePrevious: state.alike(items, byId),
                 gaps: result.gaps,
                 notes: result.notes,
               ),
+              byId,
               missing: c.notes.whereType<MissingRole>().length,
               warnings: _warnings(c),
               rank: rank,
@@ -224,6 +236,8 @@ final class _State {
     required this.missing,
     required this.warnings,
     required this.repeated,
+    required this.alikeDays,
+    required this.look,
     required this.ranks,
     required this.key,
   });
@@ -234,6 +248,8 @@ final class _State {
       missing = 0,
       warnings = 0,
       repeated = 0,
+      alikeDays = 0,
+      look = null,
       ranks = 0,
       key = '';
 
@@ -244,6 +260,10 @@ final class _State {
   final int missing;
   final int warnings;
   final int repeated;
+  final int alikeDays;
+
+  /// Visual do último dia planeado (null: dia vazio, ou cor por indicar).
+  final (int, int?)? look;
   final int ranks;
   final String key;
 
@@ -271,8 +291,35 @@ final class _State {
     };
   }
 
+  /// Cor dominante da peça de cima (ou peça única) e da parte de baixo.
+  /// Só com as duas conhecidas (ou peça única com cor).
+  static (int, int?)? lookOf(
+    List<OutfitItem> items,
+    Map<GarmentId, Garment> byId,
+  ) {
+    int? colorOf(OutfitRole role) {
+      for (final i in items) {
+        if (i.role != role) continue;
+        final colors = byId[i.garmentId]?.colors ?? const [];
+        if (colors.isEmpty) return null;
+        return colors.reduce((a, b) => b.proportion > a.proportion ? b : a).rgb;
+      }
+      return null;
+    }
+
+    if (colorOf(OutfitRole.onePiece) case final c?) return (c, null);
+    final top = colorOf(OutfitRole.mainTop);
+    final bottom = colorOf(OutfitRole.bottom);
+    if (top == null || bottom == null) return null;
+    return (top, bottom);
+  }
+
+  bool alike(List<OutfitItem> items, Map<GarmentId, Garment> byId) =>
+      look != null && lookOf(items, byId) == look;
+
   _State extend(
-    DayPlan plan, {
+    DayPlan plan,
+    Map<GarmentId, Garment> byId, {
     int missing = 0,
     int warnings = 0,
     int rank = 0,
@@ -293,6 +340,8 @@ final class _State {
       missing: this.missing + missing,
       warnings: this.warnings + warnings,
       repeated: repeated + plan.repeats.length,
+      alikeDays: alikeDays + (plan.alikePrevious ? 1 : 0),
+      look: lookOf(items, byId),
       ranks: ranks + rank,
       key:
           '$key|${plan.day.iso}:'
@@ -305,6 +354,7 @@ final class _State {
       (a.missing, b.missing),
       (a.warnings, b.warnings),
       (a.repeated, b.repeated),
+      (a.alikeDays, b.alikeDays),
       (a.ranks, b.ranks),
     ]) {
       if (x != y) return x.compareTo(y);

@@ -267,6 +267,12 @@ class _DayTile extends ConsumerWidget {
                     key: Key('$key-repeats'),
                     style: TextStyle(color: theme.colorScheme.error),
                   ),
+                if (s.alikePrevious)
+                  Text(
+                    l10n.weekAlikePrevious,
+                    key: Key('$key-alike'),
+                    style: theme.textTheme.bodySmall,
+                  ),
                 if (s.status == DayPlanStatus.notFound)
                   Text(
                     l10n.weekNotFound,
