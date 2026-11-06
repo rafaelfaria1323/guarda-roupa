@@ -14,32 +14,34 @@ Estado: **visual "fio" v2 aprovado pelo utilizador a 2026-11-05** ([proposta com
 
 - Peças recortadas e pousadas sobre o fundo, com sombra suave, em vez de cartões de produto.
 - Frases em vez de números soltos ("Vestiste-os 12 vezes, a última há 6 dias").
-- Um botão principal por ecrã (índigo, em pílula); ações secundárias como texto sublinhado.
+- Um botão principal por ecrã (verde salva, em pílula); ações secundárias como texto sublinhado.
 - Estados de lavandaria como um ponto e uma palavra ("a lavar"), não como cartões.
 
-Tokens (`lib/app/theme.dart`, `AppColors`):
+**v3 (2026-11-06): design do Stitch.** A pessoa desenhou a app no Google Stitch (ecrãs claros e escuros: Hoje, Armário, Peça, Conjuntos, Semana, Lavandaria, Stylist e Perfil). A fase 1 aplica as cores, a letra e as formas; a disposição de cada ecrã segue em PRs próprios, só com funções que a app já tem.
 
-| Token | Valor | Uso |
-|---|---|---|
-| Fundo (papel) | `#F3F0EA` | Ecrãs |
-| Superfície | `#FFFFFF` | Cartões, campos, barra de navegação |
-| Superfície discreta | `#EAE6DE` | Fundos secundários |
-| Texto principal | `#1E1F24` | Texto, etiquetas selecionadas |
-| Texto secundário | `#5C5E66` | Metadados |
-| Destaque (índigo, o fio) | `#3446C9` | Botão principal, separador ativo, logótipo |
-| Destaque suave | `#ECEEF9` / texto `#26349A` | Indicador do separador, etiquetas |
-| Contorno / separador | `#D5D0C6` / `#E4DFD5` | Pílulas por selecionar, divisões |
-| Lavandaria | `#D9822B` / texto `#8A4B12` | "a lavar", "a secar" |
+Tokens (`lib/app/theme.dart`, `AppColors`), claro / escuro:
 
-**Modo escuro.** Em Definições › Aspeto escolhe-se Automático (segue o telemóvel), Claro ou Escuro; a escolha fica só no aparelho e aplica-se logo ao abrir. O escuro usa a mesma estrutura de tokens (`AppColors.dark`): fundo `#151413`, superfície `#211F1D`, texto `#EDEAE4` / `#A9A69F`, índigo claro `#9AA6FF` com texto `#111A5C`, lavandaria `#E99A4E`. As cores das peças não mudam. Um teste confirma o contraste do texto nos dois temas.
+| Token | Claro | Escuro | Uso |
+|---|---|---|---|
+| Fundo (linho) | `#FBF9F2` | `#111410` | Ecrãs |
+| Superfície | `#FFFFFF` | `#1D201C` | Cartões, campos, barra de navegação |
+| Superfície discreta | `#EFEEE7` | `#282B27` | Fundos secundários |
+| Texto principal | `#1B1C18` | `#E6E8E1` | Texto |
+| Texto secundário | `#5B5F57` | `#B4B7AC` | Metadados |
+| Destaque (verde salva) | `#51604B` / texto `#FFFFFF` | `#BCCCAC` / texto `#27341E` | Botão principal, etiquetas escolhidas, separador ativo |
+| Destaque suave | `#E2ECDA` / texto `#3C4B37` | `#3D4737` / texto `#D8E8C7` | Indicador do separador |
+| Contorno / separador | `#D9D6CC` / `#ECE7DE` | `#454840` / `#2C2F2A` | Pílulas, contorno de cartões e campos |
+| Lavandaria (terracota) | `#D9A78F` / texto `#7D5541` | `#EFBBA2` | "a lavar", "a secar" |
 
-Letra: **DM Sans** no texto e na interface; **Fraunces** (serifada) só em títulos grandes. Ambas OFL, incluídas como assets estáticos em `assets/fonts/` (geradas com `tool/fonts/instance_fonts.py`). Não depender só da cor para comunicar estados.
+Cartões brancos com 16 de raio e contorno de 1 px; botões, etiquetas e pesquisa em pílula. Um teste confirma o contraste do texto nos dois temas.
+
+Letra: **Manrope** em tudo (títulos a 600–700, mais apertados). OFL, incluída como assets estáticos em `assets/fonts/` (gerados com `tool/fonts/instance_fonts.py`). Não depender só da cor para comunicar estados.
 
 ## Ecrã Hoje (v2, aplicado)
 
 De cima para baixo, sem cartões à volta (`PlannerScreen`):
 
-1. **Marca e saudação.** A barra mostra `FioWordmark`; o título é "Bom dia." / "Boa tarde." / "Boa noite." conforme a hora (Fraunces, 40).
+1. **Marca e saudação.** A barra mostra `FioWordmark`; o título é "Bom dia." / "Boa tarde." / "Boa noite." conforme a hora (Manrope, 40).
 2. **Tempo numa frase** (resumo da previsão, origem e hora em letra pequena; "Atualizar" e "Indicar o tempo à mão" como ações discretas).
 3. **Sugestão do dia como flat-lay.** As peças (`GarmentCutout`: foto com borda branca e sombra; sem foto, um cartão na cor principal da peça) pousadas com rotações pequenas. Por baixo, "Sugestão 1 de N", os nomes numa frase e os avisos (lavagem, rotação, papel em falta) a laranja escuro. As razões ficam atrás de "Porquê este".
 4. **Ocasião** numa só linha de pílulas que desliza na horizontal.

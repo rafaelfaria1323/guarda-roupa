@@ -42,18 +42,12 @@ flutter:
     - assets/models/fashionclip_categories.json
   # Instâncias estáticas (tool/fonts/instance_fonts.py), licença OFL.
   fonts:
-    - family: DMSans
+    - family: Manrope
       fonts:
-        - asset: assets/fonts/DMSans-Regular.ttf
-        - asset: assets/fonts/DMSans-Medium.ttf
+        - asset: assets/fonts/Manrope-Regular.ttf
+        - asset: assets/fonts/Manrope-Medium.ttf
           weight: 500
-        - asset: assets/fonts/DMSans-SemiBold.ttf
+        - asset: assets/fonts/Manrope-SemiBold.ttf
           weight: 600
-        - asset: assets/fonts/DMSans-Bold.ttf
+        - asset: assets/fonts/Manrope-Bold.ttf
           weight: 700
-    - family: Fraunces
-      fonts:
-        - asset: assets/fonts/Fraunces-Medium.ttf
-          weight: 500
-        - asset: assets/fonts/Fraunces-SemiBold.ttf
-          weight: 600

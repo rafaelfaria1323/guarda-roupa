@@ -5,8 +5,7 @@ O Flutter não aplica o eixo wght de uma fonte variável a partir de
 FontWeight, por isso guardam-se instâncias fixas.
 
   python3 -m venv /tmp/ft && /tmp/ft/bin/pip install fonttools==4.55.0
-  curl -fsSLO 'https://raw.githubusercontent.com/google/fonts/main/ofl/dmsans/DMSans%5Bopsz,wght%5D.ttf'
-  curl -fsSLO 'https://raw.githubusercontent.com/google/fonts/main/ofl/fraunces/Fraunces%5BSOFT,WONK,opsz,wght%5D.ttf'
+  curl -fsSL -o 'Manrope[wght].ttf' 'https://raw.githubusercontent.com/google/fonts/main/ofl/manrope/Manrope%5Bwght%5D.ttf'
   /tmp/ft/bin/python tool/fonts/instance_fonts.py <pasta dos ttf> assets/fonts
 """
 import sys
@@ -17,9 +16,7 @@ from fontTools.varLib.instancer import instantiateVariableFont
 
 NAMES = {400: "Regular", 500: "Medium", 600: "SemiBold", 700: "Bold"}
 JOBS = [
-    ("DMSans[opsz,wght].ttf", "DMSans", {"opsz": 14}, [400, 500, 600, 700]),
-    ("Fraunces[SOFT,WONK,opsz,wght].ttf", "Fraunces",
-     {"opsz": 72, "SOFT": 50, "WONK": 0}, [500, 600]),
+    ("Manrope[wght].ttf", "Manrope", {}, [400, 500, 600, 700]),
 ]
 
 src, out = Path(sys.argv[1]), Path(sys.argv[2])
