@@ -119,6 +119,10 @@ export function parseProduct(
   set('description', fallback.description, 'html', MAX.text);
 
   if (out.name == null && out.images.length === 0) return null;
+  // Os títulos de página trazem a loja no fim ("T-shirt | UNIQLO PT").
+  if (out.name != null && out.sources.name !== 'json-ld' && out.sources.name !== 'microdata') {
+    out.name = withoutSiteSuffix(out.name, [meta['og:site_name'], pageUrl.hostname]);
+  }
 
   // A categoria, as cores e a posse confirmam-se sempre; a variante quando
   // a página tem várias (várias cores não dizem qual é a tua).
@@ -129,6 +133,29 @@ export function parseProduct(
   if (colors.size > 1 || out.variants.length > 1) out.confirm.push('variant');
   if (out.material == null) out.confirm.push('material');
   return out;
+}
+
+/**
+ * Tira o último pedaço do título depois de `|`, `–`, `—` ou ` - ` quando
+ * nomeia o site (pelo `og:site_name` ou pelo domínio: "hm" serve "H&M").
+ * Nunca deixa o nome vazio.
+ */
+export function withoutSiteSuffix(name: string, sites: (string | undefined)[]): string {
+  const fold = (x: string) => x.normalize('NFD').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const tokens = new Set<string>();
+  for (const site of sites) {
+    if (site == null) continue;
+    const bare = site.replace(/^www\d*\./i, '');
+    const labels = bare.split('.');
+    // Domínio: o nome antes do sufixo (shop.mango.com → mango).
+    const label = labels.length > 1 ? labels[labels.length - 2] : bare;
+    for (const t of [fold(bare), fold(label)]) if (t.length >= 2) tokens.add(t);
+  }
+  const m = name.match(/^(.*\S)\s*(?:\||–|—|\s-)\s*([^|–—]+)$/);
+  if (m == null) return name;
+  const tail = fold(m[2]);
+  const named = [...tokens].some((t) => tail.includes(t) || (tail.length >= 4 && t.includes(tail)));
+  return named && m[1].trim() !== '' ? m[1].trim() : name;
 }
 
 type Json = Record<string, unknown>;
