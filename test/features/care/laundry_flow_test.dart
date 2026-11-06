@@ -15,9 +15,9 @@ Future<void> back(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('lavagem: aviso após usar, "Lavei hoje" reinicia, sem mudar '
-      'a disponibilidade; aviso por categoria editável', (tester) async {
-    await pumpApp(
+  testWidgets('lavagem: ao usar vai sozinha para lavar, "Lavei hoje" '
+      'reinicia e devolve-a; aviso por categoria editável', (tester) async {
+    final app = await pumpApp(
       tester,
       overrides: [
         clockProvider.overrideWithValue(
@@ -34,16 +34,20 @@ void main() {
     await tester.tap(pick('Branca'));
     await tester.pump();
     await save(tester);
-
-    // T-shirt: aviso após cada utilização.
-    await openWardrobe(tester);
-    await settleUntil(tester, inList('Lavar recomendado'));
     expect(
-      find.byKey(const Key('wardrobe-summary')),
+      find.text('Utilização registada. Marquei para lavar: Branca.'),
       findsOne,
-      reason: 'aviso não muda estado',
     );
-    expect(find.textContaining('a lavar'), findsNothing);
+    Future<String> availability() async =>
+        (await tester.runAsync(
+              () => app.db.get('SELECT availability FROM garments'),
+            ))!['availability']!
+            as String;
+    expect(await availability(), 'needs_cleaning');
+
+    // T-shirt: suja após cada utilização.
+    await openWardrobe(tester);
+    await settleUntil(tester, inList('Precisa de limpeza'));
 
     await openEdit(tester, inList('Branca'));
     final form = find
@@ -70,14 +74,19 @@ void main() {
       gone: true,
     );
     expect(find.text('Sem utilizações desde a última limpeza.'), findsOne);
-    expect(find.text('Limpeza registada.'), findsOne);
+    expect(
+      find.text('Limpeza registada. Voltou a estar disponível.'),
+      findsOne,
+    );
+    expect(await availability(), 'available');
 
-    // Desfazer a limpeza volta ao aviso.
+    // Desfazer a limpeza volta ao aviso e a "Precisa de limpeza".
     await tester.tap(find.text('Desfazer'));
     await settleUntil(
       tester,
       find.byKey(const Key('garment-laundry-recommended')),
     );
+    expect(await availability(), 'needs_cleaning');
 
     await tester.tap(find.byKey(const Key('garment-save')));
     await settleUntil(

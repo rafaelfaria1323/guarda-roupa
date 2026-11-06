@@ -81,8 +81,19 @@ void main() {
     expect(find.text('1 peça escolhida'), findsOne);
     await save(tester);
 
+    // A t-shirt foi para lavar: a sugestão de cima muda e empurra o cartão.
+    await tester.ensureVisible(
+      find.byWidgetPredicate(
+        (w) => w.key.toString().contains('wear-event-'),
+        skipOffstage: false,
+      ),
+    );
+    await tester.pumpAndSettle();
     expect(chip('Branca'), findsOne);
-    expect(find.text('Utilização registada.'), findsOne);
+    expect(
+      find.text('Utilização registada. Marquei para lavar: Branca.'),
+      findsOne,
+    );
 
     // Histórico na ficha da peça.
     await openWardrobe(tester);

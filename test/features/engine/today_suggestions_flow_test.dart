@@ -92,10 +92,20 @@ void main() {
     expect(find.text('O que vestiste hoje?'), findsOne);
     expect(find.text('3 peças escolhidas'), findsOne);
     await save(tester);
-
-    // Usada hoje: a t-shirt volta a aparecer, mas com aviso de rotação.
-    await scrollTo(tester, find.byKey(const Key('suggestion-0-wear')));
-    expect(find.textContaining('volta à rotação a'), findsWidgets);
+    // A única t-shirt foi para lavar sozinha (P-07): sem parte de cima
+    // disponível, a sugestão explica porquê.
+    expect(
+      find.text('Utilização registada. Marquei para lavar: Branca.'),
+      findsOne,
+    );
+    expect(
+      find.text(
+        'Top principal: todas indisponíveis ou arquivadas',
+        skipOffstage: false,
+      ),
+      findsOne,
+    );
+    expect(find.byKey(const Key('suggestion-0-wear')), findsNothing);
   });
 
   testWidgets('sem previsão diz isso e aceita o tempo indicado à mão', (

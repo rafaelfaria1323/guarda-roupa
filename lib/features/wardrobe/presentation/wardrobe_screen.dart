@@ -420,9 +420,7 @@ class _GarmentTile extends ConsumerWidget {
         ref.watch(laundryStatesProvider)?[garment.id]?.washRecommended ?? false;
     final category = l10n.categoryLabel(garment.category.id);
     final availability = garment.availability;
-    final inCare =
-        availability == Availability.washing ||
-        availability == Availability.drying;
+    final inCare = !availability.isAvailable;
     // Só o que foge ao normal: "disponível" não se escreve.
     final (String, Color)? status = garment.isArchived
         ? (l10n.garmentArchived, AppColors.onSurfaceMuted)

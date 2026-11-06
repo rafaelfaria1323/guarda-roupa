@@ -11,12 +11,14 @@ Estado: necessária no MVP; valores iniciais decididos em P-07 (2026-11-03), edi
 | Camisolas, calças, ganga, saias e vestidos | 4 utilizações |
 | Casacos e calçado | sem aviso |
 
-Contam só utilizações confirmadas (“Vesti hoje”) desde a última limpeza registada. O aviso é informativo: nunca muda a disponibilidade sozinho.
+Contam só utilizações confirmadas (“Vesti hoje”) desde a última limpeza registada.
+
+**Lavandaria sozinha** (decisão do utilizador a 2026-11-06, substitui “nunca muda a disponibilidade sozinho”): ao guardar ou corrigir um “Vesti hoje”, as peças disponíveis que chegam ao limiar passam a **Precisa de limpeza** (`LaundryPolicy.dirtyAfterWear`). O aviso diz quais (“Marquei para lavar: Branca.”), e “Desfazer” anula o uso e devolve-as. Uma peça só volta a Disponível com **Lavei hoje** ou mudando-a à mão; nunca por passar tempo. Como fica indisponível, a semana troca-a sozinha nos dias planeados ([planeamento](planeamento-semanal.md)).
 
 ## Implementado (incremento 3)
 
-- Ficha da peça, secção **Lavagem**: utilizações desde a última limpeza, data da última limpeza, aviso “Recomendado lavar” e botão **Lavei hoje** (com desfazer). Registar uma limpeza não muda a disponibilidade: “A lavar”/“A secar”/“Disponível” continuam a ser escolhas explícitas.
-- Lista do guarda-roupa: “Lavar recomendado” no subtítulo.
+- Ficha da peça, secção **Lavagem**: utilizações desde a última limpeza, data da última limpeza, aviso “Recomendado lavar” e botão **Lavei hoje** (com desfazer). Desde 2026-11-06, “Lavei hoje” também devolve a peça a Disponível se não estava (desfazer repõe o estado anterior); “A lavar” e “A secar” continuam a poder escolher-se à mão.
+- Lista do guarda-roupa: o estado (“Precisa de limpeza”, “A lavar”, “A secar”) ou, numa peça disponível com o limiar mudado depois, “Lavar recomendado”.
 - Definições → **Aviso de lavagem por categoria**; cada peça pode ter o seu na ficha. `0` = sem aviso; “Predefinido” volta ao valor da tabela acima.
 - Sem limpeza registada contam todas as utilizações registadas (não se presume que a peça acabou de ser lavada). No mesmo dia, conta a ordem de registo entre utilização e limpeza.
 - Dados: `cleaning_events` e `care_policies` (uma linha por categoria ou peça, id determinístico; último a escrever ganha, campo a campo), escritos por `apply_wear_operation` (`record_cleaning`, `void_cleaning`, `set_policy`). `care_policies.rotation_days` fica pronto para a rotatividade.
@@ -30,7 +32,7 @@ Contam só utilizações confirmadas (“Vesti hoje”) desde a última limpeza 
 | Recomendação de lavar | Aviso informativo baseado em utilizações e política |
 | Precisa de limpeza / em lavagem / a secar | Indisponibilidade real; exclui a peça das novas combinações |
 
-**Atingir o limiar recomendado não marca automaticamente uma peça como suja.** Uma opção de automatismo só pode ser ativada de forma explícita, explicando o efeito no planeamento.
+Atingir o limiar ao confirmar um uso marca a peça como “Precisa de limpeza” (escolha explícita do utilizador a 2026-11-06). Mudar o limiar depois não muda o estado de nenhuma peça: fica só o aviso.
 
 ## Estados e transições
 
