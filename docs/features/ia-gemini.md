@@ -18,7 +18,7 @@ Ligar em **Definições › IA local › Gemini (opcional) › Usar o Gemini nes
 | Peça: **Preencher pela foto (Gemini)** (com uma foto) | O mesmo, a partir da capa. Muda a categoria e as cores; o nome e os atributos só se estiverem vazios | Mensagem; o formulário fica como estava |
 | Peça: **Ler a etiqueta (Gemini)** | Lavagem (máquina 30/40/60, à mão, lavandaria), máquina de secar, composição e outros cuidados, em pt-PT | Mensagem; a foto da etiqueta nunca se guarda |
 
-Mais tarde: a foto ao espelho (ver o que se vestiu), com a mesma função.
+A foto ao espelho (ver o que se vestiu) ficou de fora por decisão do utilizador (2026-11-06).
 
 ## Pedir ao stylist (2026-11-06)
 
