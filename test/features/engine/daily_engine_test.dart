@@ -127,6 +127,69 @@ void main() {
       expect(r.notes.single, isA<NoWeather>());
     });
 
+    group('camada por baixo', () {
+      final hoodie = g(
+        'hoodie',
+        GarmentCategory.sweatshirt,
+        warmth: Warmth.warm,
+      );
+
+      test('sweat com t-shirt por baixo; o conforto é o da sweat', () {
+        final r = run([hoodie, tee, jeans, sneakers], weather: cold);
+        final layered = r.candidates.firstWhere(
+          (c) => ids(c).contains('hoodie'),
+        );
+        expect(roles(layered), {
+          'tee': OutfitRole.mainTop,
+          'hoodie': OutfitRole.midLayer,
+          'jeans': OutfitRole.bottom,
+          'sneakers': OutfitRole.footwear,
+        });
+        expect(notesOf(layered, 'tee').whereType<ComfortNote>(), isEmpty);
+        expect(
+          layered.notes.whereType<MissingRole>(),
+          isEmpty,
+          reason: 'sweat quente no frio dispensa casaco',
+        );
+      });
+
+      test('sem peça leve, a malha vai sozinha', () {
+        final warmTee = g('wt', GarmentCategory.tShirt, warmth: Warmth.warm);
+        final r = run([hoodie, warmTee, jeans, sneakers]);
+        final c = r.candidates.firstWhere((c) => ids(c).contains('hoodie'));
+        expect(roles(c)['hoodie'], OutfitRole.mainTop);
+        expect(ids(c), isNot(contains('wt')));
+      });
+
+      test('trocar a sweat dá outra malha; o plano avalia a de cima', () {
+        final sweater = g('sweater', GarmentCategory.sweater);
+        final snapshot = WardrobeSnapshot(
+          garments: [hoodie, sweater, tee, jeans, sneakers],
+        );
+        final request = SuggestionRequest(day: day(10), weather: cold);
+        final items = [
+          OutfitItem(tee.id, OutfitRole.mainTop),
+          OutfitItem(hoodie.id, OutfitRole.midLayer),
+          OutfitItem(jeans.id, OutfitRole.bottom),
+          OutfitItem(sneakers.id, OutfitRole.footwear),
+        ];
+        final rep = DailyEngine.replace(
+          snapshot,
+          request,
+          items,
+          replace: {hoodie.id},
+        );
+        expect(rep.added.single, OutfitItem(sweater.id, OutfitRole.midLayer));
+
+        final assessed = DailyEngine.assess(snapshot, request, items);
+        expect(assessed[0]!.notes.whereType<ComfortNote>(), isEmpty);
+        expect(
+          assessed[1]!.notes.whereType<ComfortNote>().single.fit,
+          ComfortFit.fits,
+        );
+      });
+    });
+
     test('peça única + calçado', () {
       final r = run([g('dress', GarmentCategory.dress), sneakers]);
       expect(r.status, SuggestionStatus.valid);

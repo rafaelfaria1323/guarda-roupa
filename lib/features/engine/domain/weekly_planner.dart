@@ -269,6 +269,7 @@ final class _State {
 
   static const _mainRoles = {
     OutfitRole.mainTop,
+    OutfitRole.midLayer,
     OutfitRole.bottom,
     OutfitRole.onePiece,
   };
@@ -308,7 +309,8 @@ final class _State {
     }
 
     if (colorOf(OutfitRole.onePiece) case final c?) return (c, null);
-    final top = colorOf(OutfitRole.mainTop);
+    // Com camada, vê-se a de cima.
+    final top = colorOf(OutfitRole.midLayer) ?? colorOf(OutfitRole.mainTop);
     final bottom = colorOf(OutfitRole.bottom);
     if (top == null || bottom == null) return null;
     return (top, bottom);

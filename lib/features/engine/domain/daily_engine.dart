@@ -18,8 +18,10 @@ import 'suggestion.dart';
 ///   incluem a pedida fica de fora (sem ocasiões = desconhecido, entra com
 ///   nota).
 /// - **Modelos:** top + parte de baixo + calçado, ou peça única + calçado.
-///   Uma t-shirt chega como top único; camadas só quando o conforto as pede
-///   (frio com peça leve/média) ou como sugestão opcional.
+///   Uma t-shirt chega como top único; uma malha (camisola, sweat, casaco
+///   de malha) leva uma peça leve por baixo ([overLayers]); casaco só
+///   quando o conforto o pede (frio com peça leve/média) ou como sugestão
+///   opcional.
 /// - **Ordem de cada papel:** conforto, chuva/vento (casaco e calçado),
 ///   rotatividade (elegíveis primeiro, P-06), preferências (gosto − evito),
 ///   menos usadas, usadas há mais tempo, seed. Com uma inspiração
@@ -73,7 +75,15 @@ abstract final class DailyEngine {
       final removed = <OutfitRole, GarmentId>{};
       _Pool? ownFootwear;
       _Pool? ownOuter;
+      _Entry? ownLayer;
       for (final item in o.items) {
+        if (item.role == OutfitRole.midLayer) {
+          // A camada do conjunto, se ainda servir; senão fica sem ela.
+          ownLayer ??= tops.ranked
+              .where((e) => e.garment.id == item.garmentId)
+              .firstOrNull;
+          continue;
+        }
         final slot = _slotOf(item.role);
         if (slot == null) continue;
         final pool = pools[slot]!;
@@ -122,6 +132,8 @@ abstract final class DailyEngine {
           mains,
           footwear: ownFootwear ?? footwear,
           outer: ownOuter ?? outer,
+          tops: tops,
+          layer: ownLayer,
           variant: removed.isEmpty ? null : (o, removed),
         ),
       );
@@ -140,6 +152,7 @@ abstract final class DailyEngine {
             ],
             footwear: footwear,
             outer: outer,
+            tops: tops,
           ),
         );
       }
@@ -211,10 +224,26 @@ abstract final class DailyEngine {
   ) {
     final ctx = _Context(snapshot, request);
     final byId = {for (final g in snapshot.garments) g.id: g};
+    final layered = items.any((i) => i.role == OutfitRole.midLayer);
     return [
       for (final i in items)
         if (byId[i.garmentId] case final g?)
-          SuggestedItem(g, i.role, ctx._entry(g, _slotOf(i.role)).notes)
+          SuggestedItem(g, i.role, [
+            for (final n
+                in ctx
+                    ._entry(
+                      g,
+                      i.role == OutfitRole.midLayer
+                          ? _Slot.top
+                          : _slotOf(i.role),
+                    )
+                    .notes)
+              // Com uma camada por cima, o conforto é o dela.
+              if (!(layered &&
+                  i.role == OutfitRole.mainTop &&
+                  n is ComfortNote))
+                n,
+          ])
         else
           null,
     ];
@@ -245,18 +274,26 @@ abstract final class DailyEngine {
     final out = <OutfitItem>[];
     final added = <OutfitItem>[];
     final dropped = <OutfitRole>[];
+    final layered = items.any((i) => i.role == OutfitRole.midLayer);
+    // Camada intermédia: outra malha; o top por baixo dela: outra peça leve.
+    bool fits(OutfitRole role, Garment g) => switch (role) {
+      OutfitRole.midLayer => overLayers.contains(g.category),
+      OutfitRole.mainTop when layered => canGoUnder(g),
+      _ => true,
+    };
     for (final i in items) {
       if (!replace.contains(i.garmentId)) {
         out.add(i);
         continue;
       }
-      final slot = _slotOf(i.role);
+      final slot = i.role == OutfitRole.midLayer ? _Slot.top : _slotOf(i.role);
       final options = slot == null
           ? const <_Entry>[]
           : [
               for (final e in pools[slot]!.ranked)
                 if (!taken.contains(e.garment.id) &&
-                    e.garment.id != i.garmentId)
+                    e.garment.id != i.garmentId &&
+                    fits(i.role, e.garment))
                   e,
             ];
       final pick = _best(options);
@@ -291,6 +328,25 @@ abstract final class DailyEngine {
     );
     return Replacement(items: out, added: added, dropped: dropped);
   }
+
+  /// Malhas que se vestem por cima de outra peça.
+  static const overLayers = {
+    GarmentCategory.sweater,
+    GarmentCategory.sweatshirt,
+    GarmentCategory.cardigan,
+  };
+
+  static const _underCategories = {
+    GarmentCategory.tShirt,
+    GarmentCategory.top,
+    GarmentCategory.shirt,
+    GarmentCategory.polo,
+  };
+
+  /// Pode ir por baixo de uma [overLayers]: uma peça leve (não quente).
+  static bool canGoUnder(Garment g) =>
+      _underCategories.contains(g.category) &&
+      g.attributes.warmth != Warmth.warm;
 
   /// A primeira sem avisos (lavar recomendado não entra na ordem), senão a
   /// primeira.
@@ -570,12 +626,45 @@ final class _Context {
     List<(_Entry, OutfitRole)> mains, {
     required _Pool footwear,
     required _Pool outer,
+    _Pool? tops,
+    _Entry? layer,
     (Outfit, Map<OutfitRole, GarmentId>)? variant,
   }) {
     final items = <(_Entry, OutfitRole)>[...mains];
     final notes = <SuggestionNote>[];
 
-    final upper = mains.first.$1;
+    // Por baixo de uma camisola, sweat ou casaco de malha vai uma peça
+    // leve (t-shirt, top, camisa ou polo): a de baixo é o top principal e a
+    // de malha a camada intermédia. É a de cima que decide o casaco.
+    _Entry? over = layer;
+    _Entry? under;
+    final t = items.indexWhere((x) => x.$2 == OutfitRole.mainTop);
+    if (layer != null) {
+      items.add((layer, OutfitRole.midLayer));
+      if (t >= 0) under = items[t].$1;
+    } else if (tops != null &&
+        t >= 0 &&
+        DailyEngine.overLayers.contains(items[t].$1.garment.category)) {
+      final used = {for (final (e, _) in items) e.garment.id};
+      final bases = [
+        for (final e in tops.ranked)
+          if (DailyEngine.canGoUnder(e.garment) && !used.contains(e.garment.id))
+            e,
+      ];
+      final clean = [
+        for (final e in bases)
+          if (!e.notes.any(SuggestedItem.isWarning)) e,
+      ];
+      final from = clean.isNotEmpty ? clean : bases;
+      if (from.isNotEmpty) {
+        over = items[t].$1;
+        under = from[i % from.length];
+        items[t] = (under, OutfitRole.mainTop);
+        items.add((over, OutfitRole.midLayer));
+      }
+    }
+
+    final upper = over ?? mains.first.$1;
     final needsOuter = upper.fit == ComfortFit.fitsWithOuterLayer;
     _Entry? optional;
     if (needsOuter) {
@@ -661,7 +750,12 @@ final class _Context {
     if (savedNote != null) notes.add(savedNote);
 
     final suggested = [
-      for (final (e, role) in items) SuggestedItem(e.garment, role, e.notes),
+      for (final (e, role) in items)
+        SuggestedItem(e.garment, role, [
+          // Com uma camada por cima, o conforto é o dela.
+          for (final n in e.notes)
+            if (!(identical(e, under) && over != null && n is ComfortNote)) n,
+        ]),
     ];
     return _Draft(
       OutfitCandidate(
@@ -675,6 +769,7 @@ final class _Context {
         notes: notes,
       ),
       entries: [for (final (e, _) in items) e],
+      under: under,
       seed: request.seed,
       comboPreference: comboPreference + (savedNote == null ? 0 : 1),
       clash: clash,
@@ -696,6 +791,7 @@ final class _Draft {
   _Draft(
     this.candidate, {
     required List<_Entry> entries,
+    _Entry? under,
     required int seed,
     required int comboPreference,
     required this.clash,
@@ -708,7 +804,12 @@ final class _Draft {
        look = entries.fold(0, (sum, e) => sum + e.look),
        preference =
            entries.fold(0, (sum, e) => sum + e.preference) + comboPreference,
-       positions = entries.fold(0, (sum, e) => sum + e.position) {
+       // A peça de baixo não conta: um conjunto com camada não fica atrás
+       // só por ter mais uma peça.
+       positions = entries.fold(
+         0,
+         (sum, e) => identical(e, under) ? sum : sum + e.position,
+       ) {
     tiebreak = _seedKey(seed, key);
   }
 

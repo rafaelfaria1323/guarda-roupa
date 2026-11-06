@@ -155,7 +155,11 @@ abstract final class PlanReview {
     return out;
   }
 
-  static const _upperBody = {OutfitRole.mainTop, OutfitRole.onePiece};
+  static const _upperBody = {
+    OutfitRole.mainTop,
+    OutfitRole.midLayer,
+    OutfitRole.onePiece,
+  };
 
   static Iterable<PlanIssue> _issues(
     OutfitItem item,

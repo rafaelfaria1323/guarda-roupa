@@ -37,7 +37,9 @@ class WeekThread extends StatelessWidget {
     }
     final items = d.draft.items;
     if (items.isEmpty) return null;
+    // Com camada, vê-se a de cima.
     final main =
+        items.where((i) => i.role == OutfitRole.midLayer).firstOrNull ??
         items
             .where(
               (i) =>
