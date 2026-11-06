@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 
-/// Visual "fio" (v2, aprovado a 2026-11-05; docs/design-e-fluxos.md):
-/// fundo de papel quente, texto quase preto e um só destaque índigo. As cores
-/// fortes ficam para as fotos das peças. O modo escuro (2026-11-06) é o
-/// mesmo papel à noite: fundo quase preto quente, texto claro e o índigo
-/// mais claro para se ler.
+/// Visual "fio" (v3, 2026-11-06, do design do Stitch; docs/design-e-fluxos.md):
+/// linho quente, cartões brancos com contorno fino e um só destaque verde
+/// salva. As cores fortes ficam para as fotos das peças. O escuro é o mesmo
+/// à noite: verde-carvão, texto marfim e o salva mais claro para se ler.
 @immutable
 final class AppColors extends ThemeExtension<AppColors> {
   const AppColors({
@@ -26,39 +25,39 @@ final class AppColors extends ThemeExtension<AppColors> {
   });
 
   static const light = AppColors(
-    background: Color(0xFFF3F0EA),
+    background: Color(0xFFFBF9F2),
     surface: Color(0xFFFFFFFF),
-    surfaceMuted: Color(0xFFEAE6DE),
-    onSurface: Color(0xFF1E1F24),
-    onSurfaceMuted: Color(0xFF5C5E66),
-    faint: Color(0xFF9C9A93),
-    accent: Color(0xFF3446C9),
+    surfaceMuted: Color(0xFFEFEEE7),
+    onSurface: Color(0xFF1B1C18),
+    onSurfaceMuted: Color(0xFF5B5F57),
+    faint: Color(0xFF9A9C93),
+    accent: Color(0xFF51604B),
     onAccent: Color(0xFFFFFFFF),
-    accentSoft: Color(0xFFECEEF9),
-    onAccentSoft: Color(0xFF26349A),
-    outline: Color(0xFFD5D0C6),
-    divider: Color(0xFFE4DFD5),
-    care: Color(0xFFD9822B),
-    onCareSoft: Color(0xFF8A4B12),
-    shadow: Color(0x2E3C321E),
+    accentSoft: Color(0xFFE2ECDA),
+    onAccentSoft: Color(0xFF3C4B37),
+    outline: Color(0xFFD9D6CC),
+    divider: Color(0xFFECE7DE),
+    care: Color(0xFFD9A78F),
+    onCareSoft: Color(0xFF7D5541),
+    shadow: Color(0x24393A35),
   );
 
   static const dark = AppColors(
-    background: Color(0xFF151413),
-    surface: Color(0xFF211F1D),
-    surfaceMuted: Color(0xFF2D2B28),
-    onSurface: Color(0xFFEDEAE4),
-    onSurfaceMuted: Color(0xFFA9A69F),
-    faint: Color(0xFF75726C),
-    accent: Color(0xFF9AA6FF),
-    onAccent: Color(0xFF111A5C),
-    accentSoft: Color(0xFF282E58),
-    onAccentSoft: Color(0xFFD0D5FF),
-    outline: Color(0xFF45423D),
-    divider: Color(0xFF302E2A),
-    care: Color(0xFFE99A4E),
-    onCareSoft: Color(0xFFF4BC85),
-    shadow: Color(0x66000000),
+    background: Color(0xFF111410),
+    surface: Color(0xFF1D201C),
+    surfaceMuted: Color(0xFF282B27),
+    onSurface: Color(0xFFE6E8E1),
+    onSurfaceMuted: Color(0xFFB4B7AC),
+    faint: Color(0xFF7D8077),
+    accent: Color(0xFFBCCCAC),
+    onAccent: Color(0xFF27341E),
+    accentSoft: Color(0xFF3D4737),
+    onAccentSoft: Color(0xFFD8E8C7),
+    outline: Color(0xFF454840),
+    divider: Color(0xFF2C2F2A),
+    care: Color(0xFFEFBBA2),
+    onCareSoft: Color(0xFFEFBBA2),
+    shadow: Color(0x730E100D),
   );
 
   /// As cores do tema atual.
@@ -99,10 +98,10 @@ final class AppColors extends ThemeExtension<AppColors> {
 }
 
 /// Texto do corpo e da interface.
-const bodyFont = 'DMSans';
+const bodyFont = 'Manrope';
 
-/// Títulos (só tamanhos grandes: a Fraunces é de display).
-const displayFont = 'Fraunces';
+/// Títulos: a mesma Manrope, mais cheia e mais apertada.
+const displayFont = bodyFont;
 
 ThemeData buildAppTheme([Brightness brightness = Brightness.light]) {
   final c = brightness == Brightness.dark ? AppColors.dark : AppColors.light;
@@ -138,9 +137,9 @@ ThemeData buildAppTheme([Brightness brightness = Brightness.light]) {
   TextStyle display(TextStyle? s, double size) => s!.copyWith(
     fontFamily: displayFont,
     fontSize: size,
-    fontWeight: FontWeight.w500,
-    letterSpacing: -0.4,
-    height: 1.1,
+    fontWeight: size >= 24 ? FontWeight.w700 : FontWeight.w600,
+    letterSpacing: -0.02 * size,
+    height: 1.2,
     color: c.onSurface,
   );
   final text = base.copyWith(
@@ -176,7 +175,7 @@ ThemeData buildAppTheme([Brightness brightness = Brightness.light]) {
       surfaceTintColor: Colors.transparent,
       scrolledUnderElevation: 0,
       centerTitle: false,
-      titleTextStyle: display(base.headlineSmall, 26),
+      titleTextStyle: display(base.headlineSmall, 22),
     ),
     cardTheme: CardThemeData(
       color: c.surface,
@@ -184,7 +183,8 @@ ThemeData buildAppTheme([Brightness brightness = Brightness.light]) {
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(24)),
+        borderRadius: BorderRadius.all(Radius.circular(16)),
+        side: BorderSide(color: c.divider),
       ),
     ),
     filledButtonTheme: FilledButtonThemeData(
@@ -238,9 +238,9 @@ ThemeData buildAppTheme([Brightness brightness = Brightness.light]) {
     chipTheme: ChipThemeData(
       shape: pill,
       side: BorderSide(color: c.outline),
-      backgroundColor: Colors.transparent,
-      selectedColor: c.onSurface,
-      checkmarkColor: c.onInverse,
+      backgroundColor: c.surface,
+      selectedColor: c.accent,
+      checkmarkColor: c.onAccent,
       // A cor segue o estado: em FilterChip o rótulo selecionado não usa
       // secondaryLabelStyle e ficaria preto sobre preto.
       labelStyle: text.labelMedium!.copyWith(
@@ -248,7 +248,7 @@ ThemeData buildAppTheme([Brightness brightness = Brightness.light]) {
         fontWeight: FontWeight.w600,
         color: WidgetStateColor.resolveWith(
           (states) => states.contains(WidgetState.selected)
-              ? c.onInverse
+              ? c.onAccent
               : states.contains(WidgetState.disabled)
               ? c.onSurfaceMuted
               : c.onSurface,
@@ -257,7 +257,7 @@ ThemeData buildAppTheme([Brightness brightness = Brightness.light]) {
       secondaryLabelStyle: text.labelMedium!.copyWith(
         fontSize: 14,
         fontWeight: FontWeight.w600,
-        color: c.onInverse,
+        color: c.onAccent,
       ),
       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
     ),
@@ -265,8 +265,8 @@ ThemeData buildAppTheme([Brightness brightness = Brightness.light]) {
       style: SegmentedButton.styleFrom(
         shape: pill,
         side: BorderSide(color: c.outline),
-        selectedBackgroundColor: c.onSurface,
-        selectedForegroundColor: c.onInverse,
+        selectedBackgroundColor: c.accent,
+        selectedForegroundColor: c.onAccent,
         foregroundColor: c.onSurface,
         textStyle: text.labelLarge,
       ),
@@ -280,7 +280,7 @@ ThemeData buildAppTheme([Brightness brightness = Brightness.light]) {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.all(Radius.circular(16)),
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: c.divider),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.all(Radius.circular(16)),
