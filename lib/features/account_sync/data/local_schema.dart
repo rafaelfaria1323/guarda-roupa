@@ -38,6 +38,8 @@ const localSchema = Schema([
     Column.text('formality'),
     Column.text('fit'),
     Column.text('length'),
+    Column.text('wash'),
+    Column.integer('tumble_dry'),
     Column.text('occasions'),
     Column.text('material'),
     Column.text('care'),

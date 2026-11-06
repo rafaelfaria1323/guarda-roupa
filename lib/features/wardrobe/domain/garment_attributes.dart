@@ -74,6 +74,21 @@ enum GarmentLength {
   static GarmentLength? fromId(String? id) => _byId(values, id, (v) => v.id);
 }
 
+/// Como se lava, pela etiqueta. Máquina com a temperatura máxima.
+enum WashCare {
+  machine30('machine_30'),
+  machine40('machine_40'),
+  machine60('machine_60'),
+  hand('hand'),
+
+  /// Limpeza a seco ou "não lavar": vai à lavandaria.
+  professional('professional');
+
+  const WashCare(this.id);
+  final String id;
+  static WashCare? fromId(String? id) => _byId(values, id, (v) => v.id);
+}
+
 /// Ocasiões iniciais confirmadas (docs/features/conjuntos-e-ocasioes.md).
 enum Occasion {
   casual('casual'),
@@ -117,6 +132,8 @@ final class GarmentAttributes {
     this.formality,
     this.fit,
     this.length,
+    this.wash,
+    this.tumbleDry,
     this.occasions = const {},
     this.material,
     this.care,
@@ -135,6 +152,10 @@ final class GarmentAttributes {
   final Formality? formality;
   final GarmentFit? fit;
   final GarmentLength? length;
+  final WashCare? wash;
+
+  /// Pode ir à máquina de secar; `null` = não se sabe.
+  final bool? tumbleDry;
   final Set<Occasion> occasions;
 
   /// Texto da etiqueta, quando conhecido.
@@ -152,6 +173,8 @@ final class GarmentAttributes {
     'formality': formality?.id,
     'fit': fit?.id,
     'length': length?.id,
+    'wash': wash?.id,
+    'tumble_dry': tumbleDry,
     'occasions': [
       for (final o in Occasion.values)
         if (occasions.contains(o)) o.id,
@@ -170,6 +193,8 @@ final class GarmentAttributes {
     Formality? Function()? formality,
     GarmentFit? Function()? fit,
     GarmentLength? Function()? length,
+    WashCare? Function()? wash,
+    bool? Function()? tumbleDry,
     Set<Occasion>? occasions,
     String? Function()? material,
     String? Function()? care,
@@ -182,6 +207,8 @@ final class GarmentAttributes {
     formality: formality == null ? this.formality : formality(),
     fit: fit == null ? this.fit : fit(),
     length: length == null ? this.length : length(),
+    wash: wash == null ? this.wash : wash(),
+    tumbleDry: tumbleDry == null ? this.tumbleDry : tumbleDry(),
     occasions: occasions ?? this.occasions,
     material: material == null ? this.material : material(),
     care: care == null ? this.care : care(),
@@ -200,6 +227,8 @@ final class GarmentAttributes {
         formality: formality,
         fit: fit,
         length: length,
+        wash: wash,
+        tumbleDry: tumbleDry,
         occasions: Set.unmodifiable(occasions),
         material: text(material),
         care: text(care),
@@ -216,6 +245,8 @@ final class GarmentAttributes {
       other.formality == formality &&
       other.fit == fit &&
       other.length == length &&
+      other.wash == wash &&
+      other.tumbleDry == tumbleDry &&
       other.occasions.length == occasions.length &&
       other.occasions.containsAll(occasions) &&
       other.material == material &&
@@ -231,6 +262,8 @@ final class GarmentAttributes {
     formality,
     fit,
     length,
+    wash,
+    tumbleDry,
     Object.hashAllUnordered(occasions),
     material,
     care,

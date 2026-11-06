@@ -88,6 +88,8 @@ abstract final class GarmentRow {
       formality: Formality.fromId(row['formality'] as String?),
       fit: GarmentFit.fromId(row['fit'] as String?),
       length: GarmentLength.fromId(row['length'] as String?),
+      wash: WashCare.fromId(row['wash'] as String?),
+      tumbleDry: _bool(row['tumble_dry']),
       occasions: Set.unmodifiable(occasions),
       material: row['material'] as String?,
       care: row['care'] as String?,

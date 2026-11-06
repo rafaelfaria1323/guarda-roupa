@@ -65,7 +65,7 @@ class GarmentLaundrySection extends ConsumerWidget {
               ],
             ),
           ),
-        if (LaundryPolicy.asksProfessional(garment.attributes.care))
+        if (LaundryPolicy.isProfessional(garment.attributes))
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Row(

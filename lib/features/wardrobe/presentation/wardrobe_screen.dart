@@ -10,6 +10,7 @@ import '../../../core/domain/result.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../care/application/care_providers.dart';
+import '../../care/domain/laundry_basket.dart';
 import '../../care/domain/laundry_policy.dart';
 import '../../account_sync/application/providers.dart';
 import '../../import/application/import_providers.dart';
@@ -240,6 +241,10 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
                           g.availability == Availability.drying,
                     )
                     .length;
+                // O cesto conta todas as peças, não só as do filtro.
+                final basket = LaundryBasket.of(
+                  ref.watch(allGarmentsProvider).value ?? const [],
+                ).count;
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -252,15 +257,31 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
                         maintainSize: true,
                         maintainAnimation: true,
                         maintainState: true,
-                        child: Text(
-                          [
-                            l10n.wardrobeCount(garments?.length ?? 0),
-                            if (inCare > 0) l10n.wardrobeInCare(inCare),
-                          ].join(' · '),
-                          key: const Key('wardrobe-summary'),
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                [
+                                  l10n.wardrobeCount(garments?.length ?? 0),
+                                  if (inCare > 0) l10n.wardrobeInCare(inCare),
+                                ].join(' · '),
+                                key: const Key('wardrobe-summary'),
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                            if (basket > 0)
+                              ActionChip(
+                                key: const Key('wardrobe-basket'),
+                                avatar: const Icon(
+                                  Icons.local_laundry_service_outlined,
+                                ),
+                                label: Text(l10n.wardrobeBasket(basket)),
+                                onPressed: () =>
+                                    context.push(AppRoutes.laundryBasket),
+                              ),
+                          ],
                         ),
                       ),
                     ),

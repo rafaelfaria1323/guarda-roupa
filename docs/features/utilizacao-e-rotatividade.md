@@ -30,7 +30,7 @@ Editável por categoria (Definições → Lavagem e rotação por categoria) e p
 - `eligibleFrom` = última utilização + dias. Só utilizações confirmadas até hoje contam; datas futuras são ignoradas.
 - `rank`: elegíveis primeiro, depois menos usadas nos últimos 30 dias, depois usadas há mais tempo (nunca usadas à frente); desempate por id. Se nenhuma for elegível, todas vêm com `warning` para a sugestão o dizer.
 - Na ficha: “Volta à rotação a …” ou “Pode ser usada”. No “Vesti hoje”: nota informativa nas peças usadas recentemente (não impede o registo, que é do que aconteceu).
-- Por fazer: usar `rank` no motor de combinações e considerar reservas do planeador (incrementos seguintes).
+- O motor de combinações já ordena pela rotatividade (`rank`) e a pesquisa semanal reserva as peças de cada dia ([motor](motor-de-combinacoes.md), [planeamento](planeamento-semanal.md)).
 
 ## Requisitos confirmados
 
