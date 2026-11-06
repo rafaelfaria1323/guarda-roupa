@@ -34,7 +34,7 @@ final class OpenMeteoClient {
       'longitude': l.longitude.toStringAsFixed(2),
       'hourly':
           'apparent_temperature,precipitation,precipitation_probability,'
-          'wind_speed_10m',
+          'wind_speed_10m,uv_index',
       'wind_speed_unit': 'kmh',
       'timezone': l.timezone,
       'forecast_days': '$forecastDays',
@@ -94,11 +94,13 @@ final class OpenMeteoClient {
     final prob = hourly['precipitation_probability'] is List
         ? col('precipitation_probability')
         : null;
+    final uv = hourly['uv_index'] is List ? col('uv_index') : null;
     final n = times.length;
     if (feels.length != n ||
         rain.length != n ||
         wind.length != n ||
-        (prob != null && prob.length != n)) {
+        (prob != null && prob.length != n) ||
+        (uv != null && uv.length != n)) {
       throw const WeatherFetchFailed('columns differ');
     }
 
@@ -133,6 +135,9 @@ final class OpenMeteoClient {
       final ps = prob == null
           ? const <double>[]
           : [for (final i in idx) ?at(prob, i)];
+      final us = uv == null
+          ? const <double>[]
+          : [for (final i in idx) ?at(uv, i)];
       days.add(
         DayWeather(
           day: day,
@@ -144,6 +149,7 @@ final class OpenMeteoClient {
           precipitationProbability: ps.isEmpty
               ? null
               : ps.reduce((a, b) => a > b ? a : b).round(),
+          uvIndexMax: us.isEmpty ? null : us.reduce((a, b) => a > b ? a : b),
         ),
       );
     }

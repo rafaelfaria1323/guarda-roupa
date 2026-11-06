@@ -34,6 +34,14 @@ abstract final class LaundryPolicy {
     GarmentCategory.shoes ||
     GarmentCategory.boots ||
     GarmentCategory.sandals ||
+    GarmentCategory.scarf ||
+    GarmentCategory.beanie ||
+    GarmentCategory.gloves ||
+    GarmentCategory.hat ||
+    GarmentCategory.sunglasses ||
+    GarmentCategory.umbrella ||
+    GarmentCategory.belt ||
+    GarmentCategory.bag ||
     GarmentCategory.accessory ||
     GarmentCategory.other => 0,
   };

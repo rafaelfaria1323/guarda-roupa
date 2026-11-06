@@ -59,6 +59,7 @@ String? noteText(BuildContext context, SuggestionNote note) {
     ),
     FormalityMixNote() => l10n.noteFormalityMix,
     OptionalLayerNote() => l10n.noteOptionalLayer,
+    WeatherAccessoryNote(:final reason) => l10n.noteWeatherAccessory(reason.id),
     SavedOutfitNote(:final outfit, swaps: []) => switch (outfit.name) {
       final name? => l10n.noteSavedOutfit(name),
       null => l10n.noteSavedOutfitUnnamed,

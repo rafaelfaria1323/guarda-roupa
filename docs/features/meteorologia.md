@@ -24,13 +24,15 @@ Os limites ficam neste dispositivo (`local_settings`, chave `comfort_thresholds`
 ## Implementado (2026-11-03): previsão e localização
 
 - **Localização:** Definições › Localização da meteorologia. Pesquisa por nome na geocodificação do Open-Meteo e escolha numa lista (nome, região, coordenadas). Guarda-se neste dispositivo (tabela local `local_settings`, fora da sincronização e do backup), com coordenadas arredondadas a duas casas decimais. Sem escolha, Torres Vedras (39,09; −9,26; Europe/Lisbon).
-- **Pedido:** `api.open-meteo.com/v1/forecast` com coordenadas arredondadas, fuso do local, 7 dias e valores horários: sensação térmica, precipitação, probabilidade de precipitação e vento a 10 m (km/h). Não envia mais nada. Sem chave.
+- **Pedido:** `api.open-meteo.com/v1/forecast` com coordenadas arredondadas, fuso do local, 7 dias e valores horários: sensação térmica, precipitação, probabilidade de precipitação, vento a 10 m (km/h) e índice UV (desde 2026-11-06). Não envia mais nada. Sem chave.
 - **Resumo por dia** (`DayWeather`), só das 8 h às 20 h locais (a madrugada não conta):
   - média, mínimo e máximo da sensação térmica;
   - precipitação somada e probabilidade máxima;
-  - vento máximo.
+  - vento máximo;
+  - índice UV máximo (opcional: uma cópia guardada antes não o tem).
   - Um dia com horas em falta fica de fora.
 - **Chuva para o motor** (`RainRule`): ≥ 1 mm nessas horas, ou probabilidade ≥ 50 %. São valores técnicos iniciais, a rever com o utilizador. O motor recebe a sensação média, a chuva e o vento máximo.
+- **Sol para o motor** (`SunRule`, 2026-11-06): índice UV máximo ≥ 3 (moderado) e sem chuva. Serve só para sugerir óculos de sol e, com calor, chapéu ([acessórios pelo tempo](motor-de-combinacoes.md#acessórios-pelo-tempo-2026-11-06)). O tempo indicado à mão não diz se há sol.
 - **Cache** (`WeatherRepository`, tabela local `weather_cache` por local):
   - pede no máximo uma vez a cada 3 h, salvo pedido explícito para atualizar;
   - com menos de 6 h, a previsão é *recente*; uma cópia mais velha (sem rede ou pedido falhado) é *antiga* e diz quando foi obtida;

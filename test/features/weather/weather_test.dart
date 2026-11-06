@@ -20,12 +20,14 @@ Map<String, Object?> hourly({
   double Function(int day, int hour)? rain,
   double wind = 10,
   int? probability = 10,
+  double Function(int day, int hour)? uv,
 }) {
   final time = <String>[];
   final f = <double?>[];
   final r = <double?>[];
   final w = <double?>[];
   final p = <int?>[];
+  final u = <double?>[];
   for (var d = 0; d < days; d++) {
     final day = CalendarDay(2026, 11, 3).addDays(d).iso;
     for (var h = 0; h < 24; h++) {
@@ -34,6 +36,7 @@ Map<String, Object?> hourly({
       r.add(rain?.call(d, h) ?? 0);
       w.add(wind);
       p.add(probability);
+      u.add(uv?.call(d, h) ?? 0);
     }
   }
   return {
@@ -43,6 +46,7 @@ Map<String, Object?> hourly({
       'precipitation': r,
       'precipitation_probability': p,
       'wind_speed_10m': w,
+      if (uv != null) 'uv_index': u,
     },
   };
 }
@@ -82,6 +86,31 @@ void main() {
       expect(first.precipitationMm, 0);
       expect(first.precipitationProbability, 30);
       expect(days[1].precipitationMm, closeTo(0.6, 1e-9));
+    });
+
+    test('UV: máximo nas horas do dia; sem coluna fica por saber', () {
+      final days = OpenMeteoClient.parseForecast(
+        hourly(uv: (d, h) => h == 13 ? (d == 0 ? 5.5 : 1) : (h == 2 ? 9 : 0)),
+      );
+      expect(days.map((d) => d.uvIndexMax), [5.5, 1]);
+      expect(OpenMeteoClient.parseForecast(hourly()).first.uvIndexMax, isNull);
+      expect(DayWeather.fromJson(days.first.toJson())!.uvIndexMax, 5.5);
+    });
+
+    test('sol: UV ≥ 3 e sem chuva', () {
+      DayWeather d({double? uv, double mm = 0}) => DayWeather(
+        day: CalendarDay(2026, 11, 3),
+        feelsLikeC: 20,
+        feelsLikeMinC: 20,
+        feelsLikeMaxC: 20,
+        precipitationMm: mm,
+        windMaxKmh: 0,
+        uvIndexMax: uv,
+      );
+      expect(d(uv: 3).toConditions().sunny, isTrue);
+      expect(d(uv: 2.9).toConditions().sunny, isFalse);
+      expect(d(uv: 6, mm: 4).toConditions().sunny, isFalse);
+      expect(d().toConditions().sunny, isFalse);
     });
 
     test('dia incompleto ou com valores em falta fica de fora', () {

@@ -422,6 +422,19 @@ select pg_temp.op('b1000000-0000-0000-0000-000000000011', 'edit',
 select pg_temp.check('máquina de secar volta a não sei',
   :'r'::jsonb ->> 'result' = 'applied'
   and (select tumble_dry is null from public.garments where id = :'G3'));
+select pg_temp.op('b1000000-0000-0000-0000-000000000012', 'create',
+  '{"category":"umbrella"}', '10000000-0000-0000-0000-000000000008') as r \gset
+select pg_temp.check('cria chapéu-de-chuva',
+  :'r'::jsonb ->> 'result' = 'applied'
+  and (select category = 'umbrella' from public.garments
+       where id = '10000000-0000-0000-0000-000000000008'));
+select pg_temp.op('b1000000-0000-0000-0000-000000000013', 'edit',
+  '{"changes":{"category":{"from":"umbrella","to":"cape"}}}',
+  '10000000-0000-0000-0000-000000000008') as r \gset
+select pg_temp.check('categoria desconhecida é rejeitada',
+  :'r'::jsonb ->> 'result' <> 'applied'
+  and (select category = 'umbrella' from public.garments
+       where id = '10000000-0000-0000-0000-000000000008'));
 commit;
 
 \echo 'Todos os testes SQL passaram.'

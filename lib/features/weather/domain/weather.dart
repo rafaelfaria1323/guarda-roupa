@@ -96,6 +96,7 @@ final class DayWeather {
     required this.precipitationMm,
     required this.windMaxKmh,
     this.precipitationProbability,
+    this.uvIndexMax,
   });
 
   /// Horas que contam para vestir: o dia, não a madrugada.
@@ -116,6 +117,10 @@ final class DayWeather {
   final int? precipitationProbability;
   final double windMaxKmh;
 
+  /// Índice UV máximo nessas horas; `null` se o fornecedor não o deu
+  /// (ou numa cópia guardada antes de existir).
+  final double? uvIndexMax;
+
   Map<String, Object?> toJson() => {
     'day': day.iso,
     'feels_like': feelsLikeC,
@@ -124,6 +129,7 @@ final class DayWeather {
     'precipitation': precipitationMm,
     'precipitation_probability': precipitationProbability,
     'wind_max': windMaxKmh,
+    'uv_index_max': uvIndexMax,
   };
 
   static DayWeather? fromJson(Object? json) {
@@ -157,6 +163,7 @@ final class DayWeather {
         final num v => v.round(),
         _ => null,
       },
+      uvIndexMax: n('uv_index_max'),
     );
   }
 }
@@ -172,11 +179,21 @@ abstract final class RainRule {
       (d.precipitationProbability ?? 0) >= minProbability;
 }
 
+/// O que conta como "dia de sol" para sugerir óculos de sol (e chapéu,
+/// se estiver calor): índice UV moderado ou mais e sem chuva.
+abstract final class SunRule {
+  static const minUvIndex = 3.0;
+
+  static bool isSunny(DayWeather d) =>
+      (d.uvIndexMax ?? 0) >= minUvIndex && !RainRule.isRainy(d);
+}
+
 extension DayWeatherConditions on DayWeather {
   WeatherConditions toConditions() => WeatherConditions(
     feelsLikeC: feelsLikeC,
     rain: RainRule.isRainy(this),
     windKmh: windMaxKmh,
+    sunny: SunRule.isSunny(this),
   );
 }
 

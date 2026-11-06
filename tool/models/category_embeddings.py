@@ -45,7 +45,15 @@ CATEGORIES = {
     'shoes': ['leather shoes', 'dress shoes', 'heels'],
     'boots': ['boots'],
     'sandals': ['sandals', 'flip-flops'],
-    'accessory': ['a hat', 'a cap', 'a bag', 'a belt', 'a scarf'],
+    'scarf': ['a scarf', 'a knitted scarf', 'a wool scarf'],
+    'beanie': ['a beanie', 'a knit winter hat'],
+    'gloves': ['gloves', 'winter gloves', 'leather gloves'],
+    'hat': ['a baseball cap', 'a hat', 'a bucket hat'],
+    'sunglasses': ['sunglasses'],
+    'umbrella': ['an umbrella', 'a folding umbrella'],
+    'belt': ['a belt', 'a leather belt'],
+    'bag': ['a bag', 'a handbag', 'a backpack', 'a tote bag'],
+    'accessory': ['a necktie', 'socks', 'jewelry', 'a wristwatch'],
 }
 CONTEXT = 77
 EOT = 49407

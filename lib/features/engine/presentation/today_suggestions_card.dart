@@ -399,7 +399,7 @@ class _SuggestionCandidateViewState extends State<SuggestionCandidateView> {
     final candidate = widget.candidate;
     final index = widget.index;
     final layer = candidate.optionalLayer;
-    final items = [...candidate.items, ?layer];
+    final items = [...candidate.items, ?layer, ...candidate.accessories];
     final small = theme.textTheme.bodySmall?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
       height: 1.45,
@@ -460,6 +460,17 @@ class _SuggestionCandidateViewState extends State<SuggestionCandidateView> {
         if (layer != null)
           Text(
             l10n.suggestionsOptionalLayer(garmentLabel(l10n, layer.garment)),
+            style: small,
+          ),
+        if (candidate.accessories.isNotEmpty)
+          Text(
+            l10n.suggestionsAccessories(
+              [
+                for (final a in candidate.accessories)
+                  garmentLabel(l10n, a.garment),
+              ].join(', '),
+            ),
+            key: Key('suggestion-$index-accessories'),
             style: small,
           ),
         for (final note in candidate.notes.whereType<SavedOutfitNote>())
