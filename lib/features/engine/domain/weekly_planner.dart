@@ -149,13 +149,7 @@ abstract final class WeeklyPlanner {
           continue;
         }
         final result = DailyEngine.suggest(
-          WardrobeSnapshot(
-            garments: snapshot.garments,
-            wears: [...snapshot.wears, ...state.projected],
-            cleanings: snapshot.cleanings,
-            policies: snapshot.policies,
-            preferences: snapshot.preferences,
-          ),
+          snapshot.withWears([...snapshot.wears, ...state.projected]),
           SuggestionRequest(
             day: dayRequest.day,
             occasion: dayRequest.occasion,

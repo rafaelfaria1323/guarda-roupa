@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../account_sync/application/providers.dart';
 import '../../care/application/care_providers.dart';
 import '../../inspirations/application/inspiration_providers.dart';
+import '../../outfits/application/outfit_providers.dart';
 import '../../wardrobe/domain/garment_attributes.dart';
 import '../../wear/application/wear_providers.dart';
 import '../../weather/application/weather_providers.dart';
@@ -19,11 +20,13 @@ final wardrobeSnapshotProvider = Provider<WardrobeSnapshot?>((ref) {
   final cleanings = ref.watch(allCleaningsProvider).value;
   final policies = ref.watch(carePoliciesProvider).value;
   final preferences = ref.watch(preferencesProvider).value;
+  final outfits = ref.watch(outfitsProvider).value;
   if (garments == null ||
       wears == null ||
       cleanings == null ||
       policies == null ||
-      preferences == null) {
+      preferences == null ||
+      outfits == null) {
     return null;
   }
   return WardrobeSnapshot(
@@ -32,6 +35,7 @@ final wardrobeSnapshotProvider = Provider<WardrobeSnapshot?>((ref) {
     cleanings: cleanings,
     policies: policies,
     preferences: preferences,
+    outfits: outfits,
   );
 });
 

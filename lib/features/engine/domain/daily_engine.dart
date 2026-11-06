@@ -82,6 +82,62 @@ abstract final class DailyEngine {
       }
     }
 
+    // Conjuntos guardados para esta ocasião, se as peças servirem hoje
+    // (disponíveis e da ocasião). O casaco decide-o o tempo, como nos
+    // outros; camadas intermédias e acessórios o motor ainda não põe.
+    final pools = {
+      _Slot.top: tops,
+      _Slot.bottom: bottoms,
+      _Slot.onePiece: onePieces,
+      _Slot.footwear: footwear,
+      _Slot.outer: outer,
+    };
+    for (final o in ctx.outfits) {
+      final mains = <(_Entry, OutfitRole)>[];
+      _Pool? ownFootwear;
+      _Pool? ownOuter;
+      var usable = true;
+      for (final item in o.items) {
+        final slot = _slotOf(item.role);
+        if (slot == null) continue;
+        final pool = pools[slot]!;
+        final entry = pool.ranked
+            .where((e) => e.garment.id == item.garmentId)
+            .firstOrNull;
+        if (entry == null) {
+          usable = false;
+          break;
+        }
+        switch (slot) {
+          case _Slot.footwear:
+            ownFootwear = _Pool(slot, pool.cause, [entry]);
+          case _Slot.outer:
+            ownOuter = _Pool(slot, pool.cause, [entry]);
+          case _Slot.top || _Slot.bottom || _Slot.onePiece:
+            mains.add((entry, item.role));
+        }
+      }
+      final roles = [for (final (_, r) in mains) r];
+      final shape =
+          (roles.length == 2 &&
+              roles.contains(OutfitRole.mainTop) &&
+              roles.contains(OutfitRole.bottom)) ||
+          (roles.length == 1 && roles.single == OutfitRole.onePiece);
+      if (!usable || !shape) continue;
+      // A parte de cima primeiro: é ela que decide o casaco.
+      mains.sort(
+        (a, b) => _Context._layer(a.$2).compareTo(_Context._layer(b.$2)),
+      );
+      add(
+        ctx.compose(
+          0,
+          mains,
+          footwear: ownFootwear ?? footwear,
+          outer: ownOuter ?? outer,
+        ),
+      );
+    }
+
     drafts.sort(_Draft.compare);
     final candidates = [for (final d in drafts.take(max)) d.candidate];
 
@@ -301,6 +357,13 @@ final class _Context {
               (request.occasion != null &&
                   p.occasions.contains(request.occasion)))
             p,
+      ],
+      outfits = [
+        for (final o in snapshot.outfits)
+          if (o.occasions.isEmpty ||
+              request.occasion == null ||
+              o.occasions.contains(request.occasion))
+            o,
       ];
 
   final WardrobeSnapshot snapshot;
@@ -309,6 +372,9 @@ final class _Context {
   final Map<GarmentId, RotationState> rotation;
   final Map<GarmentId, LaundryState> laundry;
   final List<StylePreference> preferences;
+
+  /// Conjuntos guardados que servem para a ocasião pedida.
+  final List<Outfit> outfits;
   bool outerAvailable = false;
 
   bool get rain => request.weather?.rain ?? false;
@@ -521,6 +587,19 @@ final class _Context {
       );
     }
 
+    // É um conjunto guardado: todas as peças dele estão aqui (o casaco
+    // não conta, depende do tempo).
+    final ids = {for (final (e, _) in items) e.garment.id};
+    final saved = outfits.where((o) {
+      final needed = [
+        for (final i in o.items)
+          if (DailyEngine._slotOf(i.role) case final s? when s != _Slot.outer)
+            i.garmentId,
+      ];
+      return needed.isNotEmpty && needed.every(ids.contains);
+    }).firstOrNull;
+    if (saved != null) notes.add(SavedOutfitNote(saved));
+
     final suggested = [
       for (final (e, role) in items) SuggestedItem(e.garment, role, e.notes),
     ];
@@ -537,7 +616,7 @@ final class _Context {
       ),
       entries: [for (final (e, _) in items) e],
       seed: request.seed,
-      comboPreference: comboPreference,
+      comboPreference: comboPreference + (saved == null ? 0 : 1),
       load: load,
     );
   }

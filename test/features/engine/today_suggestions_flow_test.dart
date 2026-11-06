@@ -108,6 +108,46 @@ void main() {
     expect(find.byKey(const Key('suggestion-0-wear')), findsNothing);
   });
 
+  testWidgets('guardar a sugestão como conjunto marca-a e não repete', (
+    tester,
+  ) async {
+    final app = await pumpApp(
+      tester,
+      overrides: [
+        clockProvider.overrideWithValue(
+          FixedClock(DateTime.utc(2026, 11, 3, 12)),
+        ),
+        httpClientProvider.overrideWithValue(
+          MockClient((_) async => throw http.ClientException('offline')),
+        ),
+      ],
+    );
+    await seed(tester, app.db);
+    await scrollTo(tester, find.byKey(const Key('suggestion-0-save')));
+    expect(find.byKey(const Key('suggestion-0-saved')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('suggestion-0-save')));
+    await settleUntil(tester, find.byKey(const Key('suggestion-0-saved')));
+    expect(find.text('Um dos teus conjuntos'), findsOne);
+    expect(find.byKey(const Key('suggestion-0-save')), findsNothing);
+    expect(
+      find.text(
+        'Guardado nos teus conjuntos. Passa a ser preferido nas sugestões.',
+      ),
+      findsOne,
+    );
+
+    final rows = (await tester.runAsync(
+      () => app.db.getAll('SELECT items FROM outfits'),
+    ))!;
+    expect(rows, hasLength(1));
+    final roles = [
+      for (final i in jsonDecode(rows.single['items']! as String) as List)
+        (i as Map)['role'],
+    ];
+    expect(roles, ['main_top', 'bottom', 'footwear']);
+  });
+
   testWidgets('sem previsão diz isso e aceita o tempo indicado à mão', (
     tester,
   ) async {

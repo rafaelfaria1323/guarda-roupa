@@ -41,7 +41,7 @@ De cima para baixo, sem cartões à volta (`PlannerScreen`):
 2. **Tempo numa frase** (resumo da previsão, origem e hora em letra pequena; "Atualizar" e "Indicar o tempo à mão" como ações discretas).
 3. **Sugestão do dia como flat-lay.** As peças (`GarmentCutout`: foto com borda branca e sombra; sem foto, um cartão na cor principal da peça) pousadas com rotações pequenas. Por baixo, "Sugestão 1 de N", os nomes numa frase e os avisos (lavagem, rotação, papel em falta) a laranja escuro. As razões ficam atrás de "Porquê este".
 4. **Ocasião** numa só linha de pílulas que desliza na horizontal.
-5. **Um botão principal**, "Vou vestir isto" (abre "Vesti hoje" com as peças por confirmar), e "Mostrar outro" (passa à sugestão seguinte; no fim pede um novo lote ao motor).
+5. **Um botão principal**, "Vou vestir isto" (abre "Vesti hoje" com as peças por confirmar), "Mostrar outro" (passa à sugestão seguinte; no fim pede um novo lote ao motor) e "Guardar como conjunto" (com a ocasião escolhida, sem a camada opcional). Uma sugestão que já é um conjunto guardado diz "Um dos teus conjuntos" a índigo, por baixo dos nomes, e não mostra o botão.
 6. **Vesti hoje.** Sem registo: uma linha e o botão "Vesti hoje". Com registo: "Hoje vestiste" com as peças recortadas, "Corrigir" e "Desfazer".
 7. **A tua semana como um fio** (`WeekThread`): sete nós com a cor da peça principal de cada dia (vestida, senão planeada); tracejado = por decidir; hoje com contorno. Por baixo, os dias em cartões brancos com a ocasião, "Pode não acontecer", as peças e as ações (inalterados).
 

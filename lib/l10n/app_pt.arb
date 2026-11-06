@@ -1415,5 +1415,16 @@
         "type": "int"
       }
     }
-  }
+  },
+  "noteSavedOutfit": "Um dos teus conjuntos: {name}",
+  "@noteSavedOutfit": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noteSavedOutfitUnnamed": "Um dos teus conjuntos",
+  "suggestionsSaveOutfit": "Guardar como conjunto",
+  "suggestionsOutfitSaved": "Guardado nos teus conjuntos. Passa a ser preferido nas sugestões."
 }
