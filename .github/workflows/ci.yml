@@ -129,7 +129,7 @@ jobs:
     timeout-minutes: 5
     strategy:
       matrix:
-        function: [import-product, reminders, describe-photo]
+        function: [import-product, reminders, describe-photo, stylist]
     defaults:
       run:
         working-directory: supabase/functions/${{ matrix.function }}

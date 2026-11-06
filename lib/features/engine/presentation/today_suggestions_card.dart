@@ -8,6 +8,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../outfits/application/outfit_providers.dart';
 import '../../outfits/domain/outfit.dart';
 import '../../outfits/presentation/outfit_messages.dart';
+import '../../stylist/presentation/stylist_section.dart';
 import '../../wardrobe/domain/garment_attributes.dart';
 import '../../wardrobe/presentation/garment_cutout.dart';
 import '../../wear/presentation/today_wear_card.dart';
@@ -71,6 +72,7 @@ class TodaySuggestionsCard extends ConsumerWidget {
           )
         else
           _Result(result: result),
+        const StylistSection(),
       ],
     );
   }
@@ -378,11 +380,19 @@ class SuggestionCandidateView extends StatefulWidget {
     required this.index,
     required this.total,
     required this.candidate,
+    this.heading,
+    this.keyPrefix,
   });
 
   final int index;
   final int total;
   final OutfitCandidate candidate;
+
+  /// Em vez de "Sugestão X de Y" (ex.: o nome dado pelo stylist).
+  final String? heading;
+
+  /// Prefixo das chaves (testes); por omissão `suggestion-<index>`.
+  final String? keyPrefix;
 
   @override
   State<SuggestionCandidateView> createState() =>
@@ -398,6 +408,7 @@ class _SuggestionCandidateViewState extends State<SuggestionCandidateView> {
     final theme = Theme.of(context);
     final candidate = widget.candidate;
     final index = widget.index;
+    final k = widget.keyPrefix ?? 'suggestion-$index';
     final layer = candidate.optionalLayer;
     final items = [...candidate.items, ?layer, ...candidate.accessories];
     final small = theme.textTheme.bodySmall?.copyWith(
@@ -439,12 +450,13 @@ class _SuggestionCandidateViewState extends State<SuggestionCandidateView> {
     ];
 
     return Column(
-      key: Key('suggestion-$index'),
+      key: Key(k),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _FlatLay(items: items),
         Text(
-          l10n.suggestionOf('${index + 1}', '${widget.total}'),
+          widget.heading ??
+              l10n.suggestionOf('${index + 1}', '${widget.total}'),
           style: theme.textTheme.labelMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -470,14 +482,14 @@ class _SuggestionCandidateViewState extends State<SuggestionCandidateView> {
                   garmentLabel(l10n, a.garment),
               ].join(', '),
             ),
-            key: Key('suggestion-$index-accessories'),
+            key: Key('$k-accessories'),
             style: small,
           ),
         for (final note in candidate.notes.whereType<SavedOutfitNote>())
           if (noteText(context, note) case final text?)
             Text(
               text,
-              key: Key('suggestion-$index-saved'),
+              key: Key('$k-saved'),
               style: small?.copyWith(color: theme.colorScheme.primary),
             ),
         ...warnings,
@@ -486,7 +498,7 @@ class _SuggestionCandidateViewState extends State<SuggestionCandidateView> {
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton(
-              key: Key('suggestion-$index-why'),
+              key: Key('$k-why'),
               style: TextButton.styleFrom(
                 padding: EdgeInsets.zero,
                 minimumSize: const Size(0, 36),

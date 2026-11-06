@@ -15,11 +15,9 @@ import {
   WASH,
 } from './schema.ts';
 
-export type Kind = 'garment' | 'label';
-export type Quota = 'ok' | 'forbidden' | 'rate_limited' | 'unauthorized';
+import type { Generated, Quota } from '../_shared/gemini.ts';
 
-/** Resposta do Gemini: o texto JSON, ou o estado HTTP do erro. */
-export type Generated = { text: string } | { status: number };
+export type Kind = 'garment' | 'label';
 
 export interface Deps {
   /** Há chave do Gemini nos secrets. */
