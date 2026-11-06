@@ -257,6 +257,12 @@ void main() {
     await tester.pumpAndSettle();
 
     Future<void> tapKey(String key) async {
+      // O formulário é uma lista preguiçosa: pode ainda não estar construída.
+      await tester.scrollUntilVisible(
+        find.byKey(Key(key)),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.ensureVisible(find.byKey(Key(key)));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(Key(key)));
@@ -354,6 +360,12 @@ void main() {
     await tester.enterText(find.byKey(const Key('garment-name')), 'Grossa');
 
     Future<void> tapKey(String key) async {
+      // O formulário é uma lista preguiçosa: pode ainda não estar construída.
+      await tester.scrollUntilVisible(
+        find.byKey(Key(key)),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.ensureVisible(find.byKey(Key(key)));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(Key(key)));

@@ -323,7 +323,7 @@
       }
     }
   },
-  "colorLabel": "{color, select, white{Branco} cream{Cru} beige{Bege} khaki{Caqui} brown{Castanho} grey{Cinzento} charcoal{Cinzento-escuro} black{Preto} navy{Azul-marinho} blue{Azul} light_blue{Azul-claro} denim{Ganga} green{Verde} olive{Verde-azeitona} yellow{Amarelo} orange{Laranja} red{Vermelho} burgundy{Bordô} pink{Rosa} purple{Roxo} other{Cor personalizada}}",
+  "colorLabel": "{color, select, white{Branco} cream{Cru} beige{Bege} khaki{Caqui} brown{Castanho} grey{Cinzento} charcoal{Cinzento-escuro} black{Preto} navy{Azul-marinho} blue{Azul} light_blue{Azul-claro} denim{Ganga} green{Verde} mint{Verde-menta} turquoise{Turquesa} olive{Verde-azeitona} yellow{Amarelo} orange{Laranja} terracotta{Terracota} red{Vermelho} burgundy{Bordô} pink{Rosa} purple{Roxo} lilac{Lilás} silver{Prateado} gold{Dourado} other{Cor personalizada}}",
   "@colorLabel": {
     "placeholders": {
       "color": {
@@ -1305,5 +1305,9 @@
         "type": "int"
       }
     }
+  },
+  "colorDetailTag": "detalhe",
+  "@colorDetailTag": {
+    "description": "Cor que ocupa pouco da peça (menos de 10 %), como uma estrela ou uma fivela."
   }
 }

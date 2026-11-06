@@ -60,5 +60,13 @@ void main() {
     ]);
     expect(colorsFromText('Cinzento escuro'), [ReferenceColor.charcoal]);
     expect(colorsFromText('Estampado'), isEmpty);
+    expect(colorsFromText('Aço / Verde menta'), [
+      ReferenceColor.silver,
+      ReferenceColor.mint,
+    ]);
+    expect(colorsFromText('Dourado'), [ReferenceColor.gold]);
+    expect(colorsFromText('Terracota'), [ReferenceColor.terracotta]);
+    expect(colorsFromText('Lilás'), [ReferenceColor.lilac]);
+    expect(colorsFromText('Verde-água'), [ReferenceColor.turquoise]);
   });
 }

@@ -109,4 +109,87 @@ void main() {
     );
     expect(percents(img.encodePng(image)), {ReferenceColor.navy: 100});
   });
+
+  test('detalhe pequeno e vivo entra como detalhe', () {
+    // Como a estrela vermelha de uns ténis brancos num fundo de estúdio.
+    const w = 200, h = 160;
+    final image = img.Image(width: w, height: h)
+      ..clear(rgb(ReferenceColor.grey));
+    img.fillRect(
+      image,
+      x1: 40,
+      y1: 40,
+      x2: 159,
+      y2: 119,
+      color: rgb(ReferenceColor.navy),
+    );
+    img.fillRect(
+      image,
+      x1: 90,
+      y1: 70,
+      x2: 109,
+      y2: 89,
+      color: rgb(ReferenceColor.red),
+    );
+    expect(percents(img.encodePng(image)), {
+      ReferenceColor.navy: 95,
+      ReferenceColor.red: 5,
+    });
+  });
+
+  test('detalhe neutro pequeno não entra', () {
+    const w = 200, h = 160;
+    final image = img.Image(width: w, height: h)
+      ..clear(rgb(ReferenceColor.grey));
+    img.fillRect(
+      image,
+      x1: 40,
+      y1: 40,
+      x2: 159,
+      y2: 119,
+      color: rgb(ReferenceColor.red),
+    );
+    img.fillRect(
+      image,
+      x1: 90,
+      y1: 70,
+      x2: 109,
+      y2: 89,
+      color: rgb(ReferenceColor.black),
+    );
+    expect(percents(img.encodePng(image)), {ReferenceColor.red: 100});
+  });
+
+  test('peça pequena num fundo de estúdio liso: tira o fundo', () {
+    // Fotos de loja com muita margem: a peça ocupa menos de 15 %.
+    const w = 200, h = 160;
+    final image = img.Image(width: w, height: h)
+      ..clear(img.ColorRgb8(0xEC, 0xE7, 0xE1));
+    img.fillRect(
+      image,
+      x1: 80,
+      y1: 60,
+      x2: 119,
+      y2: 99,
+      color: rgb(ReferenceColor.navy),
+    );
+    expect(percents(img.encodePng(image)), {ReferenceColor.navy: 100});
+  });
+
+  test('PNG de 16 bits (captura do iPhone)', () {
+    final image = img.Image(width: 50, height: 50, format: img.Format.uint16);
+    for (final p in image) {
+      p.setRgb(0xC0C0, 0x3939, 0x2B2B);
+    }
+    expect(percents(img.encodePng(image)), {ReferenceColor.red: 100});
+  });
+
+  test('metálicos não vêm da foto', () {
+    final image = img.Image(width: 50, height: 50)
+      ..clear(rgb(ReferenceColor.silver));
+    expect(
+      percents(img.encodePng(image)).keys,
+      isNot(contains(ReferenceColor.silver)),
+    );
+  });
 }

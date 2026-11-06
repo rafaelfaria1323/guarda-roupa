@@ -18,21 +18,9 @@ import '../../wardrobe/domain/reference_color.dart';
 /// Sem cores numa peça considerada, a combinação de cor fica por saber:
 /// nunca se afirma nem se penaliza.
 abstract final class OutfitHarmony {
-  /// Cores de referência tratadas como neutras (proposta P-21). Fora da
-  /// lista, uma cor é neutra se tiver croma OKLCH < [neutralChroma].
-  static const neutralColors = {
-    ReferenceColor.white,
-    ReferenceColor.cream,
-    ReferenceColor.beige,
-    ReferenceColor.khaki,
-    ReferenceColor.brown,
-    ReferenceColor.grey,
-    ReferenceColor.charcoal,
-    ReferenceColor.black,
-    ReferenceColor.navy,
-    ReferenceColor.denim,
-  };
-
+  /// Cores de referência neutras: [ReferenceColor.isNeutral] (proposta
+  /// P-21). Fora da lista, uma cor é neutra se tiver croma OKLCH <
+  /// [neutralChroma].
   static const neutralChroma = 0.05;
 
   /// "Tons próximos": matizes a menos disto (graus OKLCH) e todas com cor.
@@ -105,7 +93,7 @@ abstract final class OutfitHarmony {
 
   static bool isNeutral(int rgb) {
     if (ReferenceColor.fromRgb(rgb) case final ref?) {
-      return neutralColors.contains(ref);
+      return ref.isNeutral;
     }
     return _oklch(rgb).chroma < neutralChroma;
   }

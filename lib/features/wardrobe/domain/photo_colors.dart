@@ -17,7 +17,7 @@ import 'reference_color.dart';
 /// e fundos parecidos com a peça enganam.
 abstract final class PhotoColors {
   /// Lado máximo da imagem reduzida que se analisa.
-  static const sampleSide = 64;
+  static const sampleSide = 128;
 
   /// A borda é fundo se uma só cor ocupar pelo menos isto dela.
   static const backgroundShare = 0.6;
@@ -31,9 +31,25 @@ abstract final class PhotoColors {
   /// fundo (ou ocupa a foto toda) e o fundo não se tira.
   static const minForeground = 0.15;
 
+  /// Fundo de estúdio liso: quase toda a borda ([flatShare]) a menos de
+  /// [flatDistance] da cor típica. Aí a peça pode ser pequena na foto (fotos
+  /// de loja com muita margem): basta sobrar [minMaskShare].
+  static const flatDistance = 0.02;
+  static const flatShare = 0.9;
+
   /// Uma cor entra se ocupar pelo menos isto do que sobra.
   static const minShare = 0.1;
   static const maxColors = 3;
+
+  /// Detalhes (a estrela de uns ténis, uma fivela colorida): uma cor que
+  /// não seja neutra ([ReferenceColor.isNeutral]) entra a partir deste
+  /// tanto, até [maxWithAccents] cores ao todo.
+  static const minAccentShare = 0.03;
+
+  /// Um detalhe tem de se distinguir das cores principais (distância OKLab),
+  /// para não ser um reflexo ou uma sombra de uma delas.
+  static const accentDistance = 0.1;
+  static const maxWithAccents = 4;
 
   /// Uma máscara que marque menos do que isto como peça (ou quase tudo) não
   /// recortou nada de útil: usa-se a borda.
@@ -41,7 +57,8 @@ abstract final class PhotoColors {
   static const maxMaskShare = 0.98;
 
   static final _refs = [
-    for (final c in ReferenceColor.values) (c, Oklab.fromRgb(c.rgb)),
+    for (final c in ReferenceColor.values)
+      if (!c.isMetallic) (c, Oklab.fromRgb(c.rgb)),
   ];
 
   /// `[]` se a imagem não se ler. Com [mask], só conta o que for peça.
@@ -77,7 +94,9 @@ abstract final class PhotoColors {
         if (useMask && !mask.isForeground((x + 0.5) / w, (y + 0.5) / h)) {
           continue;
         }
-        final rgb = (p.r.toInt() << 16) | (p.g.toInt() << 8) | p.b.toInt();
+        // Normalizado: as capturas do iPhone são PNG de 16 bits por canal.
+        int c8(num v) => (v / p.maxChannelValue * 255).round().clamp(0, 255);
+        final rgb = (c8(p.r) << 16) | (c8(p.g) << 8) | c8(p.b);
         final lab = Oklab.fromRgb(rgb);
         labs[y * w + x] = lab;
         grid[y * w + x] = _nearest(lab);
@@ -103,11 +122,17 @@ abstract final class PhotoColors {
     // Fundo por cor de referência (fundos lisos) ou pela distância à cor
     // típica da borda (fundos com gradiente).
     bool Function(int i)? isBackground;
+    var flat = false;
     if (borderTotal > 0) {
       final top = border.entries.reduce((a, b) => b.value > a.value ? b : a);
       final typical = _median(borderLabs);
       const d2 = backgroundDistance * backgroundDistance;
       final near = borderLabs.where((l) => l.distance2(typical) <= d2).length;
+      const f2 = flatDistance * flatDistance;
+      flat =
+          borderLabs.where((l) => l.distance2(typical) <= f2).length /
+              borderTotal >=
+          flatShare;
       if (near / borderTotal >= backgroundShare) {
         isBackground = (i) =>
             grid[i] == top.key || labs[i]!.distance2(typical) <= d2;
@@ -133,7 +158,9 @@ abstract final class PhotoColors {
     if (isBackground != null && !useMask) {
       final rest = count(without: isBackground);
       final kept = rest.values.fold(0, (s, v) => s + v);
-      if (kept / total >= minForeground) counts = rest;
+      if (kept / total >= (flat ? minMaskShare : minForeground)) {
+        counts = rest;
+      }
     }
     return _proportions(counts);
   }
@@ -161,27 +188,59 @@ abstract final class PhotoColors {
     return best.$1;
   }
 
-  /// As maiores, em passos de 10 % (mínimo 10 %), a somar 100 %.
+  /// As maiores (até [maxColors]) e os detalhes vivos (até
+  /// [maxWithAccents] ao todo), em passos de 5 % (mínimo 5 %), a somar
+  /// 100 %.
   static List<GarmentColor> _proportions(Map<ReferenceColor, int> counts) {
     final total = counts.values.fold(0, (s, v) => s + v);
-    final ranked =
-        counts.entries.where((e) => e.value / total >= minShare).toList()
-          ..sort((a, b) {
-            final c = b.value.compareTo(a.value);
-            return c != 0 ? c : a.key.index.compareTo(b.key.index);
-          });
-    final chosen = ranked.take(maxColors).toList();
+    int byShare(
+      MapEntry<ReferenceColor, int> a,
+      MapEntry<ReferenceColor, int> b,
+    ) {
+      final c = b.value.compareTo(a.value);
+      return c != 0 ? c : a.key.index.compareTo(b.key.index);
+    }
+
+    final ranked = counts.entries.toList()..sort(byShare);
+    final chosen = ranked
+        .where((e) => e.value / total >= minShare)
+        .take(maxColors)
+        .toList();
     if (chosen.isEmpty) return const [];
-    final sum = chosen.fold(0, (s, e) => s + e.value);
-    final tens = [
-      for (final e in chosen) (e.value * 10 / sum).round().clamp(1, 10),
+    final mainSum = chosen.fold(0, (s, e) => s + e.value);
+    final accents = ranked
+        .where(
+          (e) =>
+              e.value / total < minShare &&
+              e.value / total >= minAccentShare &&
+              !e.key.isNeutral &&
+              chosen.every(
+                (m) =>
+                    Oklab.fromRgb(m.key.rgb)
+                        .distance2(Oklab.fromRgb(e.key.rgb)) >=
+                    accentDistance * accentDistance,
+              ),
+        )
+        .take(maxWithAccents - chosen.length)
+        .toList();
+
+    // Os detalhes contam pela fração da peça; as principais repartem o
+    // resto. Em vigésimos (passos de 5 %).
+    final accentParts = [
+      for (final e in accents) (e.value * 20 / total).round().clamp(1, 2),
     ];
-    // Acerta a maior para somar 10 décimos.
-    tens[0] += 10 - tens.fold(0, (s, v) => s + v);
+    final mainParts = 20 - accentParts.fold(0, (s, v) => s + v);
+    final parts = [
+      for (final e in chosen)
+        (e.value * mainParts / mainSum).round().clamp(1, mainParts),
+      ...accentParts,
+    ];
+    // Acerta a maior para somar 20 vigésimos.
+    parts[0] += 20 - parts.fold(0, (s, v) => s + v);
     return [
-      for (final (i, e) in chosen.indexed)
-        if (tens[i] > 0)
-          GarmentColor.create(rgb: e.key.rgb, proportion: tens[i] / 10)!,
+      for (final (i, e) in [...chosen, ...accents].indexed)
+        if (parts[i] > 0)
+          GarmentColor.create(rgb: e.key.rgb, proportion: parts[i] / 20)!,
     ];
   }
 }

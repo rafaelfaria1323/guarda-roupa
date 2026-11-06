@@ -4,7 +4,8 @@ import '../../../l10n/app_localizations.dart';
 import '../domain/garment_color.dart';
 import '../domain/reference_color.dart';
 
-/// Escolha de cores e da proporção aproximada de cada uma (passos de 10%).
+/// Escolha de cores e da proporção aproximada de cada uma (passos de 5%).
+/// Abaixo de 10% a cor é um detalhe (uma estrela, uma fivela).
 /// As cores escolhidas ou ajustadas aqui ficam confirmadas pelo utilizador;
 /// as sugeridas pela foto ([onSuggest]) ficam marcadas até lá.
 class ColorsEditor extends StatelessWidget {
@@ -25,6 +26,9 @@ class ColorsEditor extends StatelessWidget {
 
   static int percentOf(GarmentColor c) => (c.proportion * 100).round();
 
+  /// Abaixo disto (em %) a cor mostra-se como detalhe.
+  static const detailBelow = 10;
+
   static int totalPercent(List<GarmentColor> colors) =>
       colors.fold(0, (sum, c) => sum + percentOf(c));
 
@@ -42,7 +46,7 @@ class ColorsEditor extends StatelessWidget {
     }
     if (value.length >= maxColors) return;
     final remaining = 100 - totalPercent(value);
-    onChanged([...value, _color(color.rgb, remaining.clamp(10, 100))]);
+    onChanged([...value, _color(color.rgb, remaining.clamp(5, 100))]);
   }
 
   void _setPercent(int index, int percent) {
@@ -103,9 +107,11 @@ class ColorsEditor extends StatelessWidget {
               SizedBox(
                 width: 112,
                 child: Text(
-                  c.confirmed
-                      ? _name(l10n, c)
-                      : '${_name(l10n, c)} · ${l10n.colorSuggestedTag}',
+                  [
+                    _name(l10n, c),
+                    if (percentOf(c) < detailBelow) l10n.colorDetailTag,
+                    if (!c.confirmed) l10n.colorSuggestedTag,
+                  ].join(' · '),
                   key: Key('color-name-$i'),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -113,10 +119,10 @@ class ColorsEditor extends StatelessWidget {
               Expanded(
                 child: Slider(
                   key: Key('color-percent-$i'),
-                  value: percentOf(c).clamp(10, 100).toDouble(),
-                  min: 10,
+                  value: percentOf(c).clamp(5, 100).toDouble(),
+                  min: 5,
                   max: 100,
-                  divisions: 9,
+                  divisions: 19,
                   label: '${percentOf(c)}%',
                   onChanged: (v) => _setPercent(i, v.round()),
                 ),
@@ -207,6 +213,7 @@ class ColorDot extends StatelessWidget {
             height: size,
             decoration: BoxDecoration(
               color: color,
+              gradient: _metallic(rgb),
               shape: BoxShape.circle,
               border: Border.all(
                 color: selected ? scheme.primary : scheme.outlineVariant,
@@ -223,6 +230,22 @@ class ColorDot extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  /// Prateado e dourado com um brilho, para não parecerem cinzento e bege.
+  static Gradient? _metallic(int rgb) {
+    final ref = ReferenceColor.fromRgb(rgb);
+    if (ref == null || !ref.isMetallic) return null;
+    final base = Color(0xFF000000 | rgb);
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        Color.lerp(base, Colors.white, 0.6)!,
+        base,
+        Color.lerp(base, Colors.black, 0.3)!,
+      ],
     );
   }
 }

@@ -38,6 +38,9 @@ void main() {
       expect(OutfitHarmony.isNeutral(ReferenceColor.beige.rgb), isTrue);
       expect(OutfitHarmony.isNeutral(ReferenceColor.red.rgb), isFalse);
       expect(OutfitHarmony.isNeutral(ReferenceColor.olive.rgb), isFalse);
+      expect(OutfitHarmony.isNeutral(ReferenceColor.silver.rgb), isTrue);
+      expect(OutfitHarmony.isNeutral(ReferenceColor.gold.rgb), isTrue);
+      expect(OutfitHarmony.isNeutral(ReferenceColor.mint.rgb), isFalse);
     });
 
     test('fora da lista: pelo croma', () {
