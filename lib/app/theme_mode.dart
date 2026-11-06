@@ -1,36 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../features/account_sync/application/providers.dart';
+import 'device_prefs.dart';
 
-/// Claro, escuro ou como o aparelho (docs/design-e-fluxos.md). Guarda-se
-/// neste aparelho (`local_settings`, `theme_mode`); antes de entrar na conta
-/// segue o aparelho.
-final themeModeProvider = AsyncNotifierProvider<AppThemeMode, ThemeMode>(
+/// Claro, escuro ou como o aparelho (docs/design-e-fluxos.md). Fica só neste
+/// aparelho (`localStorage`, `fio.theme_mode`) e lê-se logo ao abrir, antes
+/// de entrar na conta, para a app não piscar em claro.
+final themeModeProvider = NotifierProvider<AppThemeMode, ThemeMode>(
   AppThemeMode.new,
 );
 
-class AppThemeMode extends AsyncNotifier<ThemeMode> {
-  static const _key = 'theme_mode';
+class AppThemeMode extends Notifier<ThemeMode> {
+  static const key = 'fio.theme_mode';
 
   @override
-  Future<ThemeMode> build() async {
-    final db = ref.watch(userDatabaseProvider).value;
-    if (db == null) return ThemeMode.system;
-    final row = await db.getOptional(
-      'SELECT value FROM local_settings WHERE key = ?',
-      [_key],
-    );
-    return ThemeMode.values.asNameMap()[row?['value']] ?? ThemeMode.system;
-  }
+  ThemeMode build() =>
+      ThemeMode.values.asNameMap()[devicePrefs.get(key)] ?? ThemeMode.system;
 
-  Future<void> set(ThemeMode mode) async {
-    final db = ref.read(userDatabaseProvider).value;
-    if (db == null) return;
-    await db.execute(
-      'INSERT OR REPLACE INTO local_settings (key, value) VALUES (?, ?)',
-      [_key, mode.name],
-    );
-    if (ref.mounted) state = AsyncData(mode);
+  void set(ThemeMode mode) {
+    devicePrefs.set(key, mode.name);
+    state = mode;
   }
 }

@@ -1,8 +1,8 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guarda_roupa/app/device_prefs.dart';
 import 'package:guarda_roupa/app/theme.dart';
+import 'package:guarda_roupa/app/theme_mode.dart';
 
 import '../support/app_harness.dart';
 
@@ -10,7 +10,7 @@ void main() {
   testWidgets('aspeto: automático, escuro e claro, e fica guardado', (
     tester,
   ) async {
-    final app = await pumpApp(tester);
+    await pumpApp(tester);
     Brightness now() =>
         Theme.of(tester.element(find.byType(Scaffold).first)).brightness;
     expect(now(), Brightness.light, reason: 'o aparelho do teste é claro');
@@ -26,24 +26,12 @@ void main() {
           .scaffoldBackgroundColor,
       AppColors.dark.background,
     );
-    // A base trabalha enquanto a app anda: pede e vai avançando.
-    String? saved;
-    unawaited(
-      app.db
-          .get("SELECT value FROM local_settings WHERE key = 'theme_mode'")
-          .then((r) => saved = r['value'] as String?),
-    );
-    for (var i = 0; i < 100 && saved == null; i++) {
-      await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 10)),
-      );
-      await tester.pump(const Duration(milliseconds: 50));
-    }
-    expect(saved, 'dark');
+    expect(devicePrefs.get(AppThemeMode.key), 'dark');
 
     await tester.tap(find.text('Claro'));
     await settle(tester);
     expect(now(), Brightness.light);
+    expect(devicePrefs.get(AppThemeMode.key), 'light');
   });
 
   test('o texto lê-se bem nos dois temas', () {

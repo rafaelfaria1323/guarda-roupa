@@ -16,7 +16,7 @@ class GuardaRoupaApp extends ConsumerWidget {
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       theme: buildAppTheme(),
       darkTheme: buildAppTheme(Brightness.dark),
-      themeMode: ref.watch(themeModeProvider).value ?? ThemeMode.system,
+      themeMode: ref.watch(themeModeProvider),
       routerConfig: ref.watch(routerProvider),
       locale: const Locale('pt'),
       supportedLocales: AppLocalizations.supportedLocales,

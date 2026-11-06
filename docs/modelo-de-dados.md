@@ -125,7 +125,9 @@ Tabela só do servidor, sem acesso direto ([Gemini](features/ia-gemini.md)):
 |---|---|---|
 | `photo_ai_requests` | `id`, `owner_id`, `requested_at` | `claim_photo_ai_quota` (até 60 por hora e 300 por dia; apaga o que tem mais de um dia) |
 
-A opção "Usar o Gemini neste aparelho" fica só no aparelho, em `local_settings` (`gemini_photos`). As [peças que faziam falta](features/pecas-em-falta.md) guardam aí também o orçamento por peça (`shopping_budget`) e as ideias postas de lado (`shopping_dismissed`, lista JSON). O aspeto da app (`theme_mode`: `system`, `light` ou `dark`) também fica só no aparelho.
+A opção "Usar o Gemini neste aparelho" fica só no aparelho, em `local_settings` (`gemini_photos`). As [peças que faziam falta](features/pecas-em-falta.md) guardam aí também o orçamento por peça (`shopping_budget`) e as ideias postas de lado (`shopping_dismissed`, lista JSON).
+
+O aspeto da app (Automático, Claro ou Escuro) fica fora da base, no `localStorage` do browser (`fio.theme_mode`), para se aplicar logo ao abrir, mesmo antes de entrar na conta.
 
 ## Sync: campos condicionais
 

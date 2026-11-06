@@ -79,9 +79,7 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                     ),
                 ],
-                selected: {
-                  ref.watch(themeModeProvider).value ?? ThemeMode.system,
-                },
+                selected: {ref.watch(themeModeProvider)},
                 onSelectionChanged: (s) =>
                     ref.read(themeModeProvider.notifier).set(s.single),
               ),
