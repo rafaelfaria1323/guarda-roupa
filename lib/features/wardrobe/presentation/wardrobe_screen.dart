@@ -271,6 +271,15 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
                                 ),
                               ),
                             ),
+                            IconButton(
+                              key: const Key('wardrobe-batch'),
+                              tooltip: l10n.wardrobeBatch,
+                              icon: const Icon(
+                                Icons.add_photo_alternate_outlined,
+                              ),
+                              onPressed: () =>
+                                  context.push(AppRoutes.batchGarments),
+                            ),
                             if ((garments ?? const []).isNotEmpty)
                               IconButton(
                                 key: const Key('wardrobe-insights'),

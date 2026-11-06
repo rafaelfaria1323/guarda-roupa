@@ -6,4 +6,7 @@ enum PhotoSource { camera, gallery }
 /// permissão for recusada ou o sistema falhar.
 abstract interface class PhotoPicker {
   Future<Uint8List?> pick(PhotoSource source);
+
+  /// Várias fotos da galeria, no máximo [limit]. `[]` se cancelar.
+  Future<List<Uint8List>> pickMany({required int limit});
 }

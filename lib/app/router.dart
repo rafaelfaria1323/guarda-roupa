@@ -24,6 +24,7 @@ import '../features/reminders/presentation/reminder_settings_screen.dart';
 import '../features/planner/presentation/planner_screen.dart';
 import '../features/wardrobe/domain/garment.dart';
 import '../features/wardrobe/presentation/garment_detail_screen.dart';
+import '../features/wardrobe/presentation/batch_add_screen.dart';
 import '../features/wardrobe/presentation/garment_form_screen.dart';
 import '../features/wardrobe/presentation/wardrobe_screen.dart';
 import '../features/wear/presentation/wardrobe_insights_screen.dart';
@@ -35,6 +36,7 @@ abstract final class AppRoutes {
   static const planner = '/planeador';
   static const wardrobe = '/guarda-roupa';
   static const newGarment = '/guarda-roupa/nova';
+  static const batchGarments = '/guarda-roupa/varias';
   static const laundryBasket = '/guarda-roupa/cesto';
   static const wardrobeInsights = '/guarda-roupa/resumo';
   static String garment(GarmentId id) => '/guarda-roupa/peca/${id.value}';
@@ -105,6 +107,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.newGarment,
         builder: (context, state) => const GarmentFormScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.batchGarments,
+        builder: (context, state) => const BatchAddScreen(),
       ),
       GoRoute(
         path: AppRoutes.laundryBasket,

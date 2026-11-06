@@ -23,6 +23,19 @@ final class FakePhotoPicker implements PhotoPicker {
     if (failWith case final e?) throw e;
     return next.isEmpty ? null : next.removeAt(0);
   }
+
+  /// Resultado do próximo [pickMany] (`[]` = cancelado).
+  List<Uint8List> nextMany = [];
+  final manyLimits = <int>[];
+
+  @override
+  Future<List<Uint8List>> pickMany({required int limit}) async {
+    manyLimits.add(limit);
+    if (failWith case final e?) throw e;
+    final out = nextMany.take(limit).toList();
+    nextMany = [];
+    return out;
+  }
 }
 
 /// Storage em memória.

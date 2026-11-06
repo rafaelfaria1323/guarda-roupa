@@ -1780,5 +1780,44 @@
         "type": "String"
       }
     }
-  }
+  },
+  "wardrobeBatch": "Várias fotos de uma vez",
+  "batchTitle": "Várias peças de uma vez",
+  "batchIntro": "Escolhe fotos da galeria, uma por peça. O fio cria as peças e sugere a categoria e as cores de cada uma.",
+  "batchHint": "Depois só confirmas a categoria com um toque. As cores ficam por confirmar na peça.",
+  "batchNoModel": "A sugestão da categoria precisa da IA local (Definições › IA local). Sem ela, as peças entram como \"Outra\" e escolhes a categoria aqui.",
+  "batchPick": "Escolher fotos (até {count})",
+  "@batchPick": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "batchProgress": "A preparar {done} de {total}…",
+  "@batchProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "batchCreated": "{count, plural, =0{Nenhuma peça criada} =1{1 peça criada} other{{count} peças criadas}}",
+  "@batchCreated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "batchReviewHint": "Confirma a categoria de cada uma. Toca na foto para abrir a peça.",
+  "batchPreparing": "A preparar…",
+  "batchSuggested": "Categoria sugerida",
+  "batchOtherCategory": "Outra…",
+  "batchSaveFailed": "Não foi possível guardar esta peça.",
+  "batchMore": "Mais fotos",
+  "batchDone": "Concluir"
 }
