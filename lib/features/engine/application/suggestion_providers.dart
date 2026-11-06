@@ -154,16 +154,19 @@ ComfortThresholds currentComfort(Ref ref) =>
 final todaySuggestionsProvider = Provider<SuggestionResult?>((ref) {
   final snapshot = ref.watch(wardrobeSnapshotProvider);
   if (snapshot == null) return null;
+  return DailyEngine.suggest(snapshot, ref.watch(todayRequestProvider));
+});
+
+/// O pedido de hoje: dia, ocasião, tempo e limites de conforto (também o
+/// que se manda ao stylist).
+final todayRequestProvider = Provider<SuggestionRequest>((ref) {
   final choices = ref.watch(suggestionChoicesProvider);
-  return DailyEngine.suggest(
-    snapshot,
-    SuggestionRequest(
-      day: todayFrom(ref.watch(clockProvider)),
-      occasion: choices.occasion,
-      weather: ref.watch(todayConditionsProvider),
-      comfort: currentComfort(ref),
-      seed: choices.seed,
-    ),
+  return SuggestionRequest(
+    day: todayFrom(ref.watch(clockProvider)),
+    occasion: choices.occasion,
+    weather: ref.watch(todayConditionsProvider),
+    comfort: currentComfort(ref),
+    seed: choices.seed,
   );
 });
 

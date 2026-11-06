@@ -428,3 +428,7 @@ verify_jwt = false
 [functions.describe-photo]
 # O token é validado pela base em claim_photo_ai_quota (allowlist e quota).
 verify_jwt = false
+
+[functions.stylist]
+# Como describe-photo: a base valida o token, a allowlist e a quota.
+verify_jwt = false

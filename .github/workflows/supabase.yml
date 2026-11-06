@@ -182,7 +182,7 @@ jobs:
           rm gemini.env
       - if: steps.secrets.outputs.ok == 'true'
         run: |
-          for f in import-product reminders describe-photo; do
+          for f in import-product reminders describe-photo stylist; do
             supabase functions deploy "$f" --project-ref "${{ steps.secrets.outputs.ref }}" --use-api
           done
       - if: steps.secrets.outputs.ok == 'true' && env.SUPABASE_DB_URL != ''

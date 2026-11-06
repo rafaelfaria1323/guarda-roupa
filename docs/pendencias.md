@@ -47,7 +47,7 @@ Notas para não esquecer (2026-11-04):
    - **Feito a 2026-11-04:** o secret existe e o deploy é automático. As permissões dos roles do PowerSync são dadas por `grant_powersync_select()` (migração `20261112000002`). O role da integração (`powersync_<id>`) não tinha SELECT em `plan_entries`, por isso o plano semanal não sincronizava entre dispositivos.
 7. **Secrets do Cloudflare** para publicar a PWA (2026-11-04): `CLOUDFLARE_API_TOKEN` (Cloudflare Pages › Edit) e `CLOUDFLARE_ACCOUNT_ID`, pelos passos do [guia 04 §1](guias/04-publicar-pwa.md#1-uma-vez-só-a-conta-e-os-secrets-tu). Depois disso, cada merge na `main` publica em `https://guarda-roupa.pages.dev`. É o que permite testar tudo no iPhone (ações 2 e 5, P-05).
 
-8. **Gemini (opcional, 2026-11-06):** criar uma chave grátis no Google AI Studio e guardá-la no GitHub como secret `GEMINI_API_KEY`, pelos [passos](features/ia-gemini.md#criar-a-chave-uma-vez-o-utilizador). Depois ligar em Definições › IA local e experimentar com algumas peças e uma etiqueta. Sem a chave, a app funciona como antes.
+8. **Gemini (opcional, 2026-11-06):** criar uma chave grátis no Google AI Studio e guardá-la no GitHub como secret `GEMINI_API_KEY`, pelos [passos](features/ia-gemini.md#criar-a-chave-uma-vez-o-utilizador). Depois ligar em Definições › IA local e experimentar com algumas peças, uma etiqueta e o “Pedir ao stylist” em Hoje. Sem a chave, a app funciona como antes.
 
 Também em aberto: a POC em dois dispositivos (P-03). Com só um iPhone, o segundo dispositivo pode ser o Chrome no Mac, com a mesma conta.
 

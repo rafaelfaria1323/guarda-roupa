@@ -150,7 +150,7 @@ Implementação Dart pura, tipos imutáveis e dependências injetadas de context
 | Regras fixas apenas | Bom início, mas limitado para equilibrar várias preferências |
 | Aleatório filtrado | Útil como baseline, fraco para estética e semana |
 | Solver exato | Pode provar melhor certas restrições, mas tem custo de modelação/execução |
-| LLM remoto | Custos, privacidade e resultados não garantidos; não é motor obrigatório |
+| LLM remoto | Custos, privacidade e resultados não garantidos; não é motor obrigatório. Desde 2026-11-06 há um extra opcional, [Pedir ao stylist](ia-gemini.md#pedir-ao-stylist-2026-11-06): o Gemini escolhe pelo texto das peças e a app confirma as regras e junta os avisos do motor |
 | Embeddings/modelo local | Futuro auxiliar de semelhança/estilo; continua a respeitar regras |
 
 ## Ações e aceitação
