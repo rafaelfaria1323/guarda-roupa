@@ -46,6 +46,7 @@ Uma recomendação de package não é uma garantia de compatibilidade com todos 
 | [Backups e recuperação](features/backups-e-recuperacao.md) | Exportação, integridade e recuperação sem perda silenciosa |
 | [IA local](features/ia-local.md) | Evolução opcional, modelos e limites de inferência |
 | [Gemini (opcional)](features/ia-gemini.md) | Ler fotos de peças e etiquetas e “Pedir ao stylist” com o Gemini, se ligado |
+| [Peças que faziam falta](features/pecas-em-falta.md) | Faltas no armário pelas peças e inspirações; com o Gemini, ideias com marcas |
 | [Subscrições e evolução](features/subscricoes-e-evolucao.md) | Futuro comercial, pagamentos e custos |
 
 ## Decisões arquiteturais

@@ -6,6 +6,7 @@ import '../../../app/router.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../care/application/care_providers.dart';
+import '../../shopping/presentation/shopping_section.dart';
 import '../../wardrobe/presentation/garment_cutout.dart';
 import '../application/wear_providers.dart';
 import '../domain/calendar_day.dart';
@@ -34,11 +35,17 @@ class WardrobeInsightsScreen extends ConsumerWidget {
       body: switch (insights) {
         null => const Center(child: CircularProgressIndicator()),
         WardrobeInsights(hasHistory: false, neverWorn: [], fresh: _) =>
-          EmptyState(
-            key: const Key('insights-empty'),
-            icon: Icons.insights_outlined,
-            message: l10n.insightsNoHistory,
-            hint: l10n.insightsNoHistoryHint,
+          ListView(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+            children: [
+              EmptyState(
+                key: const Key('insights-empty'),
+                icon: Icons.insights_outlined,
+                message: l10n.insightsNoHistory,
+                hint: l10n.insightsNoHistoryHint,
+              ),
+              const ShoppingSection(),
+            ],
           ),
         final i => ListView(
           key: const Key('insights-list'),
@@ -114,6 +121,7 @@ class WardrobeInsightsScreen extends ConsumerWidget {
                   style: theme.textTheme.bodyMedium,
                 ),
               ),
+            const ShoppingSection(),
           ],
         ),
       },
