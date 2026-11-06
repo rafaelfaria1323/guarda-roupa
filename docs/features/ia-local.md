@@ -46,7 +46,7 @@ Levantamento de fontes públicas, a confirmar em cada model card original antes 
 Postos de parte:
 - **MobileCLIP (Apple):** licença dos pesos própria e, na versão 2, só para investigação.
 - **Modelos treinados no DeepFashion:** dataset descrito como só para investigação não comercial.
-- **APIs cloud:** custo por chamada, privacidade das fotos e dependência de rede.
+- **APIs cloud como base:** custo por chamada, privacidade das fotos e dependência de rede. Desde 2026-11-06 há o [Gemini como opção](ia-gemini.md), desligado de início; os modelos locais continuam a ser o caminho quando está desligado ou falha.
 
 ### POC proposta (aprovada pelo utilizador a 2026-11-04)
 

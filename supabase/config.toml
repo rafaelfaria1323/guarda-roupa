@@ -424,3 +424,7 @@ enabled = true
 # Chamada pelo pg_cron, sem sessão: a autorização é o token do cron, que a
 # base confirma em claim_due_reminders. O GET só devolve a chave pública.
 verify_jwt = false
+
+[functions.describe-photo]
+# O token é validado pela base em claim_photo_ai_quota (allowlist e quota).
+verify_jwt = false
