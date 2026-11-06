@@ -85,16 +85,17 @@ enum Occasion {
   static Occasion? fromId(String? id) => _byId(values, id, (v) => v.id);
 
   /// Formalidades que servem para a ocasião quando a peça não tem
-  /// ocasiões marcadas (decisão do utilizador, 2026-11-06): no trabalho e
-  /// à noite, casual cuidado ou arranjado; no dia a dia, qualquer uma.
+  /// ocasiões marcadas (decisão do utilizador, 2026-11-06): à noite,
+  /// casual cuidado ou arranjado; no dia a dia e no trabalho, qualquer uma
+  /// (no trabalho vai-se muitas vezes descontraído: t-shirt ou hoodie com
+  /// jeans).
   /// As ocasiões marcadas na peça prevalecem sempre.
   Set<Formality> get formalities => switch (this) {
-    Occasion.casual => const {
+    Occasion.casual || Occasion.workCasual => const {
       Formality.relaxed,
       Formality.smartCasual,
       Formality.dressy,
     },
-    Occasion.workCasual ||
     Occasion.evening => const {Formality.smartCasual, Formality.dressy},
   };
 }

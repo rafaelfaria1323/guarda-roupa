@@ -253,36 +253,34 @@ void main() {
         smart,
         jeans,
         sneakers,
-      ], occasion: Occasion.workCasual);
+      ], occasion: Occasion.evening);
       final ids = [for (final c in w.candidates) ...c.items]
           .map((i) => i.garment.id.value)
           .toSet();
-      expect(
-        ids,
-        isNot(contains('hoodie')),
-        reason: 'descontraído no trabalho',
-      );
+      expect(ids, isNot(contains('hoodie')), reason: 'descontraído à noite');
       final note = notesOf(
         w.candidates.first,
         'polo',
       ).whereType<OccasionMatches>().single;
       expect(note.byFormality, isTrue);
 
-      // Ao dia a dia serve qualquer formalidade.
-      final c = run([relaxed, jeans, sneakers], occasion: Occasion.casual);
-      expect(
-        notesOf(c.candidates.single, 'hoodie').whereType<OccasionMatches>(),
-        hasLength(1),
-      );
+      // No dia a dia e no trabalho serve qualquer formalidade.
+      for (final o in [Occasion.casual, Occasion.workCasual]) {
+        final c = run([relaxed, jeans, sneakers], occasion: o);
+        expect(
+          notesOf(c.candidates.single, 'hoodie').whereType<OccasionMatches>(),
+          hasLength(1),
+        );
+      }
 
       // As ocasiões marcadas prevalecem.
       final marked = g(
         'hoodie',
         GarmentCategory.top,
         formality: Formality.relaxed,
-        occasions: {Occasion.workCasual},
+        occasions: {Occasion.evening},
       );
-      final m = run([marked, jeans, sneakers], occasion: Occasion.workCasual);
+      final m = run([marked, jeans, sneakers], occasion: Occasion.evening);
       expect(
         notesOf(
           m.candidates.single,
