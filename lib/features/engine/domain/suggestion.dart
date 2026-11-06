@@ -99,8 +99,12 @@ final class OccasionUnknown extends SuggestionNote {
 }
 
 final class OccasionMatches extends SuggestionNote {
-  const OccasionMatches(this.occasion);
+  const OccasionMatches(this.occasion, {this.byFormality = false});
   final Occasion occasion;
+
+  /// A peça não tem ocasiões marcadas; serve pela formalidade
+  /// ([Occasion.formalities]).
+  final bool byFormality;
 }
 
 final class ComfortNote extends SuggestionNote {

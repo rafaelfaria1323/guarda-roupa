@@ -825,6 +825,14 @@
       }
     }
   },
+  "noteOccasionByFormality": "para {occasion}, pela formalidade",
+  "@noteOccasionByFormality": {
+    "placeholders": {
+      "occasion": {
+        "type": "String"
+      }
+    }
+  },
   "noteComfort": "{fit, select, fits{adequada ao tempo} fitsWithOuterLayer{com casaco por cima} unknown{aquecimento desconhecido} mismatch{pode não ser adequada ao tempo} other{}}",
   "@noteComfort": {
     "placeholders": {

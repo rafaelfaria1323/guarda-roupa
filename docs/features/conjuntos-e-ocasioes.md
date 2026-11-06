@@ -19,7 +19,7 @@ Estado: necessária no MVP.
 
 Guardar composições reutilizáveis, atribuir uma ou mais ocasiões e recuperar sugestões adequadas sem confundir composição, plano e utilização.
 
-Ocasiões iniciais confirmadas: casual, trabalho (smart casual), jantares/saídas. O id técnico continua `work_casual`; o nome mostrado passou de “Trabalho informal” para “Trabalho (smart casual)” (P-19: o trabalho não pede roupa formal). Etiquetas futuras podem ser adicionadas sem misturar nomes traduzidos com IDs técnicos.
+Ocasiões iniciais confirmadas: casual, trabalho (smart casual), jantares/saídas. O id técnico continua `work_casual`; o nome mostrado passou de “Trabalho informal” para “Trabalho (smart casual)” (P-19: o trabalho não pede roupa formal). Formalidade por ocasião (decidido 2026-11-06): uma peça sem ocasiões marcadas serve para o trabalho e para a noite se for casual cuidado ou arranjada, e para o dia a dia com qualquer formalidade; marcar ocasiões na peça prevalece sobre esta regra ([motor](motor-de-combinacoes.md)). Etiquetas futuras podem ser adicionadas sem misturar nomes traduzidos com IDs técnicos.
 
 ## Estrutura e papéis
 

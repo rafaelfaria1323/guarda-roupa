@@ -8,7 +8,7 @@ Dart puro em `lib/features/engine/domain/` (`DailyEngine.suggest`), sem UI nem p
 
 - **Entradas:** `WardrobeSnapshot` (peças, utilizações, limpezas, valores de lavagem/rotatividade, preferências) e `SuggestionRequest` (dia, ocasião opcional, condições opcionais, limites de conforto, seed, número de resultados — 3 por omissão).
 - **Modelos:** top principal + parte de baixo + calçado, ou peça única + calçado. A t-shirt chega como top único. Casaco só quando o conforto o pede (frio com top leve/médio) ou como camada opcional à parte (ameno, ou chuva/vento com um casaco adequado).
-- **Obrigatório:** só peças não arquivadas e disponíveis; nenhuma peça em dois papéis; uma peça com ocasiões indicadas que não incluem a pedida fica de fora. Sem ocasiões indicadas é desconhecido: entra com nota.
+- **Obrigatório:** só peças não arquivadas e disponíveis; nenhuma peça em dois papéis; uma peça com ocasiões indicadas que não incluem a pedida fica de fora. Sem ocasiões indicadas conta a formalidade (decidido 2026-11-06): no trabalho e à noite servem casual cuidado e arranjado, no dia a dia qualquer uma; uma peça descontraída sem ocasiões fica de fora do trabalho e da noite, e as que servem levam a nota “para trabalho, pela formalidade”. Sem ocasiões nem formalidade é desconhecido: entra com nota. As ocasiões marcadas prevalecem sempre.
 - **Ordem de cada papel, sem pesos:** conforto (serve › serve com casaco › desconhecido › não serve), chuva/vento (casaco e calçado), rotatividade (elegíveis primeiro, P-06), preferências (gosto − evito), menos usadas em 30 dias, usadas há mais tempo, seed. Uma peça confortável mas dentro do intervalo de rotatividade fica à frente de uma elegível que não serve.
 - **Preferências:** cor (RGB de referência), padrão, textura e formalidade (2026-11-06), em cada peça, nas ocasiões da preferência (vazio = sempre). Combinações de cor contam no conjunto (ver abaixo).
 - **Lavagem (P-07):** só aviso.
@@ -40,12 +40,12 @@ Cartão em Hoje (antes Planeador), por baixo de "Vesti hoje":
 - **Sem cor indicada numa peça:** a combinação fica por saber. Não se descreve nem conta para preferências.
 - **Ordem:** as combinações só pesam com uma preferência "Gosto"/"Evito" de combinação (Estilo › Preferências, nas ocasiões dela): +1 ou −1, somado às preferências das peças, com a nota da preferência no conjunto. Sem preferência, aparecem só como descrição ("Cores: base neutra").
 - **Padrões e texturas:** padrão por indicar ou liso não conta. Cada padrão além do primeiro, e cada textura forte (marcada ou com pelo) além da primeira, soma um ponto de "competição". O conjunto fica atrás de outro igual em tudo o resto, com a nota "Mais de um padrão: podem competir". Nunca é excluído nem conta como aviso.
-- **Formalidade (2026-11-06):** uma peça descontraída e outra arranjada no mesmo conjunto (ex.: sweatshirt com calças de fato) põem-no atrás de outro igual em tudo menos nas preferências, com a nota "Uma peça descontraída com outra arranjada: podem não ligar". Casual cuidado liga com as duas; formalidade por indicar não conta. Nunca é excluído nem conta como aviso. A ocasião ainda não pede uma formalidade (o trabalho é smart casual, P-19, e uma saída pode ser descontraída).
+- **Formalidade (2026-11-06):** uma peça descontraída e outra arranjada no mesmo conjunto (ex.: sweatshirt com calças de fato) põem-no atrás de outro igual em tudo menos nas preferências, com a nota "Uma peça descontraída com outra arranjada: podem não ligar". Casual cuidado liga com as duas; formalidade por indicar não conta. Nunca é excluído nem conta como aviso. A ocasião pede formalidade só às peças sem ocasiões marcadas (ver “Obrigatório”).
 - **Limite:** os pares continuam a ser a i-ésima peça de cada papel. A harmonia ordena estes conjuntos, mas não procura outros pares.
 
 As notas do conjunto aparecem em "Sugestões para hoje". Só o papel em falta fica a laranja escuro, à vista; as outras ficam em "Porquê este".
 
-Ainda não: formalidade pedida pela ocasião, acessórios, camada intermédia. A diversidade na semana (peças repetidas e o mesmo visual em dias seguidos) é do [planeamento](planeamento-semanal.md).
+Ainda não: acessórios, camada intermédia. A diversidade na semana (peças repetidas e o mesmo visual em dias seguidos) é do [planeamento](planeamento-semanal.md).
 
 ### Montar com o que tenho (2026-11-06)
 
