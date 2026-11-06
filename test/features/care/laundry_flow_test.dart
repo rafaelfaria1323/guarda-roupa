@@ -81,6 +81,7 @@ void main() {
     expect(await availability(), 'available');
 
     // Desfazer a limpeza volta ao aviso e a "Precisa de limpeza".
+    await settleUntil(tester, find.text('Desfazer'));
     await tester.tap(find.text('Desfazer'));
     await settleUntil(
       tester,
@@ -88,6 +89,8 @@ void main() {
     );
     expect(await availability(), 'needs_cleaning');
 
+    // O desfazer muda a peça por baixo do formulário: esperar que volte.
+    await settleUntil(tester, find.byKey(const Key('garment-save')));
     await tester.tap(find.byKey(const Key('garment-save')));
     await settleUntil(
       tester,
