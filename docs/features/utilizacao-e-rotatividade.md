@@ -1,6 +1,6 @@
 # Feature — Utilização real e rotatividade
 
-Estado: registo de utilizações e `RotationPolicy` implementados (incremento 3); falta ligar ao motor de combinações e ao planeador. Valores decididos em P-06 e P-08 (2026-11-03).
+Estado: registo de utilizações e `RotationPolicy` implementados (incremento 3) e usados pelo motor de combinações e pelo planeador; resumo do armário desde 2026-11-06. Valores decididos em P-06 e P-08 (2026-11-03).
 
 ## Implementado
 
@@ -11,6 +11,18 @@ Estado: registo de utilizações e `RotationPolicy` implementados (incremento 3)
 - Dados: tabela `wear_events` (`worn_on` como data de calendário, `garment_ids`, `plan_entry_id`, `voided_at`) e operações `record_wear`/`void_wear` por `apply_wear_operation`, idempotentes por `op_id`. A mesma entrada de plano confirmada em dois dispositivos dá uma única utilização (`merged`); desfazer e voltar a confirmar é permitido.
 - Confirmar um plano: “Vesti isto hoje” no cartão do dia abre “Vesti hoje” com as peças planeadas por confirmar (podem ajustar-se) e grava a utilização com `plan_entry_id`.
 - Ainda sem lembretes/notificações (P-08). As utilizações e os intervalos escolhidos entram no backup ZIP (desde o formato v2) e são recuperados com os ids novos das peças.
+
+## Resumo do armário (2026-11-06)
+
+Decisão do utilizador: um ecrã para saber o que tirar ou usar mais. Abre-se pelo ícone de gráfico no topo do Armário (`WardrobeInsights`, Dart puro, sem colunas novas).
+
+- **Contas:** só utilizações confirmadas (“Vesti hoje”); peças arquivadas ficam de fora; utilizações com data futura não contam.
+- **Frase de abertura:** “Usaste X de Y peças nos últimos 30 dias.”
+- **Mais usadas:** até 5, por utilizações nos últimos 30 dias (empate: usada mais recentemente).
+- **Paradas:** já usadas, mas a última vez foi há 60 dias ou mais; as mais antigas primeiro, com “há N dias”.
+- **Nunca usadas:** sem nenhuma utilização e no armário há 14 dias ou mais; as mais antigas primeiro. As mais recentes só se contam (“2 peças novas ainda por estrear”).
+- Cada peça abre a ficha, onde se arquiva ou se escolhe “Vou vestir hoje”. Sem utilizações registadas, o ecrã explica como se enche.
+- Os limites (30, 60, 14 dias, 5 peças) são valores técnicos iniciais, a rever com o uso.
 
 ## Valores decididos (P-06)
 
