@@ -208,8 +208,8 @@ class _UseSentence extends ConsumerWidget {
                 TextSpan(
                   text: ' $care',
                   style: laundry!.washRecommended
-                      ? const TextStyle(
-                          color: AppColors.onCareSoft,
+                      ? TextStyle(
+                          color: AppColors.of(context).onCareSoft,
                           fontWeight: FontWeight.w600,
                         )
                       : null,
@@ -263,9 +263,12 @@ class _LastTimes extends ConsumerWidget {
             Container(
               margin: const EdgeInsets.only(left: 6),
               padding: const EdgeInsets.only(left: 16),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(
-                  left: BorderSide(color: AppColors.accent, width: 2),
+                  left: BorderSide(
+                    color: AppColors.of(context).accent,
+                    width: 2,
+                  ),
                 ),
               ),
               child: Column(
@@ -313,9 +316,12 @@ class _TimeRow extends StatelessWidget {
               width: 12,
               height: 12,
               decoration: BoxDecoration(
-                color: AppColors.background,
+                color: AppColors.of(context).background,
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.accent, width: 2),
+                border: Border.all(
+                  color: AppColors.of(context).accent,
+                  width: 2,
+                ),
               ),
             ),
           ),

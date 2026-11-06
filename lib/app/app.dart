@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import 'router.dart';
 import 'theme.dart';
+import 'theme_mode.dart';
 
 class GuardaRoupaApp extends ConsumerWidget {
   const GuardaRoupaApp({super.key});
@@ -14,6 +15,8 @@ class GuardaRoupaApp extends ConsumerWidget {
     return MaterialApp.router(
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       theme: buildAppTheme(),
+      darkTheme: buildAppTheme(Brightness.dark),
+      themeMode: ref.watch(themeModeProvider),
       routerConfig: ref.watch(routerProvider),
       locale: const Locale('pt'),
       supportedLocales: AppLocalizations.supportedLocales,

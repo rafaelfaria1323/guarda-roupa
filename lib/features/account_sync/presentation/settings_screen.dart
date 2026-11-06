@@ -8,6 +8,7 @@ import '../../local_ai/domain/local_model.dart';
 import '../../reminders/application/reminder_providers.dart';
 import '../../reminders/presentation/reminder_settings_screen.dart';
 import '../../../app/router.dart';
+import '../../../app/theme_mode.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../backup/presentation/export_backup_tile.dart';
 import '../../backup/presentation/restore_backup_tile.dart';
@@ -49,6 +50,40 @@ class SettingsScreen extends ConsumerWidget {
             leading: const Icon(Icons.logout),
             title: Text(l10n.settingsSignOut),
             onTap: () => _confirmSignOut(context, ref),
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.dark_mode_outlined),
+            title: Text(l10n.themeTitle),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<ThemeMode>(
+                key: const Key('theme-mode'),
+                showSelectedIcon: false,
+                segments: [
+                  for (final m in [
+                    ThemeMode.system,
+                    ThemeMode.light,
+                    ThemeMode.dark,
+                  ])
+                    ButtonSegment(
+                      value: m,
+                      label: Text(
+                        l10n.themeMode(m.name),
+                        maxLines: 1,
+                        softWrap: false,
+                        overflow: TextOverflow.fade,
+                      ),
+                    ),
+                ],
+                selected: {ref.watch(themeModeProvider)},
+                onSelectionChanged: (s) =>
+                    ref.read(themeModeProvider.notifier).set(s.single),
+              ),
+            ),
           ),
           const Divider(height: 1),
           ListTile(

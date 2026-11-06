@@ -127,6 +127,8 @@ Tabela só do servidor, sem acesso direto ([Gemini](features/ia-gemini.md)):
 
 A opção "Usar o Gemini neste aparelho" fica só no aparelho, em `local_settings` (`gemini_photos`). As [peças que faziam falta](features/pecas-em-falta.md) guardam aí também o orçamento por peça (`shopping_budget`) e as ideias postas de lado (`shopping_dismissed`, lista JSON).
 
+O aspeto da app (Automático, Claro ou Escuro) fica fora da base, no `localStorage` do browser (`fio.theme_mode`), para se aplicar logo ao abrir, mesmo antes de entrar na conta.
+
 ## Sync: campos condicionais
 
 Na opção própria: outbox durável com ID de operação, entidade, versão base, payload e estado; receção com cursor de servidor comprovado e tombstones.
