@@ -648,27 +648,57 @@ void main() {
       expect(r.candidates[1].notes.whereType<SavedOutfitNote>(), isEmpty);
     });
 
-    test('peça a lavar ou de outra ocasião: o conjunto não entra', () {
+    test('uma peça a lavar: o conjunto vem com outra no lugar dela', () {
       final mine = saved([
         ('t4', OutfitRole.mainTop),
         ('b4', OutfitRole.bottom),
-      ]);
-      final dirty = [
-        for (final x in garments)
-          x.id.value == 'b4'
-              ? g(
-                  'b4',
-                  GarmentCategory.trousers,
-                  availability: Availability.needsCleaning,
-                )
-              : x,
+      ], name: 'Sexta');
+      Garment dirty(Garment x) =>
+          g(x.id.value, x.category, availability: Availability.needsCleaning);
+      final oneDirty = [
+        for (final x in garments) x.id.value == 'b4' ? dirty(x) : x,
       ];
-      final r = withOutfits([mine], pieces: dirty);
+      final r = withOutfits([mine], pieces: oneDirty);
+      final first = r.candidates.first;
+      // A melhor parte de baixo que não é do conjunto.
+      expect(ids(first), ['t4', 'b1', 's1']);
+      final note = first.notes.whereType<SavedOutfitNote>().single;
+      expect(note.outfit.name, 'Sexta');
+      expect(note.swaps.single.role, OutfitRole.bottom);
+      expect(note.swaps.single.removed?.id.value, 'b4');
+      expect(note.swaps.single.added.id.value, 'b1');
+
+      // Duas peças em falta já não é o mesmo conjunto.
+      final twoDirty = [
+        for (final x in garments)
+          const {'t4', 'b4'}.contains(x.id.value) ? dirty(x) : x,
+      ];
       expect(
-        r.candidates.expand((c) => c.notes).whereType<SavedOutfitNote>(),
+        withOutfits(
+          [mine],
+          pieces: twoDirty,
+        ).candidates.expand((c) => c.notes).whereType<SavedOutfitNote>(),
         isEmpty,
       );
 
+      // Calçado apagado: entra o melhor que houver.
+      final shoes = saved([
+        ('t4', OutfitRole.mainTop),
+        ('b4', OutfitRole.bottom),
+        ('gone', OutfitRole.footwear),
+      ]);
+      final withShoes = withOutfits([shoes]).candidates.first;
+      expect(ids(withShoes), ['t4', 'b4', 's1']);
+      final swap = withShoes.notes
+          .whereType<SavedOutfitNote>()
+          .single
+          .swaps
+          .single;
+      expect(swap.removed, isNull);
+      expect(swap.added.id.value, 's1');
+    });
+
+    test('de outra ocasião, o conjunto não entra', () {
       final evening = saved(
         [('t4', OutfitRole.mainTop), ('b4', OutfitRole.bottom)],
         occasions: {Occasion.evening},

@@ -1426,5 +1426,31 @@
   },
   "noteSavedOutfitUnnamed": "Um dos teus conjuntos",
   "suggestionsSaveOutfit": "Guardar como conjunto",
-  "suggestionsOutfitSaved": "Guardado nos teus conjuntos. Passa a ser preferido nas sugestões."
+  "suggestionsOutfitSaved": "Guardado nos teus conjuntos. Passa a ser preferido nas sugestões.",
+  "noteSavedOutfitSwap": "Do teu conjunto {name}, com {added} em vez de {removed}",
+  "@noteSavedOutfitSwap": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "added": {
+        "type": "String"
+      },
+      "removed": {
+        "type": "String"
+      }
+    }
+  },
+  "noteSavedOutfitSwapUnnamed": "De um dos teus conjuntos, com {added} em vez de {removed}",
+  "@noteSavedOutfitSwapUnnamed": {
+    "placeholders": {
+      "added": {
+        "type": "String"
+      },
+      "removed": {
+        "type": "String"
+      }
+    }
+  },
+  "noteSavedOutfitGone": "a peça que já não tens"
 }

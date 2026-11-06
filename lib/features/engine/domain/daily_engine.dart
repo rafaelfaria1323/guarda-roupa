@@ -50,6 +50,78 @@ abstract final class DailyEngine {
     }
 
     final max = request.maxResults;
+    // Conjuntos guardados para esta ocasião, primeiro (um igual gerado a
+    // seguir já não entra). As peças têm de servir hoje (disponíveis e da
+    // ocasião); se só uma não serve, entra outra no lugar dela. O casaco
+    // decide-o o tempo, como nos outros; camadas intermédias e acessórios
+    // o motor ainda não põe.
+    final pools = {
+      _Slot.top: tops,
+      _Slot.bottom: bottoms,
+      _Slot.onePiece: onePieces,
+      _Slot.footwear: footwear,
+      _Slot.outer: outer,
+    };
+    for (final o in ctx.outfits) {
+      final own = {for (final i in o.items) i.garmentId};
+      final mains = <(_Entry, OutfitRole)>[];
+      final removed = <OutfitRole, GarmentId>{};
+      _Pool? ownFootwear;
+      _Pool? ownOuter;
+      for (final item in o.items) {
+        final slot = _slotOf(item.role);
+        if (slot == null) continue;
+        final pool = pools[slot]!;
+        final entry = pool.ranked
+            .where((e) => e.garment.id == item.garmentId)
+            .firstOrNull;
+        switch (slot) {
+          case _Slot.outer:
+            if (entry != null) ownOuter = _Pool(slot, pool.cause, [entry]);
+          case _Slot.footwear:
+            if (entry != null) {
+              ownFootwear = _Pool(slot, pool.cause, [entry]);
+            } else {
+              removed[item.role] = item.garmentId;
+            }
+          case _Slot.top || _Slot.bottom || _Slot.onePiece:
+            if (entry != null) {
+              mains.add((entry, item.role));
+              continue;
+            }
+            removed[item.role] = item.garmentId;
+            final other = _best([
+              for (final e in pool.ranked)
+                if (!own.contains(e.garment.id)) e,
+            ]);
+            if (other != null) mains.add((other, item.role));
+        }
+      }
+      final roles = [for (final (_, r) in mains) r];
+      final shape =
+          (roles.length == 2 &&
+              roles.contains(OutfitRole.mainTop) &&
+              roles.contains(OutfitRole.bottom)) ||
+          (roles.length == 1 && roles.single == OutfitRole.onePiece);
+      if (removed.length > 1 || !shape) continue;
+      if (removed.containsKey(OutfitRole.footwear) && footwear.ranked.isEmpty) {
+        continue;
+      }
+      // A parte de cima primeiro: é ela que decide o casaco.
+      mains.sort(
+        (a, b) => _Context._layer(a.$2).compareTo(_Context._layer(b.$2)),
+      );
+      add(
+        ctx.compose(
+          0,
+          mains,
+          footwear: ownFootwear ?? footwear,
+          outer: ownOuter ?? outer,
+          variant: removed.isEmpty ? null : (o, removed),
+        ),
+      );
+    }
+
     final separatesOk = tops.ranked.isNotEmpty && bottoms.ranked.isNotEmpty;
     if (separatesOk) {
       final n = _min(max, _max(tops.ranked.length, bottoms.ranked.length));
@@ -80,62 +152,6 @@ abstract final class DailyEngine {
           ),
         );
       }
-    }
-
-    // Conjuntos guardados para esta ocasião, se as peças servirem hoje
-    // (disponíveis e da ocasião). O casaco decide-o o tempo, como nos
-    // outros; camadas intermédias e acessórios o motor ainda não põe.
-    final pools = {
-      _Slot.top: tops,
-      _Slot.bottom: bottoms,
-      _Slot.onePiece: onePieces,
-      _Slot.footwear: footwear,
-      _Slot.outer: outer,
-    };
-    for (final o in ctx.outfits) {
-      final mains = <(_Entry, OutfitRole)>[];
-      _Pool? ownFootwear;
-      _Pool? ownOuter;
-      var usable = true;
-      for (final item in o.items) {
-        final slot = _slotOf(item.role);
-        if (slot == null) continue;
-        final pool = pools[slot]!;
-        final entry = pool.ranked
-            .where((e) => e.garment.id == item.garmentId)
-            .firstOrNull;
-        if (entry == null) {
-          usable = false;
-          break;
-        }
-        switch (slot) {
-          case _Slot.footwear:
-            ownFootwear = _Pool(slot, pool.cause, [entry]);
-          case _Slot.outer:
-            ownOuter = _Pool(slot, pool.cause, [entry]);
-          case _Slot.top || _Slot.bottom || _Slot.onePiece:
-            mains.add((entry, item.role));
-        }
-      }
-      final roles = [for (final (_, r) in mains) r];
-      final shape =
-          (roles.length == 2 &&
-              roles.contains(OutfitRole.mainTop) &&
-              roles.contains(OutfitRole.bottom)) ||
-          (roles.length == 1 && roles.single == OutfitRole.onePiece);
-      if (!usable || !shape) continue;
-      // A parte de cima primeiro: é ela que decide o casaco.
-      mains.sort(
-        (a, b) => _Context._layer(a.$2).compareTo(_Context._layer(b.$2)),
-      );
-      add(
-        ctx.compose(
-          0,
-          mains,
-          footwear: ownFootwear ?? footwear,
-          outer: ownOuter ?? outer,
-        ),
-      );
     }
 
     drafts.sort(_Draft.compare);
@@ -523,11 +539,14 @@ final class _Context {
     PreferenceSubject.formality || PreferenceSubject.combo => false,
   };
 
+  /// [variant]: um conjunto guardado com peças trocadas (papel → a peça
+  /// dele que não serve hoje).
   _Draft compose(
     int i,
     List<(_Entry, OutfitRole)> mains, {
     required _Pool footwear,
     required _Pool outer,
+    (Outfit, Map<OutfitRole, GarmentId>)? variant,
   }) {
     final items = <(_Entry, OutfitRole)>[...mains];
     final notes = <SuggestionNote>[];
@@ -598,7 +617,20 @@ final class _Context {
       ];
       return needed.isNotEmpty && needed.every(ids.contains);
     }).firstOrNull;
-    if (saved != null) notes.add(SavedOutfitNote(saved));
+    SavedOutfitNote? savedNote = saved == null ? null : SavedOutfitNote(saved);
+    if (savedNote == null && variant != null) {
+      final (outfit, removed) = variant;
+      final byId = {for (final g in snapshot.garments) g.id: g};
+      savedNote = SavedOutfitNote(
+        outfit,
+        swaps: [
+          for (final MapEntry(key: role, value: id) in removed.entries)
+            for (final (e, r) in items)
+              if (r == role) OutfitSwap(role, byId[id], e.garment),
+        ],
+      );
+    }
+    if (savedNote != null) notes.add(savedNote);
 
     final suggested = [
       for (final (e, role) in items) SuggestedItem(e.garment, role, e.notes),
@@ -616,7 +648,7 @@ final class _Context {
       ),
       entries: [for (final (e, _) in items) e],
       seed: request.seed,
-      comboPreference: comboPreference + (saved == null ? 0 : 1),
+      comboPreference: comboPreference + (savedNote == null ? 0 : 1),
       load: load,
     );
   }

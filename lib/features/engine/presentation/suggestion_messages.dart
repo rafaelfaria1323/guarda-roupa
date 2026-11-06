@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../inspirations/domain/style_preference.dart';
 import '../../inspirations/presentation/preference_messages.dart';
+import '../../wear/presentation/today_wear_card.dart';
 import '../domain/comfort.dart';
 import '../domain/suggestion.dart';
 
@@ -48,10 +49,31 @@ String? noteText(BuildContext context, SuggestionNote note) {
       },
     ),
     OptionalLayerNote() => l10n.noteOptionalLayer,
-    SavedOutfitNote(:final outfit) => switch (outfit.name) {
+    SavedOutfitNote(:final outfit, swaps: []) => switch (outfit.name) {
       final name? => l10n.noteSavedOutfit(name),
       null => l10n.noteSavedOutfitUnnamed,
     },
+    SavedOutfitNote(:final outfit, :final swaps) => () {
+      final added = [for (final s in swaps) garmentLabel(l10n, s.added)];
+      final removed = [
+        for (final s in swaps)
+          switch (s.removed) {
+            final g? => garmentLabel(l10n, g),
+            null => l10n.noteSavedOutfitGone,
+          },
+      ];
+      return switch (outfit.name) {
+        final name? => l10n.noteSavedOutfitSwap(
+          name,
+          added.join(', '),
+          removed.join(', '),
+        ),
+        null => l10n.noteSavedOutfitSwapUnnamed(
+          added.join(', '),
+          removed.join(', '),
+        ),
+      };
+    }(),
     MissingRole(:final role) => l10n.suggestionsMissing(
       l10n.outfitRoleLabel(role.id),
     ),

@@ -174,10 +174,21 @@ final class SurfaceMixNote extends SuggestionNote {
   final int textured;
 }
 
-/// O conjunto é (ou contém) um conjunto guardado.
+/// O conjunto é (ou contém) um conjunto guardado; com [swaps], é o
+/// conjunto com uma peça trocada porque a dele não serve hoje.
 final class SavedOutfitNote extends SuggestionNote {
-  const SavedOutfitNote(this.outfit);
+  const SavedOutfitNote(this.outfit, {this.swaps = const []});
   final Outfit outfit;
+  final List<OutfitSwap> swaps;
+}
+
+final class OutfitSwap {
+  const OutfitSwap(this.role, this.removed, this.added);
+  final OutfitRole role;
+
+  /// `null` = a peça já não existe.
+  final Garment? removed;
+  final Garment added;
 }
 
 /// Ameno: pode juntar-se esta camada, se quiser.
