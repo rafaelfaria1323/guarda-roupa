@@ -322,7 +322,7 @@ class _ResultState extends ConsumerState<_Result> {
       SuggestionStatus.valid || SuggestionStatus.partial => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _CandidateView(
+          SuggestionCandidateView(
             index: _shown,
             total: result.candidates.length,
             candidate: result.candidates[_shown],
@@ -371,8 +371,10 @@ class _ResultState extends ConsumerState<_Result> {
 
 /// A sugestão como um flat-lay: as peças pousadas no papel, os nomes numa
 /// frase e as razões escondidas até se pedirem (os avisos ficam à vista).
-class _CandidateView extends StatefulWidget {
-  const _CandidateView({
+/// Também em "Montar com o que tenho".
+class SuggestionCandidateView extends StatefulWidget {
+  const SuggestionCandidateView({
+    super.key,
     required this.index,
     required this.total,
     required this.candidate,
@@ -383,10 +385,11 @@ class _CandidateView extends StatefulWidget {
   final OutfitCandidate candidate;
 
   @override
-  State<_CandidateView> createState() => _CandidateViewState();
+  State<SuggestionCandidateView> createState() =>
+      _SuggestionCandidateViewState();
 }
 
-class _CandidateViewState extends State<_CandidateView> {
+class _SuggestionCandidateViewState extends State<SuggestionCandidateView> {
   var _why = false;
 
   @override

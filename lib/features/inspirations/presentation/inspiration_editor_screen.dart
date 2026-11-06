@@ -254,6 +254,21 @@ class _InspirationEditorScreenState
           title: Text(l10n.inspirationTags, style: theme.textTheme.titleMedium),
           subtitle: Text(l10n.inspirationTagsHint),
         ),
+        if (_saved case final saved? when saved.hasTags || saved.image != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: FilledButton.tonalIcon(
+                key: const Key('inspiration-look'),
+                onPressed: _saving
+                    ? null
+                    : () => context.push(AppRoutes.inspirationLook(saved.id)),
+                icon: const Icon(Icons.auto_awesome_outlined),
+                label: Text(l10n.lookOpen),
+              ),
+            ),
+          ),
         if (_saved case final saved?
             when PreferenceDraft.fromInspiration(saved).isNotEmpty)
           Padding(

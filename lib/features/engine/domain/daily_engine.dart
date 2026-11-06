@@ -6,6 +6,7 @@ import '../../wardrobe/domain/garment.dart';
 import '../../wardrobe/domain/garment_attributes.dart';
 import '../../wardrobe/domain/garment_category.dart';
 import 'comfort.dart';
+import 'look_target.dart';
 import 'outfit_harmony.dart';
 import 'suggestion.dart';
 
@@ -21,11 +22,15 @@ import 'suggestion.dart';
 ///   (frio com peça leve/média) ou como sugestão opcional.
 /// - **Ordem de cada papel:** conforto, chuva/vento (casaco e calçado),
 ///   rotatividade (elegíveis primeiro, P-06), preferências (gosto − evito),
-///   menos usadas, usadas há mais tempo, seed.
+///   menos usadas, usadas há mais tempo, seed. Com uma inspiração
+///   ([SuggestionRequest.look]), o que a peça tem dela vem logo depois da
+///   rotatividade.
 /// - **Conjunto:** combinações de cor preferidas/evitadas (P-21) somam às
 ///   preferências; padrões ou texturas fortes repetidos só desempatam
 ///   ([OutfitHarmony]).
 /// - **Lavagem** (P-07) só gera aviso.
+/// - **Inspiração:** entre conjuntos com os mesmos avisos, primeiro o que
+///   tem mais em comum com ela; só depois as preferências.
 abstract final class DailyEngine {
   static SuggestionResult suggest(
     WardrobeSnapshot snapshot,
@@ -334,6 +339,9 @@ final class _Entry {
   ComfortFit? fit;
   int position = 0;
 
+  /// Aspetos em comum com a inspiração pedida.
+  int look = 0;
+
   int get preference => notes.whereType<PreferenceMatch>().fold(
     0,
     (sum, m) => sum + (m.preference.stance == PreferenceStance.like ? 1 : -1),
@@ -490,6 +498,9 @@ final class _Context {
       notes.add(RecentUses(state.recentUses, last));
     }
 
+    final look = request.look?.aspectsOf(g) ?? const <LookAspect>{};
+    if (look.isNotEmpty) notes.add(LookMatch(look));
+
     var preference = 0;
     for (final p in preferences) {
       if (!_matches(p, g)) continue;
@@ -503,16 +514,19 @@ final class _Context {
     }
 
     return _Entry(g, notes, [
-      0, // conforto, preenchido em rank()
-      weatherTier,
-      state.isEligible ? 0 : 1,
-      -preference,
-      state.recentUses,
-      // Nunca usadas primeiro; depois as usadas há mais tempo.
-      last == null ? '' : last.iso,
-      _seedKey(request.seed, g.id.value),
-      g.id.value,
-    ])..fit = fit;
+        0, // conforto, preenchido em rank()
+        weatherTier,
+        state.isEligible ? 0 : 1,
+        -look.length,
+        -preference,
+        state.recentUses,
+        // Nunca usadas primeiro; depois as usadas há mais tempo.
+        last == null ? '' : last.iso,
+        _seedKey(request.seed, g.id.value),
+        g.id.value,
+      ])
+      ..fit = fit
+      ..look = look.length;
   }
 
   static ComfortFit _fitOf(
@@ -682,6 +696,7 @@ final class _Draft {
        ),
        missing = candidate.notes.whereType<MissingRole>().length,
        warnings = candidate.items.fold(0, (sum, i) => sum + i.warnings.length),
+       look = entries.fold(0, (sum, e) => sum + e.look),
        preference =
            entries.fold(0, (sum, e) => sum + e.preference) + comboPreference,
        positions = entries.fold(0, (sum, e) => sum + e.position) {
@@ -694,6 +709,9 @@ final class _Draft {
   final String key;
   final int missing;
   final int warnings;
+
+  /// Aspetos em comum com a inspiração, somados pelas peças.
+  final int look;
   final int preference;
 
   /// Descontraído com arranjado ([OutfitHarmony.formalityClash]).
@@ -706,13 +724,16 @@ final class _Draft {
   final int positions;
   late final int tiebreak;
 
-  /// Completos primeiro, menos avisos, mais preferências (das peças e do
+  /// Completos primeiro, menos avisos, mais da inspiração (se houver),
+  /// mais preferências (das peças e do
   /// conjunto), formalidade coerente, menos padrões/texturas a competir,
   /// peças mais bem ordenadas, seed.
   static int compare(_Draft a, _Draft b) {
     var c = a.missing.compareTo(b.missing);
     if (c != 0) return c;
     c = a.warnings.compareTo(b.warnings);
+    if (c != 0) return c;
+    c = b.look.compareTo(a.look);
     if (c != 0) return c;
     c = b.preference.compareTo(a.preference);
     if (c != 0) return c;
