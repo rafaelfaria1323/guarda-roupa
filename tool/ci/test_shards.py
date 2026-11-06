@@ -30,10 +30,12 @@ def env_float(name: str, default: float) -> float:
     return float(os.environ.get(name, default))
 
 
-SETUP_S = env_float("SHARD_SETUP_S", 100)  # arranque de um job de testes
-FILE_S = env_float("TEST_FILE_S", 3)  # compilar/carregar um ficheiro
-WIDGET_TEST_S = env_float("WIDGET_TEST_S", 0.5)
-UNIT_TEST_S = env_float("UNIT_TEST_S", 0.02)
+# Medido na CI a 2026-11-06 (PR #59, 54 ficheiros, 348 testes): arranque
+# ~20 s com a cache do Flutter, `flutter test` ~153 s num só shard.
+SETUP_S = env_float("SHARD_SETUP_S", 20)  # arranque de um job de testes
+FILE_S = env_float("TEST_FILE_S", 9)  # compilar/carregar um ficheiro
+WIDGET_TEST_S = env_float("WIDGET_TEST_S", 1.5)
+UNIT_TEST_S = env_float("UNIT_TEST_S", 0.06)
 CONCURRENCY = env_float("TEST_CONCURRENCY", 4)  # flutter test -j (vCPUs)
 MIN_GAIN_S = env_float("MIN_GAIN_S", 30)
 MAX_SHARDS = int(os.environ.get("MAX_SHARDS", "8"))
