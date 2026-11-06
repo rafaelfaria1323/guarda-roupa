@@ -577,6 +577,109 @@ void main() {
     });
   });
 
+  group('acessórios pelo tempo', () {
+    final base = [
+      g('t', GarmentCategory.tShirt, warmth: Warmth.light),
+      g('j', GarmentCategory.jeans),
+      g('s', GarmentCategory.sneakers),
+      g('c', GarmentCategory.coat, warmth: Warmth.warm),
+      g('umb', GarmentCategory.umbrella),
+      g('scarf', GarmentCategory.scarf),
+      g('beanie', GarmentCategory.beanie),
+      g('gloves', GarmentCategory.gloves),
+      g('sun', GarmentCategory.sunglasses),
+      g('hat', GarmentCategory.hat),
+      g('belt', GarmentCategory.belt),
+    ];
+    List<String> extras(WeatherConditions? w, {List<Garment>? garments}) {
+      final r = run(garments ?? base, weather: w);
+      final first = r.candidates.first;
+      // Iguais em todos os conjuntos.
+      for (final c in r.candidates) {
+        expect(
+          c.accessories.map((a) => a.garment.id.value),
+          first.accessories.map((a) => a.garment.id.value),
+        );
+      }
+      return [for (final a in first.accessories) a.garment.id.value];
+    }
+
+    test('só os que a previsão pede', () {
+      expect(extras(null), isEmpty);
+      expect(extras(mild), isEmpty);
+      expect(extras(const WeatherConditions(feelsLikeC: 18, rain: true)), [
+        'umb',
+      ]);
+      expect(extras(cold), ['scarf']);
+      expect(extras(const WeatherConditions(feelsLikeC: 2)), [
+        'scarf',
+        'beanie',
+        'gloves',
+      ]);
+      expect(extras(const WeatherConditions(feelsLikeC: 18, sunny: true)), [
+        'sun',
+      ]);
+      expect(extras(const WeatherConditions(feelsLikeC: 26, sunny: true)), [
+        'sun',
+        'hat',
+      ]);
+      expect(extras(hot), isEmpty);
+    });
+
+    test('nunca obrigatórios: sem eles o conjunto continua completo', () {
+      final without = base.where(
+        (x) => x.category.group != CategoryGroup.accessory,
+      );
+      final r = run(
+        without.toList(),
+        weather: const WeatherConditions(feelsLikeC: 2, rain: true),
+      );
+      expect(r.status, SuggestionStatus.valid);
+      expect(r.candidates.first.accessories, isEmpty);
+      expect(r.gaps.map((x) => x.role), isNot(contains(OutfitRole.accessory)));
+    });
+
+    test('não entram nas peças do conjunto, e trazem a razão', () {
+      final r = run(
+        base,
+        weather: const WeatherConditions(feelsLikeC: 18, rain: true),
+      );
+      final c = r.candidates.first;
+      expect(c.items.map((i) => i.role), isNot(contains(OutfitRole.accessory)));
+      expect(
+        c.outfitItems.map((i) => i.garmentId.value),
+        isNot(contains('umb')),
+      );
+      final umb = c.accessories.single;
+      expect(umb.role, OutfitRole.accessory);
+      expect(
+        umb.notes.whereType<WeatherAccessoryNote>().single.reason,
+        AccessoryReason.rain,
+      );
+    });
+
+    test('indisponível, de outra ocasião ou menos usado', () {
+      final r = run(
+        [
+          ...base.where((x) => x.id.value != 'umb'),
+          g('u1', GarmentCategory.umbrella, availability: Availability.drying),
+          g('u2', GarmentCategory.umbrella, occasions: {Occasion.evening}),
+          g('u3', GarmentCategory.umbrella),
+          g('u4', GarmentCategory.umbrella),
+        ],
+        wears: [
+          wore(9, ['u3']),
+        ],
+        occasion: Occasion.casual,
+        weather: const WeatherConditions(feelsLikeC: 18, rain: true),
+      );
+      final umb = r.candidates.first.accessories.single;
+      expect(umb.garment.id.value, 'u4');
+      // A ocasião não se anota num acessório.
+      expect(umb.notes.whereType<OccasionUnknown>(), isEmpty);
+    });
+  });
+
   group('determinismo', () {
     final many = [
       for (var i = 0; i < 6; i++) g('t$i', GarmentCategory.tShirt),

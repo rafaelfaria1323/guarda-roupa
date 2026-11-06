@@ -190,7 +190,7 @@
     }
   },
   "settingsAccount": "Conta e sincronização",
-  "categoryLabel": "{category, select, t_shirt{T-shirt} shirt{Camisa} polo{Polo} top{Top} sweater{Camisola} sweatshirt{Sweatshirt} cardigan{Casaco de malha} trousers{Calças} jeans{Calças de ganga} shorts{Calções} skirt{Saia} dress{Vestido} jumpsuit{Macacão} jacket{Casaco} blazer{Blazer} coat{Sobretudo} raincoat{Impermeável} sneakers{Ténis} shoes{Sapatos} boots{Botas} sandals{Sandálias} accessory{Acessório} other{Outra}}",
+  "categoryLabel": "{category, select, t_shirt{T-shirt} shirt{Camisa} polo{Polo} top{Top} sweater{Camisola} sweatshirt{Sweatshirt} cardigan{Casaco de malha} trousers{Calças} jeans{Calças de ganga} shorts{Calções} skirt{Saia} dress{Vestido} jumpsuit{Macacão} jacket{Casaco} blazer{Blazer} coat{Sobretudo} raincoat{Impermeável} sneakers{Ténis} shoes{Sapatos} boots{Botas} sandals{Sandálias} scarf{Cachecol} beanie{Gorro} gloves{Luvas} hat{Chapéu ou boné} sunglasses{Óculos de sol} umbrella{Chapéu-de-chuva} belt{Cinto} bag{Mala ou mochila} accessory{Outro acessório} other{Outra}}",
   "@categoryLabel": {
     "placeholders": {
       "category": {
@@ -765,6 +765,14 @@
       }
     }
   },
+  "suggestionsAccessories": "Leva também: {names}",
+  "@suggestionsAccessories": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "suggestionsWearThis": "Vou vestir isto",
   "suggestionsMore": "Outras sugestões",
   "weatherLoading": "A obter a previsão…",
@@ -884,6 +892,14 @@
   },
   "noteWash": "lavar recomendado",
   "noteOptionalLayer": "se quiseres",
+  "noteWeatherAccessory": "{reason, select, rain{vai chover} cold{está frio} freezing{está muito frio} sun{dia de sol} sun_heat{sol e calor} other{pelo tempo}}",
+  "@noteWeatherAccessory": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "weekTitle": "A tua semana",
   "weekGenerate": "Planear de novo",
   "weekGenerated": "{proposed, plural, =0{Nenhum dia novo planeado.} =1{1 dia planeado.} other{{proposed} dias planeados.}} {notFound, plural, =0{} =1{1 dia sem conjunto possível.} other{{notFound} dias sem conjunto possível.}}",

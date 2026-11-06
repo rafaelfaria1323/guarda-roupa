@@ -33,6 +33,11 @@ import 'suggestion.dart';
 /// - **Lavagem** (P-07) só gera aviso.
 /// - **Inspiração:** entre conjuntos com os mesmos avisos, primeiro o que
 ///   tem mais em comum com ela; só depois as preferências.
+/// - **Acessórios** ([OutfitCandidate.accessories]): só os que o tempo
+///   pede (chuva → chapéu-de-chuva; frio → cachecol; muito frio → gorro e
+///   luvas; sol → óculos de sol; sol e calor → chapéu ou boné), o primeiro
+///   de cada tipo na mesma ordem. Nunca obrigatórios: não mexem na ordem
+///   dos conjuntos.
 abstract final class DailyEngine {
   static SuggestionResult suggest(
     WardrobeSnapshot snapshot,
@@ -173,7 +178,13 @@ abstract final class DailyEngine {
     }
 
     drafts.sort(_Draft.compare);
-    final candidates = [for (final d in drafts.take(max)) d.candidate];
+    final accessories = ctx.accessories();
+    final candidates = [
+      for (final d in drafts.take(max))
+        accessories.isEmpty
+            ? d.candidate
+            : d.candidate.withAccessories(accessories),
+    ];
 
     final gaps = <RoleGap>[
       // Os papéis principais só faltam se nenhum modelo resultou.
@@ -354,6 +365,9 @@ abstract final class DailyEngine {
       ranked.where((e) => !e.notes.any(SuggestedItem.isWarning)).firstOrNull ??
       ranked.firstOrNull;
 
+  /// Sensação abaixo da qual o frio pede também gorro e luvas.
+  static const freezingBelowC = 5.0;
+
   static _Slot? _slotOf(OutfitRole role) => switch (role) {
     OutfitRole.mainTop => _Slot.top,
     OutfitRole.bottom => _Slot.bottom,
@@ -494,16 +508,62 @@ final class _Context {
     for (final e in pool.ranked) {
       if (e.fit case final fit?) e.order[0] = _comfortTier(fit);
     }
-    pool.ranked.sort((a, b) {
-      for (var i = 0; i < a.order.length; i++) {
-        final c = a.order[i].compareTo(b.order[i]);
-        if (c != 0) return c;
-      }
-      return 0;
-    });
+    pool.ranked.sort(_byOrder);
     for (var i = 0; i < pool.ranked.length; i++) {
       pool.ranked[i].position = i;
     }
+  }
+
+  static int _byOrder(_Entry a, _Entry b) {
+    for (var i = 0; i < a.order.length; i++) {
+      final c = a.order[i].compareTo(b.order[i]);
+      if (c != 0) return c;
+    }
+    return 0;
+  }
+
+  /// Tipos de acessório que o tempo pede, por esta ordem.
+  List<(GarmentCategory, AccessoryReason)> get accessoryNeeds {
+    final w = request.weather;
+    if (w == null) return const [];
+    return [
+      if (w.rain) (GarmentCategory.umbrella, AccessoryReason.rain),
+      if (band == ComfortBand.cold)
+        (GarmentCategory.scarf, AccessoryReason.cold),
+      if (w.feelsLikeC < DailyEngine.freezingBelowC) ...[
+        (GarmentCategory.beanie, AccessoryReason.freezing),
+        (GarmentCategory.gloves, AccessoryReason.freezing),
+      ],
+      if (w.sunny) (GarmentCategory.sunglasses, AccessoryReason.sun),
+      if (w.sunny && band == ComfortBand.hot)
+        (GarmentCategory.hat, AccessoryReason.sunAndHeat),
+    ];
+  }
+
+  /// O primeiro de cada tipo pedido (candidato e da ocasião), pela ordem
+  /// das outras peças. A ocasião não se anota: um chapéu-de-chuva serve
+  /// para tudo.
+  List<SuggestedItem> accessories() {
+    final occasion = request.occasion;
+    return [
+      for (final (category, reason) in accessoryNeeds)
+        if (DailyEngine._best(
+              [
+                for (final g in snapshot.garments)
+                  if (g.category == category &&
+                      g.isCandidate &&
+                      (occasion == null ||
+                          _servesOccasion(g, occasion) != false))
+                    _entry(g, null),
+              ]..sort(_byOrder),
+            )
+            case final e?)
+          SuggestedItem(e.garment, OutfitRole.accessory, [
+            WeatherAccessoryNote(reason),
+            for (final n in e.notes)
+              if (n is! OccasionUnknown && n is! OccasionMatches) n,
+          ]),
+    ];
   }
 
   int _comfortTier(ComfortFit fit) => switch (fit) {

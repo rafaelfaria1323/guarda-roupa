@@ -109,6 +109,51 @@ void main() {
     expect(find.byKey(const Key('suggestion-0-wear')), findsNothing);
   });
 
+  testWidgets('com chuva sugere o chapéu-de-chuva, sem o vestir', (
+    tester,
+  ) async {
+    final app = await pumpApp(
+      tester,
+      overrides: [
+        clockProvider.overrideWithValue(
+          FixedClock(DateTime.utc(2026, 11, 3, 12)),
+        ),
+        httpClientProvider.overrideWithValue(
+          MockClient(
+            (req) async => http.Response(
+              jsonEncode(
+                hourly(days: 7, feels: (_, _) => 18, rain: (_, _) => 1),
+              ),
+              200,
+            ),
+          ),
+        ),
+      ],
+    );
+    await tester.runAsync(
+      () =>
+          PowerSyncWardrobeRepository(db: app.db, ownerId: 'user-a').addGarment(
+            const GarmentDraft(
+              category: GarmentCategory.umbrella,
+              name: 'Preto',
+            ),
+          ),
+    );
+    await seed(tester, app.db);
+
+    await scrollTo(tester, find.byKey(const Key('suggestion-0-accessories')));
+    expect(find.text('Leva também: Preto'), findsOne);
+    await scrollTo(tester, find.byKey(const Key('suggestion-0-why')));
+    await tester.tap(find.byKey(const Key('suggestion-0-why')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Preto (acessório): vai chover'), findsOne);
+
+    await scrollTo(tester, find.byKey(const Key('suggestion-0-wear')));
+    await tester.tap(find.byKey(const Key('suggestion-0-wear')));
+    await settle(tester);
+    expect(find.text('3 peças escolhidas'), findsOne);
+  });
+
   testWidgets('guardar a sugestão como conjunto marca-a e não repete', (
     tester,
   ) async {

@@ -213,6 +213,33 @@ final class OutfitSwap {
   final Garment added;
 }
 
+/// Porque o tempo sugere um acessório.
+enum AccessoryReason {
+  /// Chuva: chapéu-de-chuva.
+  rain('rain'),
+
+  /// Frio: cachecol.
+  cold('cold'),
+
+  /// Muito frio: gorro e luvas.
+  freezing('freezing'),
+
+  /// Sol: óculos de sol.
+  sun('sun'),
+
+  /// Sol e calor: chapéu ou boné.
+  sunAndHeat('sun_heat');
+
+  const AccessoryReason(this.id);
+  final String id;
+}
+
+/// Acessório que a previsão pede ([OutfitCandidate.accessories]).
+final class WeatherAccessoryNote extends SuggestionNote {
+  const WeatherAccessoryNote(this.reason);
+  final AccessoryReason reason;
+}
+
 /// Ameno: pode juntar-se esta camada, se quiser.
 final class OptionalLayerNote extends SuggestionNote {
   const OptionalLayerNote();
@@ -242,6 +269,7 @@ final class OutfitCandidate {
   const OutfitCandidate({
     required this.items,
     this.optionalLayer,
+    this.accessories = const [],
     this.notes = const [],
   });
 
@@ -250,7 +278,20 @@ final class OutfitCandidate {
 
   /// Sugestão de camada que o utilizador pode juntar ou não.
   final SuggestedItem? optionalLayer;
+
+  /// Acessórios que fazem sentido com a previsão (chapéu-de-chuva, cachecol,
+  /// óculos de sol...). Nunca obrigatórios: não contam para o conjunto
+  /// estar completo, nem para os avisos, nem entram em [outfitItems].
+  final List<SuggestedItem> accessories;
   final List<SuggestionNote> notes;
+
+  OutfitCandidate withAccessories(List<SuggestedItem> accessories) =>
+      OutfitCandidate(
+        items: items,
+        optionalLayer: optionalLayer,
+        accessories: accessories,
+        notes: notes,
+      );
 
   bool get isComplete => !notes.any((n) => n is MissingRole);
 

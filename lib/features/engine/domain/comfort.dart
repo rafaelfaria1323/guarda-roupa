@@ -7,12 +7,17 @@ final class WeatherConditions {
     required this.feelsLikeC,
     this.rain = false,
     this.windKmh = 0,
+    this.sunny = false,
   });
 
   /// Sensação térmica (ou temperatura, quando não há sensação).
   final double feelsLikeC;
   final bool rain;
   final double windKmh;
+
+  /// Sol forte (índice UV moderado ou mais, sem chuva): sugere óculos de
+  /// sol e, com calor, chapéu.
+  final bool sunny;
 }
 
 enum ComfortBand {

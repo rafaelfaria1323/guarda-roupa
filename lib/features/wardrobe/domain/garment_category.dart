@@ -36,6 +36,16 @@ enum GarmentCategory {
   shoes('shoes', CategoryGroup.footwear),
   boots('boots', CategoryGroup.footwear),
   sandals('sandals', CategoryGroup.footwear),
+  scarf('scarf', CategoryGroup.accessory),
+  beanie('beanie', CategoryGroup.accessory),
+  gloves('gloves', CategoryGroup.accessory),
+  hat('hat', CategoryGroup.accessory),
+  sunglasses('sunglasses', CategoryGroup.accessory),
+  umbrella('umbrella', CategoryGroup.accessory),
+  belt('belt', CategoryGroup.accessory),
+  bag('bag', CategoryGroup.accessory),
+
+  /// Outro acessório (gravata, meias, joias...).
   accessory('accessory', CategoryGroup.accessory),
   other('other', CategoryGroup.other);
 
