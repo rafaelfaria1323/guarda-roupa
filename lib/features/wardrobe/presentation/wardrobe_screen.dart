@@ -39,9 +39,13 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
   /// Peças que o atalho do iPhone mandou e esperam na caixa.
   int _inbox = 0;
 
+  /// Ao voltar à app (depois de mandar peças pelo atalho no Safari).
+  late final AppLifecycleListener _lifecycle;
+
   @override
   void initState() {
     super.initState();
+    _lifecycle = AppLifecycleListener(onResume: () => unawaited(_loadInbox()));
     unawaited(_loadInbox());
   }
 
@@ -62,6 +66,7 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
 
   @override
   void dispose() {
+    _lifecycle.dispose();
     _search.dispose();
     super.dispose();
   }
@@ -150,6 +155,8 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
     final theme = Theme.of(context);
     final stream = _streamFor(ref.watch(wardrobeRepositoryProvider));
     final searching = _filter.isActive;
+    // A sessão pode chegar depois do primeiro ecrã.
+    ref.listen(currentUserProvider, (_, _) => unawaited(_loadInbox()));
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(

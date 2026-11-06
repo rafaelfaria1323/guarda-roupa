@@ -48,6 +48,8 @@ A chave só serve para pôr peças na tua caixa. Se o iPhone se perder, toca em 
 
 Em vez dos passos 5 e 6, adiciona **Copiar para a área de transferência** (*Copy to Clipboard*) com o "Resultado do JavaScript". Depois, no fio: **Adicionar peça → Importar de um link → Colar do atalho**. Também funciona colar o texto no campo do link e carregar em "Ler a página".
 
+Para ficar com cara de app na folha de partilha: no topo do atalho, toca no nome e escolhe **Mudar o nome** para **fio** e **Escolher ícone** (cor e símbolo). Na folha de partilha do Safari, desliza a linha de apps até ao fim, toca em **Mais → Editar** e põe o atalho nos **Favoritos** para aparecer em primeiro lugar.
+
 ## Usar
 
 1. No Safari, abre a página **de uma peça** (não uma lista nem a página inicial).
@@ -62,6 +64,7 @@ Em vez dos passos 5 e 6, adiciona **Copiar para a área de transferência** (*Co
 | O atalho não aparece em Partilhar | Confirmar o passo 3 ("Mostrar na folha de partilha" e "Páginas web do Safari") |
 | Erro "não é permitido executar scripts" | Passo 1 |
 | Erro "a entrada não é uma página web" | No passo 4, "Página web" tem de ser a Entrada do atalho |
+| A notificação diz "Enviada para o fio", mas o fio não mostra nada | Em Importar de um link, toca em ↻ (Ver peças enviadas pelo atalho). O fio também volta a ver quando regressas à app |
 | "A chave do atalho não é válida" | A chave foi trocada ou desligada. Cria uma nova no fio e põe-na no cabeçalho `x-fio-key` |
 | "Já tens 20 peças por importar" | Usa ou descarta algumas em Enviadas pelo atalho |
 | "O atalho não mandou a página" | No passo 5, o corpo tem de ser Ficheiro com o Resultado do JavaScript |

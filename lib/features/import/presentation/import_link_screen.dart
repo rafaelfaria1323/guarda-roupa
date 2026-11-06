@@ -44,9 +44,13 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
   /// A peça da caixa que está na pré-visualização: sai da caixa ao usar.
   String? _inboxId;
 
+  /// Ao voltar à app depois de mandar peças pelo atalho no Safari.
+  late final AppLifecycleListener _lifecycle;
+
   @override
   void initState() {
     super.initState();
+    _lifecycle = AppLifecycleListener(onResume: () => unawaited(_loadInbox()));
     unawaited(_loadInbox());
   }
 
@@ -95,6 +99,7 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
 
   @override
   void dispose() {
+    _lifecycle.dispose();
     _url.dispose();
     super.dispose();
   }
@@ -201,14 +206,24 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
         title: Text(l10n.importTitle),
         actions: [
           IconButton(
+            key: const Key('import-inbox-refresh'),
+            tooltip: l10n.importInboxRefresh,
+            icon: const Icon(Icons.refresh),
+            onPressed: _busy ? null : () => unawaited(_loadInbox()),
+          ),
+          IconButton(
             key: const Key('import-shortcut-setup'),
             tooltip: l10n.shortcutSetupTitle,
             icon: const Icon(Icons.phone_iphone),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => ShortcutSetupScreen(importer: widget.importer),
-              ),
-            ),
+            onPressed: () async {
+              await Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) =>
+                      ShortcutSetupScreen(importer: widget.importer),
+                ),
+              );
+              await _loadInbox();
+            },
           ),
         ],
       ),
