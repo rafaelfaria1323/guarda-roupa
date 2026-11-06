@@ -495,7 +495,10 @@ void main() {
     test('sem preferência: descreve, não ordena', () {
       final r = run([white, black, shoes]);
       final note = r.candidates.single.notes.whereType<ColorCombosNote>();
-      expect(note.single.combos, {StyleCombo.neutralBase});
+      expect(note.single.combos, {
+        StyleCombo.neutralBase,
+        StyleCombo.highContrast,
+      });
     });
 
     test('combinação preferida à frente, em qualquer seed', () {
@@ -518,8 +521,11 @@ void main() {
         );
         // Já está na preferência: não se repete como descrição.
         expect(
-          like.candidates.first.notes.whereType<ColorCombosNote>(),
-          isEmpty,
+          like.candidates.first.notes
+              .whereType<ColorCombosNote>()
+              .single
+              .combos,
+          {StyleCombo.highContrast},
         );
 
         final avoid = run(
@@ -534,6 +540,24 @@ void main() {
           ],
         );
         expect(avoid.candidates.map(top), ['white', 'red'], reason: '$seed');
+      }
+    });
+
+    test('evitar claro com escuro: o de menos contraste à frente', () {
+      // Branco com preto é claro com escuro; vermelho com preto não.
+      for (var seed = 0; seed < 6; seed++) {
+        final r = run(
+          [white, red, black, shoes],
+          seed: seed,
+          preferences: [
+            pref(
+              PreferenceSubject.combo,
+              'high_contrast',
+              PreferenceStance.avoid,
+            ),
+          ],
+        );
+        expect(r.candidates.map(top), ['red', 'white'], reason: '$seed');
       }
     });
 
