@@ -35,7 +35,7 @@ Estado: abordagem assistida confirmada; interpretação visual avançada adiada.
   - Conta, em cada peça: uma cor parecida com a paleta (OKLab ≤ 0,08, em pelo menos 25 % da peça), a mesma formalidade, um dos padrões, uma das texturas e, com imagem e o FashionCLIP descarregado, ser das mais parecidas com a imagem (das 8 primeiras, no máximo 2 por grupo: tops, partes de baixo, calçado…). Atributo por indicar não conta.
   - Valem as regras de hoje: tempo (previsão ou indicado à mão), ocasião (a da inspiração, se for só uma), rotatividade, lavagem e avisos. A inspiração passa à frente das preferências, não das regras.
   - Cada peça diz porquê ("Como na inspiração: cor, formalidade"). Dá para vestir já ("Vou vestir isto") ou guardar como conjunto, com o nome e as ocasiões da inspiração. "Mostrar outros" troca entre peças equivalentes.
-  - Tudo neste dispositivo, sem nuvem. As proporções ainda não contam: as peças não têm o corte indicado. Um agente na nuvem (Claude) ficou como opção futura, por decidir (privacidade e custo).
+  - Tudo neste dispositivo, sem nuvem. As proporções contam pelo corte e comprimento das peças (por indicar não conta): justo em cima e largo em baixo quer um top justo ou uma parte de baixo larga; tudo justo/largo, tops, partes de baixo, peças inteiras e casacos com esse corte; camada comprida, um casaco comprido; parte de cima curta, um top curto. Um agente na nuvem (Claude) ficou como opção futura, por decidir (privacidade e custo).
 - No motor (2026-11-06): as preferências de formalidade contam em cada peça com essa formalidade ([motor](motor-de-combinacoes.md)).
 - Backup: inspirações (com proporções, desde a v4, e imagem, desde a v5) e preferências entram e são recuperadas com ids novos ([backups](backups-e-recuperacao.md)).
 

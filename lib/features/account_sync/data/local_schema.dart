@@ -36,6 +36,8 @@ const localSchema = Schema([
     Column.integer('rain_ok'),
     Column.integer('wind_ok'),
     Column.text('formality'),
+    Column.text('fit'),
+    Column.text('length'),
     Column.text('occasions'),
     Column.text('material'),
     Column.text('care'),

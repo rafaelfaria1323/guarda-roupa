@@ -393,6 +393,24 @@
   "garmentTexture": "Textura",
   "garmentWarmth": "Aquecimento",
   "garmentFormality": "Formalidade",
+  "garmentFit": "Corte",
+  "garmentLength": "Comprimento",
+  "fitLabel": "{fit, select, fitted{Justo} regular{Normal} relaxed{Largo} other{Sem indicação}}",
+  "@fitLabel": {
+    "placeholders": {
+      "fit": {
+        "type": "String"
+      }
+    }
+  },
+  "lengthLabel": "{length, select, cropped{Curto} regular{Normal} long{Comprido} other{Sem indicação}}",
+  "@lengthLabel": {
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
   "garmentRain": "Serve para chuva?",
   "garmentWind": "Serve para vento?",
   "garmentOccasions": "Ocasiões",
@@ -1506,7 +1524,7 @@
       }
     }
   },
-  "lookAspectLabel": "{aspect, select, color{cor} formality{formalidade} pattern{padrão} texture{textura} image{parecida com a imagem} other{—}}",
+  "lookAspectLabel": "{aspect, select, color{cor} formality{formalidade} pattern{padrão} texture{textura} proportion{proporções} image{parecida com a imagem} other{—}}",
   "@lookAspectLabel": {
     "placeholders": {
       "aspect": {

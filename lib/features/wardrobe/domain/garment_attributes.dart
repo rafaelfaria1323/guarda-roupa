@@ -52,6 +52,28 @@ enum Formality {
   static Formality? fromId(String? id) => _byId(values, id, (v) => v.id);
 }
 
+/// Corte da peça (como assenta no corpo).
+enum GarmentFit {
+  fitted('fitted'),
+  regular('regular'),
+  relaxed('relaxed');
+
+  const GarmentFit(this.id);
+  final String id;
+  static GarmentFit? fromId(String? id) => _byId(values, id, (v) => v.id);
+}
+
+/// Comprimento da peça em relação ao habitual da categoria.
+enum GarmentLength {
+  cropped('cropped'),
+  regular('regular'),
+  long('long');
+
+  const GarmentLength(this.id);
+  final String id;
+  static GarmentLength? fromId(String? id) => _byId(values, id, (v) => v.id);
+}
+
 /// Ocasiões iniciais confirmadas (docs/features/conjuntos-e-ocasioes.md).
 enum Occasion {
   casual('casual'),
@@ -78,6 +100,8 @@ final class GarmentAttributes {
     this.rainOk,
     this.windOk,
     this.formality,
+    this.fit,
+    this.length,
     this.occasions = const {},
     this.material,
     this.care,
@@ -94,6 +118,8 @@ final class GarmentAttributes {
   final bool? rainOk;
   final bool? windOk;
   final Formality? formality;
+  final GarmentFit? fit;
+  final GarmentLength? length;
   final Set<Occasion> occasions;
 
   /// Texto da etiqueta, quando conhecido.
@@ -109,6 +135,8 @@ final class GarmentAttributes {
     'rain_ok': rainOk,
     'wind_ok': windOk,
     'formality': formality?.id,
+    'fit': fit?.id,
+    'length': length?.id,
     'occasions': [
       for (final o in Occasion.values)
         if (occasions.contains(o)) o.id,
@@ -125,6 +153,8 @@ final class GarmentAttributes {
     bool? Function()? rainOk,
     bool? Function()? windOk,
     Formality? Function()? formality,
+    GarmentFit? Function()? fit,
+    GarmentLength? Function()? length,
     Set<Occasion>? occasions,
     String? Function()? material,
     String? Function()? care,
@@ -135,6 +165,8 @@ final class GarmentAttributes {
     rainOk: rainOk == null ? this.rainOk : rainOk(),
     windOk: windOk == null ? this.windOk : windOk(),
     formality: formality == null ? this.formality : formality(),
+    fit: fit == null ? this.fit : fit(),
+    length: length == null ? this.length : length(),
     occasions: occasions ?? this.occasions,
     material: material == null ? this.material : material(),
     care: care == null ? this.care : care(),
@@ -151,6 +183,8 @@ final class GarmentAttributes {
         rainOk: rainOk,
         windOk: windOk,
         formality: formality,
+        fit: fit,
+        length: length,
         occasions: Set.unmodifiable(occasions),
         material: text(material),
         care: text(care),
@@ -165,6 +199,8 @@ final class GarmentAttributes {
       other.rainOk == rainOk &&
       other.windOk == windOk &&
       other.formality == formality &&
+      other.fit == fit &&
+      other.length == length &&
       other.occasions.length == occasions.length &&
       other.occasions.containsAll(occasions) &&
       other.material == material &&
@@ -178,6 +214,8 @@ final class GarmentAttributes {
     rainOk,
     windOk,
     formality,
+    fit,
+    length,
     Object.hashAllUnordered(occasions),
     material,
     care,

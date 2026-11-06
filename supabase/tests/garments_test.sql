@@ -384,6 +384,24 @@ select pg_temp.check('edita a formalidade',
 select pg_temp.op('b1000000-0000-0000-0000-000000000009', 'edit',
   '{"changes":{"formality":{"from":"relaxed","to":"black_tie"}}}', :'G3') as r \gset
 select pg_temp.check('formalidade desconhecida é rejeitada', :'r'::jsonb ->> 'reason' = 'invalid');
+
+select pg_temp.op('b1000000-0000-0000-0000-00000000000a', 'create',
+  '{"category":"jeans","fit":"relaxed","length":"cropped"}', '10000000-0000-0000-0000-000000000006') as r \gset
+select pg_temp.check('cria com corte e comprimento',
+  :'r'::jsonb ->> 'result' = 'applied'
+  and (select fit = 'relaxed' and length = 'cropped' from public.garments
+       where id = '10000000-0000-0000-0000-000000000006'));
+select pg_temp.op('b1000000-0000-0000-0000-00000000000b', 'edit',
+  '{"changes":{"fit":{"from":null,"to":"fitted"},"length":{"from":null,"to":"long"}}}', :'G3') as r \gset
+select pg_temp.check('edita corte e comprimento',
+  :'r'::jsonb ->> 'result' = 'applied'
+  and (select fit = 'fitted' and length = 'long' from public.garments where id = :'G3'));
+select pg_temp.op('b1000000-0000-0000-0000-00000000000c', 'edit',
+  '{"changes":{"fit":{"from":"fitted","to":"oversized"}}}', :'G3') as r \gset
+select pg_temp.check('corte desconhecido é rejeitado', :'r'::jsonb ->> 'reason' = 'invalid');
+select pg_temp.op('b1000000-0000-0000-0000-00000000000d', 'edit',
+  '{"changes":{"length":{"from":"long","to":"midi"}}}', :'G3') as r \gset
+select pg_temp.check('comprimento desconhecido é rejeitado', :'r'::jsonb ->> 'reason' = 'invalid');
 commit;
 
 \echo 'Todos os testes SQL passaram.'

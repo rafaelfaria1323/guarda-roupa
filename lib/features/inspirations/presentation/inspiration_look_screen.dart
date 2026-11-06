@@ -182,6 +182,8 @@ class _InspirationLookScreenState extends ConsumerState<InspirationLookScreen> {
         l10n.lookAspectLabel(LookAspect.pattern.name),
       if (look.textures.isNotEmpty)
         l10n.lookAspectLabel(LookAspect.texture.name),
+      if (look.proportions.isNotEmpty)
+        l10n.lookAspectLabel(LookAspect.proportion.name),
       if (look.similar.isNotEmpty) l10n.lookAspectLabel(LookAspect.image.name),
     ];
 
