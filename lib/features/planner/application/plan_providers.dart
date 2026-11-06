@@ -67,11 +67,11 @@ final class WeekDayView {
   /// O ponto de partida para editar este dia.
   PlanDraft get draft => entry?.toDraft() ?? PlanDraft.defaultFor(day);
 
-  /// Fica como está ao planear a semana: aceite, confirmado ou já passado.
-  bool get kept =>
-      state == PlanDayState.accepted ||
+  /// Fica como está ao planear de novo: vestido, já passado ou deixado vazio.
+  bool get keptOnReplan =>
       state == PlanDayState.confirmed ||
-      state == PlanDayState.unused;
+      state == PlanDayState.unused ||
+      (state == PlanDayState.accepted && draft.items.isEmpty);
 }
 
 /// Os 7 dias a partir de hoje; `null` enquanto carrega.
@@ -135,40 +135,75 @@ final class WeekSaveFailed extends WeekGeneration {
 
 /// Planeia a semana (P-19): os dias aceites, confirmados ou passados ficam
 /// como estão (contam como reserva); um dia aceite vazio fica de fora; os
-/// restantes recebem uma proposta nova. Nada disto conta como utilização.
-Future<WeekGeneration> generateWeek(WidgetRef ref) async {
+/// restantes recebem um conjunto novo, já aceite (semana sozinha, decisão
+/// do utilizador a 2026-11-06). Nada disto conta como utilização.
+///
+/// Com [onlyEmpty] (o planeamento automático) só se enchem os dias sem
+/// entrada; todos os outros contam como reserva, tal como estão. Sem ele
+/// ("Planear de novo") refazem-se todos os dias ainda por vestir, menos os
+/// que o utilizador deixou vazios.
+Future<WeekGeneration> generateWeek(
+  WidgetRef ref, {
+  bool onlyEmpty = false,
+}) async {
   final snapshot = ref.read(wardrobeSnapshotProvider);
   final view = ref.read(weekViewProvider);
   final repo = ref.read(planRepositoryProvider);
   if (snapshot == null || view == null || repo == null) {
     return const WeekNotReady();
   }
-  final weather = await ref.read(weekWeatherProvider.future);
-  final comfort = await ref.read(comfortThresholdsProvider.future);
+  // Tudo o que vem de `ref` lê-se antes de esperar: a app pode fechar
+  // entretanto (o planeamento automático corre sozinho).
+  final weatherFuture = ref.read(weekWeatherProvider.future);
+  final comfortFuture = ref.read(comfortThresholdsProvider.future);
+  final seed = ref.read(suggestionChoicesProvider).seed;
+  final lastSearch = ref.read(lastWeekSearchProvider.notifier);
+  // Sem previsão (offline, erro) planeia-se na mesma, sem regras de tempo.
+  Map<CalendarDay, WeatherConditions> weather;
+  try {
+    weather = await weatherFuture;
+  } on Object {
+    weather = const {};
+  }
+  final comfort = await comfortFuture;
   final result = WeeklyPlanner.plan(
     snapshot,
     WeekRequest(
       days: [
         for (final d in view)
-          WeekDayRequest(
-            day: d.day,
-            occasion: d.occasion,
-            weather: weather[d.day],
-            pinned: d.kept && d.draft.items.isNotEmpty ? d.draft.items : null,
-            include: !(d.kept && d.draft.items.isEmpty),
-          ),
+          if (onlyEmpty ? d.entry != null : d.keptOnReplan)
+            WeekDayRequest(
+              day: d.day,
+              occasion: d.occasion,
+              weather: weather[d.day],
+              pinned: d.draft.items.isNotEmpty ? d.draft.items : null,
+              include: d.draft.items.isNotEmpty,
+            )
+          else
+            WeekDayRequest(
+              day: d.day,
+              occasion: d.occasion,
+              weather: weather[d.day],
+            ),
       ],
       comfort: comfort,
-      seed: ref.read(suggestionChoicesProvider).seed,
+      seed: seed,
     ),
   );
-  ref.read(lastWeekSearchProvider.notifier).set(result);
+  lastSearch.set(result);
 
+  // A vista pode ainda não ter visto uma gravação recente: os dias vazios
+  // confirmam-se na base antes de escrever.
+  final taken = onlyEmpty
+      ? {for (final e in await repo.watchDays(view.first.day).first) e.day}
+      : const <CalendarDay>{};
   var proposed = 0;
   var notFound = 0;
   for (final (i, plan) in result.days.indexed) {
     final d = view[i];
     switch (plan.status) {
+      case DayPlanStatus.planned when taken.contains(d.day):
+        break;
       case DayPlanStatus.planned:
         final saved = await repo.saveDay(
           d.day,
@@ -176,6 +211,7 @@ Future<WeekGeneration> generateWeek(WidgetRef ref) async {
             occasion: d.occasion,
             tentative: d.tentative,
             items: plan.items,
+            status: PlanStatus.accepted,
           ),
         );
         if (saved case Err(:final failure)) return WeekSaveFailed(failure);
@@ -188,6 +224,57 @@ Future<WeekGeneration> generateWeek(WidgetRef ref) async {
   }
   return WeekGenerated(proposed: proposed, notFound: notFound);
 }
+
+/// Liga a semana sozinha (`WeekAutopilot`). Os testes de outros fluxos
+/// desligam-na, para não escreverem na base ao mesmo tempo que ela.
+final weekAutopilotEnabledProvider = Provider<bool>((_) => true);
+
+/// A semana está a ser planeada à mão ("Planear de novo"): a automática
+/// espera.
+final weekPlanningBusyProvider = NotifierProvider<WeekPlanningBusy, bool>(
+  WeekPlanningBusy.new,
+);
+
+class WeekPlanningBusy extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void set(bool value) => state = value;
+}
+
+/// O que o planeamento automático já tentou nesta sessão: um dia sem
+/// conjunto possível não se tenta outra vez até o guarda-roupa mudar.
+final autoPlanAttemptsProvider =
+    NotifierProvider<AutoPlanAttemptsNotifier, Set<String>>(
+      AutoPlanAttemptsNotifier.new,
+    );
+
+class AutoPlanAttemptsNotifier extends Notifier<Set<String>> {
+  @override
+  Set<String> build() => const {};
+
+  void add(String key) => state = {...state, key};
+}
+
+/// Há dias por planear e algo novo para tentar: devolve a chave da
+/// tentativa (os dias vazios e as peças disponíveis), ou `null`.
+final autoPlanKeyProvider = Provider<String?>((ref) {
+  final snapshot = ref.watch(wardrobeSnapshotProvider);
+  final view = ref.watch(weekViewProvider);
+  if (snapshot == null || view == null) return null;
+  final garments = [
+    for (final g in snapshot.garments)
+      if (g.isCandidate) g.id.value,
+  ]..sort();
+  if (garments.isEmpty) return null;
+  final empty = [
+    for (final d in view)
+      if (d.entry == null) d.day.iso,
+  ];
+  if (empty.isEmpty) return null;
+  final key = '${empty.join(',')}|${garments.join(',')}';
+  return ref.watch(autoPlanAttemptsProvider).contains(key) ? null : key;
+});
 
 /// A previsão de cada dia da semana (da cache do repositório; um pedido
 /// chega para a semana). Dias sem previsão ficam sem regras de conforto. O
@@ -217,8 +304,9 @@ final weekWeatherProvider = FutureProvider<Map<CalendarDay, WeatherConditions>>(
 );
 
 /// Mudanças posteriores: dias planeados cujas peças deixaram de servir
-/// (suja, arquivada, previsão, lavagem) e a substituição proposta. Nunca se
-/// aplica sozinha. `null` enquanto carrega.
+/// (suja, arquivada, previsão, lavagem) e a substituição proposta. Quando há
+/// peça para trocar, o ecrã aplica-a sozinho, com aviso e "Desfazer" (semana
+/// sozinha, 2026-11-06). `null` enquanto carrega.
 final weekReviewProvider = Provider<Map<CalendarDay, DayReview>?>((ref) {
   final snapshot = ref.watch(wardrobeSnapshotProvider);
   final view = ref.watch(weekViewProvider);
@@ -245,8 +333,9 @@ final weekReviewProvider = Provider<Map<CalendarDay, DayReview>?>((ref) {
   return {for (final r in reviews) r.day: r};
 });
 
-/// Substituições que o utilizador decidiu não aplicar (nesta sessão): os
-/// avisos ficam, a proposta deixa de aparecer até mudar.
+/// Substituições já tratadas nesta sessão (aplicadas sozinhas ou que o
+/// utilizador decidiu não aplicar): os avisos ficam, a proposta deixa de
+/// aparecer e não se volta a aplicar até mudar.
 final ignoredDayChangesProvider =
     NotifierProvider<IgnoredDayChangesNotifier, Set<String>>(
       IgnoredDayChangesNotifier.new,

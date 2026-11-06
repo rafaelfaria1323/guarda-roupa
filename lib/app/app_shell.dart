@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/account_sync/application/providers.dart';
 import '../features/account_sync/presentation/sync_status.dart';
+import '../features/planner/presentation/week_autopilot.dart';
 import '../l10n/app_localizations.dart';
 import 'fio_mark.dart';
 import 'router.dart';
@@ -21,8 +22,12 @@ class AppShell extends ConsumerWidget {
     initialLocation: index == navigationShell.currentIndex,
   );
 
+  // A semana planeia-se sozinha em qualquer separador.
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) =>
+      WeekAutopilot(child: _scaffold(context, ref));
+
+  Widget _scaffold(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final destinations = [
       (Icons.wb_sunny_outlined, Icons.wb_sunny, l10n.navPlanner),
