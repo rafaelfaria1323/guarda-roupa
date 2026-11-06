@@ -25,6 +25,7 @@ import '../features/wardrobe/domain/garment.dart';
 import '../features/wardrobe/presentation/garment_detail_screen.dart';
 import '../features/wardrobe/presentation/garment_form_screen.dart';
 import '../features/wardrobe/presentation/wardrobe_screen.dart';
+import '../features/wear/presentation/wardrobe_insights_screen.dart';
 import '../features/wear/presentation/wear_picker_screen.dart';
 import 'app_shell.dart';
 
@@ -34,6 +35,7 @@ abstract final class AppRoutes {
   static const wardrobe = '/guarda-roupa';
   static const newGarment = '/guarda-roupa/nova';
   static const laundryBasket = '/guarda-roupa/cesto';
+  static const wardrobeInsights = '/guarda-roupa/resumo';
   static String garment(GarmentId id) => '/guarda-roupa/peca/${id.value}';
   static String editGarment(GarmentId id) =>
       '/guarda-roupa/peca/${id.value}/editar';
@@ -105,6 +107,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.laundryBasket,
         builder: (context, state) => const LaundryBasketScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.wardrobeInsights,
+        builder: (context, state) => const WardrobeInsightsScreen(),
       ),
       GoRoute(
         path: '/guarda-roupa/peca/:id',

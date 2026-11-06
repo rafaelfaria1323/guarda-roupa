@@ -1627,5 +1627,82 @@
         "type": "int"
       }
     }
-  }
+  },
+  "insightsTitle": "Resumo do armário",
+  "insightsWorn": "Usaste {worn} de {total} peças nos últimos {days} dias.",
+  "@insightsWorn": {
+    "placeholders": {
+      "worn": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "insightsNoHistory": "Ainda não registaste o que vestiste.",
+  "insightsNoHistoryHint": "Usa “Vesti hoje” e o resumo vai-se enchendo: o que mais usas, o que está parado e o que nunca usaste.",
+  "insightsMostWorn": "Mais usadas",
+  "insightsMostWornHint": "Nos últimos {days} dias.",
+  "@insightsMostWornHint": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "insightsTimes": "{count, plural, =1{1 vez} other{{count} vezes}}",
+  "@insightsTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "insightsIdle": "Paradas",
+  "insightsIdleHint": "Já as usaste, mas não há {days} dias ou mais. Voltar a usar, ou arquivar?",
+  "@insightsIdleHint": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "insightsDaysAgo": "há {days} dias",
+  "@insightsDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "insightsNever": "Nunca usadas",
+  "insightsNeverHint": "No armário há {days} dias ou mais e ainda sem registo de uso.",
+  "@insightsNeverHint": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "insightsSince": "desde {date}",
+  "@insightsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "insightsFresh": "{count, plural, =1{1 peça nova ainda por estrear.} other{{count} peças novas ainda por estrear.}}",
+  "@insightsFresh": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "insightsAllGood": "Nada parado nem por estrear. Bom uso do armário!"
 }
