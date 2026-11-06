@@ -55,7 +55,7 @@ O plano não entra no backup (como o `plan_entry_id` das utilizações). Escrita
   - `image`: `null` ou um objeto com a forma de uma foto de peça (`id`, `width`, `height`, `bytes`, `thumb_bytes`, `sha256`), validado por `garment_photos_valid`; os ficheiros vivem no bucket `garment-photos`;
   - `deleted_at`.
 - `StylePreference` é a tabela `style_preferences`, com estes campos:
-  - `subject` (`color`, `pattern`, `texture`, `formality`, `combo`) e `value`, validado por `style_preference_value_valid` (cor: RGB em decimal; os outros: ids conhecidos);
+  - `subject` (`color`, `pattern`, `texture`, `formality`, `combo`) e `value`, validado por `style_preference_value_valid` (cor: RGB em decimal; os outros: ids conhecidos; combinações `neutral_base`, `single_accent`, `tonal`, `high_contrast` e `low_contrast`, as duas últimas desde a migração `20261117000001`);
   - `stance`: `like` ou `avoid`;
   - `occasions`: o contexto (vazio = sempre);
   - `inspiration_id`: a origem opcional (só do próprio; fica `null` se a inspiração for apagada de vez);

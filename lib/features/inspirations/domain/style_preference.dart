@@ -41,7 +41,13 @@ enum StyleCombo {
   singleAccent('single_accent'),
 
   /// Tons próximos da mesma cor.
-  tonal('tonal');
+  tonal('tonal'),
+
+  /// Peças grandes claras com escuras (muito contraste).
+  highContrast('high_contrast'),
+
+  /// Peças grandes de luminosidade parecida (pouco contraste).
+  lowContrast('low_contrast');
 
   const StyleCombo(this.id);
   final String id;

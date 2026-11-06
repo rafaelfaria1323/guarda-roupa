@@ -27,6 +27,14 @@ abstract final class OutfitHarmony {
   static const tonalHueDegrees = 30.0;
   static const _achromatic = 0.03;
 
+  /// "Claro com escuro": luminosidades OKLab das peças grandes afastadas
+  /// pelo menos isto (ex.: branco com azul-marinho, bege com preto).
+  static const highContrastLightness = 0.5;
+
+  /// "Contraste suave": luminosidades a no máximo isto (ex.: bege com
+  /// caqui, azul-marinho com preto).
+  static const lowContrastLightness = 0.15;
+
   /// Uma cor só conta para "um só destaque" se ocupar isto da peça.
   static const significantProportion = 0.25;
 
@@ -69,6 +77,10 @@ abstract final class OutfitHarmony {
         final hues = [for (final c in lch) c.hue];
         if (_hueSpread(hues) <= tonalHueDegrees) out.add(StyleCombo.tonal);
       }
+      final ls = [for (final g in big) Oklab.fromRgb(_dominant(g)).l];
+      final range = ls.reduce(math.max) - ls.reduce(math.min);
+      if (range >= highContrastLightness) out.add(StyleCombo.highContrast);
+      if (range <= lowContrastLightness) out.add(StyleCombo.lowContrast);
     }
     return out;
   }

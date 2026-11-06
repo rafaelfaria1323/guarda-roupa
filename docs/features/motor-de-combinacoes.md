@@ -36,6 +36,7 @@ Cartão em Hoje (antes Planeador), por baixo de "Vesti hoje":
 - **Base neutra:** todas as peças grandes (top, parte de baixo, peça única, camadas) com cor dominante neutra.
 - **Um só destaque:** exatamente uma peça (calçado incluído) com uma cor não neutra em pelo menos 25 % dela.
 - **Tons próximos:** duas ou mais peças grandes, todas com cor (croma ≥ 0,03, o que exclui preto, branco e cinzento) e matizes num arco de 30°.
+- **Contraste (2026-11-06):** entre as cores dominantes de duas ou mais peças grandes, pela luminosidade OKLab. **Claro com escuro** se a mais clara e a mais escura estiverem a pelo menos 0,5 (branco ou bege com azul-marinho, cinzento com preto); **contraste suave** se estiverem a no máximo 0,15 (bege com caqui, azul-marinho com preto). Branco com ganga fica no meio. O calçado e os acessórios não contam.
 - **Sem cor indicada numa peça:** a combinação fica por saber. Não se descreve nem conta para preferências.
 - **Ordem:** as combinações só pesam com uma preferência "Gosto"/"Evito" de combinação (Estilo › Preferências, nas ocasiões dela): +1 ou −1, somado às preferências das peças, com a nota da preferência no conjunto. Sem preferência, aparecem só como descrição ("Cores: base neutra").
 - **Padrões e texturas:** padrão por indicar ou liso não conta. Cada padrão além do primeiro, e cada textura forte (marcada ou com pelo) além da primeira, soma um ponto de "competição". O conjunto fica atrás de outro igual em tudo o resto, com a nota "Mais de um padrão: podem competir". Nunca é excluído nem conta como aviso.
@@ -44,7 +45,7 @@ Cartão em Hoje (antes Planeador), por baixo de "Vesti hoje":
 
 As notas do conjunto aparecem em "Sugestões para hoje". Só o papel em falta fica a laranja escuro, à vista; as outras ficam em "Porquê este".
 
-Ainda não: formalidade pedida pela ocasião, contraste desejado, acessórios, camada intermédia. A diversidade na semana (peças repetidas e o mesmo visual em dias seguidos) é do [planeamento](planeamento-semanal.md).
+Ainda não: formalidade pedida pela ocasião, acessórios, camada intermédia. A diversidade na semana (peças repetidas e o mesmo visual em dias seguidos) é do [planeamento](planeamento-semanal.md).
 
 ## Objetivo
 

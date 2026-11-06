@@ -21,7 +21,7 @@ Estado: abordagem assistida confirmada; interpretação visual avançada adiada.
   - proporções: justo em cima e largo em baixo, largo em cima e justo em baixo, tudo justo, tudo largo, camada comprida, parte de cima curta.
   Sem etiquetas, a inspiração mostra "Sem etiquetas", nada é inventado.
 - Não é posse: não cria nem referencia peças e não aparece no guarda-roupa.
-- **Preferências** (segundo segmento do separador Estilo): "Gosto" ou "Evito" de uma cor, padrão, textura, formalidade ou combinação (base neutra, um só destaque, tons próximos).
+- **Preferências** (segundo segmento do separador Estilo): "Gosto" ou "Evito" de uma cor, padrão, textura, formalidade ou combinação (base neutra, um só destaque, tons próximos, claro com escuro, contraste suave).
   - O contexto são as ocasiões em que vale; sem ocasiões, vale sempre.
   - Só pode haver uma preferência ativa para o mesmo assunto, valor e contexto. A app explica quando já existe.
   - Ao editar, o assunto e a origem ficam; mudam o valor, a posição e o contexto.

@@ -117,4 +117,9 @@ select pg_temp.style('60000000-0000-0000-0000-000000000003', 'edit_preference',
 select pg_temp.check('eliminada não se edita', :'r'::jsonb ->> 'reason' = 'not_found');
 commit;
 
+select pg_temp.check('contraste: claro com escuro e suave são combinações válidas',
+  public.style_preference_value_valid('combo', 'high_contrast')
+  and public.style_preference_value_valid('combo', 'low_contrast')
+  and not public.style_preference_value_valid('combo', 'medium_contrast'));
+
 \echo 'Testes de preferências passaram.'

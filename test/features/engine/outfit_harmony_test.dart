@@ -57,7 +57,7 @@ void main() {
           (one('trousers', ReferenceColor.black), OutfitRole.bottom),
           (one('sneakers', ReferenceColor.white), OutfitRole.footwear),
         ]),
-        {StyleCombo.neutralBase},
+        {StyleCombo.neutralBase, StyleCombo.highContrast},
       );
     });
 
@@ -68,7 +68,11 @@ void main() {
           (one('trousers', ReferenceColor.black), OutfitRole.bottom),
           (one('sneakers', ReferenceColor.red), OutfitRole.footwear),
         ]),
-        {StyleCombo.neutralBase, StyleCombo.singleAccent},
+        {
+          StyleCombo.neutralBase,
+          StyleCombo.singleAccent,
+          StyleCombo.highContrast,
+        },
       );
       expect(
         OutfitHarmony.combos([
@@ -90,7 +94,7 @@ void main() {
           (tee, OutfitRole.mainTop),
           (one('trousers', ReferenceColor.black), OutfitRole.bottom),
         ]),
-        {StyleCombo.neutralBase},
+        {StyleCombo.neutralBase, StyleCombo.highContrast},
       );
     });
 
@@ -117,6 +121,44 @@ void main() {
         ]),
         isNot(contains(StyleCombo.tonal)),
       );
+    });
+
+    test('contraste: claro com escuro, suave ou nenhum', () {
+      Set<StyleCombo>? pair(ReferenceColor top, ReferenceColor bottom) =>
+          OutfitHarmony.combos([
+            (one('top', top), OutfitRole.mainTop),
+            (one('bottom', bottom), OutfitRole.bottom),
+          ]);
+      expect(
+        pair(ReferenceColor.beige, ReferenceColor.navy),
+        contains(StyleCombo.highContrast),
+      );
+      expect(
+        pair(ReferenceColor.grey, ReferenceColor.black),
+        contains(StyleCombo.highContrast),
+      );
+      expect(
+        pair(ReferenceColor.beige, ReferenceColor.khaki),
+        contains(StyleCombo.lowContrast),
+      );
+      expect(
+        pair(ReferenceColor.navy, ReferenceColor.black),
+        contains(StyleCombo.lowContrast),
+      );
+      // Branco com ganga fica no meio: nem uma coisa nem outra.
+      final mid = pair(ReferenceColor.white, ReferenceColor.denim)!;
+      expect(mid, isNot(contains(StyleCombo.highContrast)));
+      expect(mid, isNot(contains(StyleCombo.lowContrast)));
+    });
+
+    test('contraste só entre peças grandes', () {
+      final c = OutfitHarmony.combos([
+        (one('tee', ReferenceColor.beige), OutfitRole.mainTop),
+        (one('trousers', ReferenceColor.khaki), OutfitRole.bottom),
+        (one('sneakers', ReferenceColor.black), OutfitRole.footwear),
+      ])!;
+      expect(c, contains(StyleCombo.lowContrast));
+      expect(c, isNot(contains(StyleCombo.highContrast)));
     });
 
     test('cor por indicar numa peça: não se sabe', () {
