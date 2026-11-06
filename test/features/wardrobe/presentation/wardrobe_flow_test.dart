@@ -391,6 +391,8 @@ void main() {
     await tapKey('fit-relaxed');
     await tapKey('length-cropped');
     await tapKey('occasion-evening');
+    await tapKey('wash-machine_40');
+    await tapKey('tumble-dry-no');
     await tester.ensureVisible(find.byKey(const Key('garment-material')));
     await tester.enterText(find.byKey(const Key('garment-material')), 'Lã');
     await tester.tap(find.byKey(const Key('garment-save')));
@@ -410,6 +412,8 @@ void main() {
     expect(data['fit'], 'relaxed');
     expect(data['length'], 'cropped');
     expect(data['occasions'], ['evening']);
+    expect(data['wash'], 'machine_40');
+    expect(data['tumble_dry'], false);
     expect(data['material'], 'Lã');
 
     await tester.ensureVisible(

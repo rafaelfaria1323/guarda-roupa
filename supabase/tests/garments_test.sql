@@ -402,6 +402,26 @@ select pg_temp.check('corte desconhecido é rejeitado', :'r'::jsonb ->> 'reason'
 select pg_temp.op('b1000000-0000-0000-0000-00000000000d', 'edit',
   '{"changes":{"length":{"from":"long","to":"midi"}}}', :'G3') as r \gset
 select pg_temp.check('comprimento desconhecido é rejeitado', :'r'::jsonb ->> 'reason' = 'invalid');
+
+select pg_temp.op('b1000000-0000-0000-0000-00000000000e', 'create',
+  '{"category":"t_shirt","wash":"machine_40","tumble_dry":false}', '10000000-0000-0000-0000-000000000007') as r \gset
+select pg_temp.check('cria com lavagem e máquina de secar',
+  :'r'::jsonb ->> 'result' = 'applied'
+  and (select wash = 'machine_40' and tumble_dry = false from public.garments
+       where id = '10000000-0000-0000-0000-000000000007'));
+select pg_temp.op('b1000000-0000-0000-0000-00000000000f', 'edit',
+  '{"changes":{"wash":{"from":null,"to":"professional"},"tumble_dry":{"from":null,"to":true}}}', :'G3') as r \gset
+select pg_temp.check('edita lavagem e máquina de secar',
+  :'r'::jsonb ->> 'result' = 'applied'
+  and (select wash = 'professional' and tumble_dry from public.garments where id = :'G3'));
+select pg_temp.op('b1000000-0000-0000-0000-000000000010', 'edit',
+  '{"changes":{"wash":{"from":"professional","to":"machine_90"}}}', :'G3') as r \gset
+select pg_temp.check('lavagem desconhecida é rejeitada', :'r'::jsonb ->> 'reason' = 'invalid');
+select pg_temp.op('b1000000-0000-0000-0000-000000000011', 'edit',
+  '{"changes":{"tumble_dry":{"from":true,"to":null}}}', :'G3') as r \gset
+select pg_temp.check('máquina de secar volta a não sei',
+  :'r'::jsonb ->> 'result' = 'applied'
+  and (select tumble_dry is null from public.garments where id = :'G3'));
 commit;
 
 \echo 'Todos os testes SQL passaram.'

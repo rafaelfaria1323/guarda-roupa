@@ -411,6 +411,16 @@
       }
     }
   },
+  "garmentWash": "Lavagem",
+  "garmentTumbleDry": "Máquina de secar",
+  "washLabel": "{wash, select, machine_30{Máquina 30°} machine_40{Máquina 40°} machine_60{Máquina 60°} hand{À mão} professional{Limpeza profissional} other{Sem indicação}}",
+  "@washLabel": {
+    "placeholders": {
+      "wash": {
+        "type": "String"
+      }
+    }
+  },
   "garmentRain": "Serve para chuva?",
   "garmentWind": "Serve para vento?",
   "garmentOccasions": "Ocasiões",
@@ -1537,6 +1547,68 @@
     "placeholders": {
       "aspect": {
         "type": "String"
+      }
+    }
+  },
+  "basketTitle": "Cesto da roupa",
+  "basketEmpty": "O cesto está vazio.",
+  "basketEmptyHint": "As peças aparecem aqui quando precisam de limpeza.",
+  "basketDirty": "Para lavar",
+  "basketLoad": "{program} · {shade}",
+  "@basketLoad": {
+    "placeholders": {
+      "program": {
+        "type": "String"
+      },
+      "shade": {
+        "type": "String"
+      }
+    }
+  },
+  "washProgramLabel": "{id, select, professional{Limpeza profissional} hand{À mão} machine_30{Máquina 30°} machine_40{Máquina 40°} machine_60{Máquina 60°} other{Sem indicação de lavagem}}",
+  "@washProgramLabel": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "shadeLabel": "{id, select, light{Claras} colored{Cores} dark{Escuras} other{Sem cor}}",
+  "@shadeLabel": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "basketWashed": "Lavei estas",
+  "basketToCleaners": "Levei à lavandaria",
+  "basketInProgress": "A lavar ou a secar",
+  "basketReady": "Já estão prontas",
+  "basketAtCleaners": "Na lavandaria",
+  "basketBack": "Já vieram",
+  "basketAvailableAgain": "{count, plural, one{1 peça disponível de novo} other{{count} peças disponíveis de novo}}",
+  "@basketAvailableAgain": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "basketSentToCleaners": "{count, plural, one{1 peça na lavandaria} other{{count} peças na lavandaria}}",
+  "@basketSentToCleaners": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "basketUnknownHint": "Marca a lavagem na ficha da peça para a juntar à máquina certa.",
+  "wardrobeBasket": "Cesto · {count}",
+  "@wardrobeBasket": {
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   }

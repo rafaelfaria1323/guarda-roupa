@@ -1,4 +1,5 @@
 import '../../wardrobe/domain/garment.dart';
+import '../../wardrobe/domain/garment_attributes.dart';
 import '../../wardrobe/domain/garment_category.dart';
 import '../../wardrobe/domain/garment_filter.dart';
 import '../../wear/domain/calendar_day.dart';
@@ -106,6 +107,14 @@ abstract final class LaundryPolicy {
         if (states[g.id]!.washRecommended) g.id,
     ];
   }
+
+  /// A peça vai à lavandaria: a lavagem indicada é "limpeza profissional"
+  /// ou, sem ela, o texto da etiqueta pede-o ([asksProfessional]).
+  static bool isProfessional(GarmentAttributes a) => switch (a.wash) {
+    WashCare.professional => true,
+    null => asksProfessional(a.care),
+    _ => false,
+  };
 
   /// O texto de cuidados da etiqueta pede limpeza profissional (a seco ou
   /// "não lavar"). Só se lê o que o utilizador escreveu; nada se adivinha.

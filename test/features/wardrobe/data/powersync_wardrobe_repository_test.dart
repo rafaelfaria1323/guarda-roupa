@@ -345,6 +345,8 @@ void main() {
       formality: Formality.smartCasual,
       fit: GarmentFit.relaxed,
       length: GarmentLength.cropped,
+      wash: WashCare.hand,
+      tumbleDry: false,
       occasions: {Occasion.evening, Occasion.casual},
       material: ' 100% lã ',
       care: 'Lavar à mão',
@@ -369,6 +371,8 @@ void main() {
       expect(data, containsPair('formality', 'smart_casual'));
       expect(data, containsPair('fit', 'relaxed'));
       expect(data, containsPair('length', 'cropped'));
+      expect(data, containsPair('wash', 'hand'));
+      expect(data, containsPair('tumble_dry', false));
       expect(data, containsPair('occasions', ['casual', 'evening']));
       expect(data, containsPair('material', '100% lã'));
     });

@@ -141,6 +141,8 @@ void main() {
             formality: Formality.relaxed,
             fit: GarmentFit.fitted,
             length: GarmentLength.long,
+            wash: WashCare.hand,
+            tumbleDry: false,
             occasions: {Occasion.evening},
             material: 'Lã',
           ),

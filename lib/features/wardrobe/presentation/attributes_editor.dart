@@ -126,6 +126,21 @@ class AttributesEditor extends StatelessWidget {
               ),
           ],
         ),
+        _Choice(
+          title: l10n.garmentWash,
+          keyPrefix: 'wash',
+          values: WashCare.values,
+          idOf: (v) => v.id,
+          label: (v) => l10n.washLabel(v.id),
+          selected: value.wash,
+          onSelected: (v) => onChanged(value.copyWith(wash: () => v)),
+        ),
+        _YesNo(
+          title: l10n.garmentTumbleDry,
+          keyPrefix: 'tumble-dry',
+          value: value.tumbleDry,
+          onChanged: (v) => onChanged(value.copyWith(tumbleDry: () => v)),
+        ),
         const SizedBox(height: 16),
         TextFormField(
           key: const Key('garment-material'),
