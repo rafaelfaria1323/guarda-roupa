@@ -53,7 +53,7 @@ Decisão do utilizador: o motor junta só os acessórios que fazem sentido com a
 - **Qual:** de cada tipo, o primeiro candidato (disponível, não arquivado, sem ocasiões marcadas que excluam a pedida) pela mesma ordem das peças: rotatividade, preferências, menos usado, usado há mais tempo, seed. A ocasião não se anota num acessório.
 - **Nunca obrigatório:** sem nenhum, o conjunto continua completo e não aparece em falta. Não contam para a ordem dos conjuntos, para os avisos da semana nem para as cores e padrões. São os mesmos em todas as sugestões do dia.
 - **No ecrã:** "Leva também: Chapéu-de-chuva preto", com a razão em "Porquê este" (vai chover, está frio, dia de sol...). "Vou vestir isto" e "Guardar como conjunto" levam só as peças do conjunto.
-- **Ainda não:** na semana planeada e nas trocas.
+- **Na semana:** cada dia planeado mostra os acessórios da previsão desse dia, calculados na hora e não gravados no plano ([planeamento](planeamento-semanal.md)); por isso as trocas não lhes tocam.
 
 A diversidade na semana (peças repetidas e o mesmo visual em dias seguidos) é do [planeamento](planeamento-semanal.md).
 

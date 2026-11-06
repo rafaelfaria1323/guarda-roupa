@@ -21,6 +21,7 @@ Map<String, Object?> hourly({
   double wind = 10,
   int? probability = 10,
   double Function(int day, int hour)? uv,
+  CalendarDay? start,
 }) {
   final time = <String>[];
   final f = <double?>[];
@@ -29,7 +30,7 @@ Map<String, Object?> hourly({
   final p = <int?>[];
   final u = <double?>[];
   for (var d = 0; d < days; d++) {
-    final day = CalendarDay(2026, 11, 3).addDays(d).iso;
+    final day = (start ?? CalendarDay(2026, 11, 3)).addDays(d).iso;
     for (var h = 0; h < 24; h++) {
       time.add('${day}T${h.toString().padLeft(2, '0')}:00');
       f.add(feels?.call(d, h) ?? 15);

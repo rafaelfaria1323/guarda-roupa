@@ -5,6 +5,7 @@ import '../../account_sync/application/providers.dart';
 import '../../care/application/care_providers.dart';
 import '../../engine/application/suggestion_providers.dart';
 import '../../engine/domain/comfort.dart';
+import '../../engine/domain/daily_engine.dart';
 import '../../engine/domain/plan_review.dart';
 import '../../engine/domain/suggestion.dart';
 import '../../engine/domain/weekly_planner.dart';
@@ -300,6 +301,36 @@ final weekWeatherProvider = FutureProvider<Map<CalendarDay, WeatherConditions>>(
       }
     }
     return out;
+  },
+);
+
+/// Acessórios que a previsão de cada dia planeado pede (chapéu-de-chuva,
+/// cachecol, óculos de sol...). Não ficam no plano: seguem a previsão.
+final weekAccessoriesProvider = Provider<Map<CalendarDay, List<SuggestedItem>>>(
+  (ref) {
+    final snapshot = ref.watch(wardrobeSnapshotProvider);
+    final view = ref.watch(weekViewProvider);
+    final weather = ref.watch(weekWeatherProvider).value;
+    if (snapshot == null || view == null || weather == null) return const {};
+    final comfort = currentComfort(ref);
+    final seed = ref.watch(suggestionChoicesProvider.select((c) => c.seed));
+    return {
+      for (final d in view)
+        if (d.draft.items.isNotEmpty &&
+            d.state != PlanDayState.confirmed &&
+            d.state != PlanDayState.unused)
+          if (weather[d.day] case final w?)
+            d.day: DailyEngine.accessories(
+              snapshot,
+              SuggestionRequest(
+                day: d.day,
+                occasion: d.occasion,
+                weather: w,
+                comfort: comfort,
+                seed: seed,
+              ),
+            ),
+    };
   },
 );
 

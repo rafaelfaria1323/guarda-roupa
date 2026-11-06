@@ -225,6 +225,14 @@ abstract final class DailyEngine {
     );
   }
 
+  /// Só os acessórios que o tempo do pedido pede
+  /// ([OutfitCandidate.accessories]); para um dia já planeado, que guarda
+  /// só as peças do conjunto.
+  static List<SuggestedItem> accessories(
+    WardrobeSnapshot snapshot,
+    SuggestionRequest request,
+  ) => _Context(snapshot, request).accessories();
+
   /// Avalia peças já escolhidas (um dia planeado) com as regras do dia:
   /// as mesmas notas que uma sugestão teria. `null` para uma peça que já
   /// não existe.
