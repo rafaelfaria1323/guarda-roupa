@@ -40,7 +40,7 @@ Não existe um máximo de 100 peças. Os conjuntos de 10, 50 e 100 peças são c
 | Reserva | Utilização futura considerada pelo planeador, sem alterar o histórico real |
 | Recomendação de lavagem | Aviso baseado numa política; não mede sujidade |
 
-Duas t-shirts iguais continuam a ser duas peças. Podem partilhar uma fotografia, mas nunca o histórico físico.
+Duas t-shirts iguais continuam a ser duas peças. Podem ter a mesma fotografia (copiada para cada uma), mas nunca o histórico físico. A app mostra-as juntas e, ao registar, escolhe a que está há mais tempo sem uso ([peças iguais](features/guarda-roupa.md#peças-iguais)).
 
 ## Proposta de MVP utilizável
 

@@ -96,6 +96,9 @@ abstract final class GarmentRules {
   static const maxBrandLength = 60;
   static const maxNotesLength = 1000;
 
+  /// Unidades iguais criadas de uma vez no formulário.
+  static const maxUnits = 10;
+
   /// Tolerância para arredondamentos na soma das proporções.
   static const _epsilon = 1e-6;
 
