@@ -13,7 +13,7 @@ Estado: necessária no MVP.
 - Backup (formato v3): os conjuntos entram e são recuperados com as peças novas.
 - **Da sugestão para o conjunto (2026-11-06):** “Guardar como conjunto” em “Sugestões para hoje” guarda as peças e papéis da sugestão (sem a camada opcional), com a ocasião escolhida.
 - **No motor:** os conjuntos guardados são propostos quando as peças servem e passam à frente de outros iguais em avisos, no dia e na semana ([motor](motor-de-combinacoes.md)).
-- Por fazer: propor uma substituição dentro de um conjunto guardado quando uma peça falta (hoje o conjunto simplesmente não entra).
+- **Peça em falta (2026-11-06):** se só uma peça do conjunto não serve hoje, a sugestão traz o conjunto com outra no lugar dela e diz qual trocou; o conjunto guardado não muda. “Guardar como conjunto” continua disponível para guardar a variante como outro conjunto.
 
 ## Objetivo
 

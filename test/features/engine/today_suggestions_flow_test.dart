@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guarda_roupa/features/wardrobe/data/powersync_wardrobe_repository.dart';
+import 'package:guarda_roupa/features/wardrobe/domain/availability.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_category.dart';
 import 'package:guarda_roupa/features/wear/application/wear_providers.dart';
@@ -146,6 +147,25 @@ void main() {
         (i as Map)['role'],
     ];
     expect(roles, ['main_top', 'bottom', 'footwear']);
+
+    // A ganga vai para lavar: o conjunto volta com outras calças.
+    final repo = PowerSyncWardrobeRepository(db: app.db, ownerId: 'user-a');
+    await tester.runAsync(() async {
+      await repo.addGarment(
+        const GarmentDraft(category: GarmentCategory.jeans, name: 'Preta'),
+      );
+      final azul =
+          (await app.db.get(
+                "SELECT id FROM garments WHERE name = 'Azul'",
+              ))['id']!
+              as String;
+      await repo.setAvailability(GarmentId(azul), Availability.needsCleaning);
+    });
+    await settleUntil(
+      tester,
+      find.text('De um dos teus conjuntos, com Preta em vez de Azul'),
+    );
+    expect(find.byKey(const Key('suggestion-0-save')), findsOne);
   });
 
   testWidgets('sem previsão diz isso e aceita o tempo indicado à mão', (

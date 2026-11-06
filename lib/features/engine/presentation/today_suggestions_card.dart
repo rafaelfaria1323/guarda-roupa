@@ -349,8 +349,9 @@ class _ResultState extends ConsumerState<_Result> {
                 onPressed: _next,
                 child: Text(l10n.suggestionsShowAnother),
               ),
+              // Uma variante com peça trocada pode guardar-se como outro.
               if (!result.candidates[_shown].notes.any(
-                (n) => n is SavedOutfitNote,
+                (n) => n is SavedOutfitNote && n.swaps.isEmpty,
               ))
                 TextButton.icon(
                   key: Key('suggestion-$_shown-save'),
