@@ -32,46 +32,86 @@ class TodaySuggestionsCard extends ConsumerWidget {
     final choices = ref.watch(suggestionChoicesProvider);
     final notifier = ref.read(suggestionChoicesProvider.notifier);
 
+    final colors = AppColors.of(context);
     return Column(
       key: const Key('today-suggestions'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _WeatherLine(),
-        const SizedBox(height: 22),
-        Text(l10n.suggestionsTitle, style: theme.textTheme.titleLarge),
-        const SizedBox(height: 8),
-        // Uma só linha que desliza: a ocasião não deve ocupar o ecrã.
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          clipBehavior: Clip.none,
-          child: Row(
-            children: [
-              for (final (o, key, label) in [
-                (null, 'any', l10n.suggestionsAnyOccasion),
-                for (final o in Occasion.values)
-                  (o, o.id, l10n.occasionLabel(o.id)),
-              ])
-                Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: ChoiceChip(
-                    key: Key('suggestions-occasion-$key'),
-                    showCheckmark: false,
-                    label: Text(label),
-                    selected: choices.occasion == o,
-                    onSelected: (_) => notifier.occasion(o),
-                  ),
-                ),
-            ],
+        // O tempo numa caixa à parte, como no design.
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colors.divider),
+          ),
+          child: const Padding(
+            padding: EdgeInsets.fromLTRB(14, 10, 8, 4),
+            child: _WeatherLine(),
           ),
         ),
-        const SizedBox(height: 8),
-        if (result == null)
-          const Padding(
-            padding: EdgeInsets.all(24),
-            child: Center(child: CircularProgressIndicator()),
-          )
-        else
-          _Result(result: result),
+        const SizedBox(height: 16),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: colors.accent,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const SizedBox.square(dimension: 8),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n.suggestionsTitle,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: colors.accent,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                // Uma só linha que desliza: a ocasião não deve ocupar o ecrã.
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  clipBehavior: Clip.none,
+                  child: Row(
+                    children: [
+                      for (final (o, key, label) in [
+                        (null, 'any', l10n.suggestionsAnyOccasion),
+                        for (final o in Occasion.values)
+                          (o, o.id, l10n.occasionLabel(o.id)),
+                      ])
+                        Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: ChoiceChip(
+                            key: Key('suggestions-occasion-$key'),
+                            showCheckmark: false,
+                            label: Text(label),
+                            selected: choices.occasion == o,
+                            onSelected: (_) => notifier.occasion(o),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                if (result == null)
+                  const Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                else
+                  _Result(result: result),
+              ],
+            ),
+          ),
+        ),
         const StylistSection(),
       ],
     );
@@ -331,38 +371,40 @@ class _ResultState extends ConsumerState<_Result> {
           ),
           ...gaps,
           const SizedBox(height: 12),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            crossAxisAlignment: WrapCrossAlignment.center,
+          Row(
+            spacing: 8,
             children: [
-              FilledButton(
-                key: Key('suggestion-$_shown-wear'),
-                onPressed: () => context.push(
-                  AppRoutes.wearWith([
-                    for (final i in result.candidates[_shown].items)
-                      i.garment.id.value,
-                  ]),
+              Expanded(
+                child: FilledButton.icon(
+                  key: Key('suggestion-$_shown-wear'),
+                  onPressed: () => context.push(
+                    AppRoutes.wearWith([
+                      for (final i in result.candidates[_shown].items)
+                        i.garment.id.value,
+                    ]),
+                  ),
+                  icon: const Icon(Icons.done_all),
+                  label: Text(l10n.suggestionsWearThis),
                 ),
-                child: Text(l10n.suggestionsWearThis),
-              ),
-              TextButton(
-                key: const Key('suggestions-more'),
-                onPressed: _next,
-                child: Text(l10n.suggestionsShowAnother),
               ),
               // Uma variante com peça trocada pode guardar-se como outro.
               if (!result.candidates[_shown].notes.any(
                 (n) => n is SavedOutfitNote && n.swaps.isEmpty,
               ))
-                TextButton.icon(
+                IconButton.filledTonal(
                   key: Key('suggestion-$_shown-save'),
+                  tooltip: l10n.suggestionsSaveOutfit,
                   onPressed: _saving
                       ? null
                       : () => _save(result.candidates[_shown]),
                   icon: const Icon(Icons.bookmark_add_outlined),
-                  label: Text(l10n.suggestionsSaveOutfit),
                 ),
+              IconButton.filledTonal(
+                key: const Key('suggestions-more'),
+                tooltip: l10n.suggestionsShowAnother,
+                onPressed: _next,
+                icon: const Icon(Icons.shuffle),
+              ),
             ],
           ),
         ],
