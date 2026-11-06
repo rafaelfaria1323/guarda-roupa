@@ -7,6 +7,7 @@ import 'package:guarda_roupa/features/wardrobe/domain/availability.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_category.dart';
 import 'package:guarda_roupa/features/wear/application/wear_providers.dart';
+import 'package:guarda_roupa/features/wear/domain/calendar_day.dart';
 import 'package:guarda_roupa/features/weather/application/weather_providers.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -14,6 +15,7 @@ import 'package:powersync/powersync.dart';
 
 import '../../support/app_harness.dart';
 import '../wardrobe/domain/fakes.dart';
+import '../weather/weather_test.dart' show hourly;
 import '../wear/wear_flow_test.dart' show save;
 
 void main() {
@@ -35,7 +37,8 @@ void main() {
     await settle(tester);
   }
 
-  Finder day(int i, String part) => find.byKey(Key('week-day-$i-$part'));
+  Finder day(int i, String part, {bool skipOffstage = true}) =>
+      find.byKey(Key('week-day-$i-$part'), skipOffstage: skipOffstage);
 
   Future<void> tap(WidgetTester tester, Finder finder) async {
     await tester.scrollUntilVisible(
@@ -138,6 +141,61 @@ void main() {
       () => app.db.get('SELECT plan_entry_id FROM wear_events'),
     );
     expect(wear!['plan_entry_id'], isNotNull);
+  });
+
+  testWidgets('cada dia planeado diz o acessório que a previsão pede', (
+    tester,
+  ) async {
+    final app = await pumpApp(
+      tester,
+      autopilot: true,
+      overrides: [
+        clockProvider.overrideWithValue(
+          FixedClock(DateTime.utc(2026, 11, 9, 12)),
+        ),
+        // A partir de 9/11: chove só no segundo dia (10/11).
+        httpClientProvider.overrideWithValue(
+          MockClient(
+            (_) async => http.Response(
+              jsonEncode(
+                hourly(
+                  days: 7,
+                  start: CalendarDay(2026, 11, 9),
+                  feels: (_, _) => 18,
+                  rain: (d, _) => d == 1 ? 1 : 0,
+                ),
+              ),
+              200,
+            ),
+          ),
+        ),
+      ],
+    );
+    await tester.runAsync(
+      () =>
+          PowerSyncWardrobeRepository(db: app.db, ownerId: 'user-a').addGarment(
+            const GarmentDraft(
+              category: GarmentCategory.umbrella,
+              name: 'Guarda',
+            ),
+          ),
+    );
+    await seed(tester, app.db);
+    await autoPlanned(tester);
+
+    await tester.scrollUntilVisible(
+      day(1, 'accessories'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(
+      text(tester, day(1, 'accessories')),
+      'Leva também: Guarda (vai chover)',
+    );
+    expect(day(0, 'accessories'), findsNothing);
+    expect(day(2, 'accessories', skipOffstage: false), findsNothing);
+    // Não fica no plano: as peças do dia são as do conjunto.
+    expect(text(tester, day(1, 'items')), isNot(contains('Guarda')));
   });
 
   testWidgets('mudar a ocasião e resolver uma proposta de outro dispositivo', (

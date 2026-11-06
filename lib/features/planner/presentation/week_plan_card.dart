@@ -249,6 +249,19 @@ class _DayTile extends ConsumerWidget {
                       : l10n.weekNothing,
                   key: Key('$key-items'),
                 ),
+              if (ref.watch(weekAccessoriesProvider)[view.day]
+                  case final extras? when extras.isNotEmpty)
+                Text(
+                  l10n.suggestionsAccessories(
+                    [
+                      for (final a in extras)
+                        '${garmentLabel(l10n, a.garment)} '
+                            '(${[for (final n in a.notes.whereType<WeatherAccessoryNote>()) l10n.noteWeatherAccessory(n.reason.id)].join(', ')})',
+                    ].join(', '),
+                  ),
+                  key: Key('$key-accessories'),
+                  style: theme.textTheme.bodySmall,
+                ),
               if (view.wear case final wear?)
                 Text(
                   [
