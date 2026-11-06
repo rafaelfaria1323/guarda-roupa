@@ -82,4 +82,31 @@ void main() {
   test('ficheiro que não é imagem: nada', () {
     expect(PhotoColors.suggest(Uint8List.fromList([1, 2, 3])), isEmpty);
   });
+
+  test('fundo de estúdio em gradiente (bege a creme): tira o fundo', () {
+    // Como as fotos da Massimo Dutti: o fundo cai entre duas cores de
+    // referência e nenhuma chega sozinha a 60 % da borda.
+    const w = 200, h = 160;
+    final image = img.Image(width: w, height: h);
+    for (var y = 0; y < h; y++) {
+      final t = y / (h - 1);
+      final c = img.ColorRgb8(
+        (0xE0 + (0xEC - 0xE0) * t).round(),
+        (0xD2 + (0xE0 - 0xD2) * t).round(),
+        (0xB8 + (0xC8 - 0xB8) * t).round(),
+      );
+      for (var x = 0; x < w; x++) {
+        image.setPixel(x, y, c);
+      }
+    }
+    img.fillRect(
+      image,
+      x1: 60,
+      y1: 40,
+      x2: 139,
+      y2: 119,
+      color: rgb(ReferenceColor.navy),
+    );
+    expect(percents(img.encodePng(image)), {ReferenceColor.navy: 100});
+  });
 }

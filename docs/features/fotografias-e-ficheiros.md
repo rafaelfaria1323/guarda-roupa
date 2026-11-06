@@ -13,7 +13,7 @@ Estado: implementada (2026-11-03) sem recorte; compatibilidade iPhone/HEIC é ga
 - **Cores pela foto** (2026-11-04, sem modelo: baseline da [IA local](ia-local.md)). No formulário, "Sugerir pela foto" aparece quando a peça tem foto. Lê a miniatura da capa, reduzida a 64 px (`photo_colors.dart`):
   - cada píxel vai para a cor de referência mais próxima em OKLab;
   - com o modelo de recorte neste dispositivo (Definições › IA local), só contam os píxeis que a máscara do U²-Netp marca como peça; a máscara ignora-se se marcar menos de 2 % ou mais de 98 % da foto, e se o recorte falhar segue-se sem ele;
-  - sem máscara, a cor que ocupa ≥ 60 % da moldura exterior é tratada como fundo e tira-se, desde que sobrem ≥ 15 % da imagem; senão a peça é da cor do fundo e fica;
+  - sem máscara, o fundo estima-se pela moldura exterior: a cor típica da borda (mediana em Oklab) conta como fundo se ≥ 60 % da borda estiver a menos de 0,06 dela, o que apanha fundos de estúdio em gradiente (por exemplo bege a creme, como nas fotos da Massimo Dutti); tiram-se os píxeis próximos dessa cor, desde que sobrem ≥ 15 % da imagem. Se a borda não tiver cor típica, vale a regra antiga (a cor de referência com ≥ 60 % da borda). Se sobrar pouco, a peça é da cor do fundo e fica;
   - ficam até 3 cores com ≥ 10 %, em passos de 10 % a somar 100 %.
 
   As sugestões substituem as cores atuais, com "Desfazer", e ficam marcadas "sugerida" (`confirmed: false`) até se tocar em "Confirmar cores" ou se ajustar cada uma. Guardar sem confirmar mantém-nas como sugestão; com recorte, a mensagem diz "sem o fundo da foto". Sombras, reflexos e fundos com várias cores enganam (menos com o recorte); testado com imagens geradas, não com fotos reais.

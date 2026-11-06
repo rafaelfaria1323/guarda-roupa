@@ -97,3 +97,28 @@ Deno.test('Twitter cards e HTML simples: o nome é o título e pede confirmaçã
 Deno.test('só um título, sem imagem nem dados: não é um produto', () => {
   assertEquals(parseProduct(fixture('title_only.html'), page), null);
 });
+
+Deno.test('categoria da loja: `category` ou o caminho de navegação', () => {
+  const ld = (...blocks: unknown[]) =>
+    blocks.map((b) => `<script type="application/ld+json">${JSON.stringify(b)}</script>`)
+      .join('');
+  const product = { '@type': 'Product', name: 'Peça 1', image: 'https://a.example/1.jpg' };
+  const direct = parseProduct(
+    ld({ ...product, category: ['Homem', 'Blazers'] }),
+    page,
+  )!;
+  assertEquals(direct.category, 'Homem > Blazers');
+  const trail = parseProduct(
+    ld(product, {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 3, name: 'Peça 1' },
+        { '@type': 'ListItem', position: 1, name: 'Mulher' },
+        { '@type': 'ListItem', position: 2, item: { name: 'Casacos' } },
+      ],
+    }),
+    page,
+  )!;
+  assertEquals(trail.category, 'Mulher > Casacos');
+  assertEquals(parseProduct(ld(product), page)!.category, undefined);
+});

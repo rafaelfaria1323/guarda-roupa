@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/category_from_text.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_category.dart';
+import 'package:guarda_roupa/features/wardrobe/domain/reference_color.dart';
 
 void main() {
   test('nome da loja: a categoria provável', () {
@@ -23,6 +24,11 @@ void main() {
       'Cinto de pele': GarmentCategory.accessory,
       'Ultra Light Down Jacket': GarmentCategory.jacket,
       'Polo piqué': GarmentCategory.polo,
+      'Camisa de ganga': GarmentCategory.shirt,
+      'Denim shirt': GarmentCategory.shirt,
+      'Casaco acolchoado com capuz': GarmentCategory.coat,
+      'Camisola polo de malha': GarmentCategory.sweater,
+      'Sobrecamisa de lã': GarmentCategory.jacket,
     };
     for (final MapEntry(:key, :value) in cases.entries) {
       expect(categoryFromText(key), value, reason: key);
@@ -34,5 +40,25 @@ void main() {
     expect(categoryFromText(null), isNull);
     // Palavra inteira: "malas" não é "mala", "topo" não é "top".
     expect(categoryFromText('topo da gama'), isNull);
+  });
+
+  test('caminho da loja: o troço mais específico', () {
+    expect(
+      categoryFromTrail('Homem > Casacos > Blazers'),
+      GarmentCategory.blazer,
+    );
+    expect(categoryFromTrail('Mulher > Novidades'), isNull);
+  });
+
+  test('nome da cor na loja', () {
+    expect(colorsFromText('Azul marinho'), [ReferenceColor.navy]);
+    expect(colorsFromText('BEGE'), [ReferenceColor.beige]);
+    expect(colorsFromText('Cru'), [ReferenceColor.cream]);
+    expect(colorsFromText('Preto / Branco'), [
+      ReferenceColor.black,
+      ReferenceColor.white,
+    ]);
+    expect(colorsFromText('Cinzento escuro'), [ReferenceColor.charcoal]);
+    expect(colorsFromText('Estampado'), isEmpty);
   });
 }
