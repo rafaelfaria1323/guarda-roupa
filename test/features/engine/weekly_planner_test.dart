@@ -161,6 +161,65 @@ void main() {
     );
   });
 
+  test('dias seguidos: evita o mesmo visual com peças diferentes', () {
+    const white = 0xFFFFFF, red = 0xC0392B, black = 0x141414;
+    final garments = [
+      g('w1', GarmentCategory.shirt, rgb: white),
+      g('w2', GarmentCategory.shirt, rgb: white),
+      g('r1', GarmentCategory.shirt, rgb: red),
+      g('k1', GarmentCategory.trousers, rgb: black),
+      g('k2', GarmentCategory.trousers, rgb: black),
+      g('s1', GarmentCategory.sneakers),
+    ];
+    final result = plan(garments, week(days: 3));
+    expect(result.days.map((d) => d.alikePrevious), [false, false, false]);
+    final colors = {
+      for (final x in garments)
+        if (x.colors.isNotEmpty) x.id.value: x.colors.first.rgb,
+    };
+    final tops = [for (final d in result.days) colors[top(d)]];
+    expect(tops[0], isNot(tops[1]));
+    expect(tops[1], isNot(tops[2]));
+  });
+
+  test('só há um visual: repete e diz que é parecido', () {
+    final result = plan([
+      g('w1', GarmentCategory.shirt, rgb: 0xFFFFFF),
+      g('w2', GarmentCategory.shirt, rgb: 0xFFFFFF),
+      g('k1', GarmentCategory.trousers, rgb: 0x141414),
+      g('k2', GarmentCategory.trousers, rgb: 0x141414),
+      g('s1', GarmentCategory.sneakers),
+    ], week(days: 2));
+    expect(result.days.map((d) => d.alikePrevious), [false, true]);
+    expect(result.days.expand((d) => d.repeats), isEmpty);
+  });
+
+  test('cor por indicar ou dia vazio pelo meio: não conta', () {
+    final result = plan(
+      [
+        g('w1', GarmentCategory.shirt, rgb: 0xFFFFFF),
+        g('w2', GarmentCategory.shirt, rgb: 0xFFFFFF),
+        g('k1', GarmentCategory.trousers, rgb: 0x141414),
+        g('k2', GarmentCategory.trousers, rgb: 0x141414),
+        g('s1', GarmentCategory.sneakers),
+      ],
+      [
+        WeekDayRequest(day: day(9)),
+        WeekDayRequest(day: day(10), include: false),
+        WeekDayRequest(day: day(11)),
+      ],
+    );
+    expect(result.days.map((d) => d.alikePrevious), [false, false, false]);
+    final unknown = plan([
+      g('w1', GarmentCategory.shirt),
+      g('w2', GarmentCategory.shirt),
+      g('k1', GarmentCategory.trousers),
+      g('k2', GarmentCategory.trousers),
+      g('s1', GarmentCategory.sneakers),
+    ], week(days: 2));
+    expect(unknown.days.map((d) => d.alikePrevious), [false, false]);
+  });
+
   test('o mesmo pedido dá a mesma semana', () {
     final garments = [
       for (final t in ['t1', 't2', 't3', 't4']) g(t, GarmentCategory.tShirt),

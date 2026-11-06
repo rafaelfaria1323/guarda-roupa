@@ -44,7 +44,7 @@ Cartão em Hoje (antes Planeador), por baixo de "Vesti hoje":
 
 As notas do conjunto aparecem em "Sugestões para hoje". Só o papel em falta fica a laranja escuro, à vista; as outras ficam em "Porquê este".
 
-Ainda não: formalidade pedida pela ocasião, contraste desejado, acessórios, camada intermédia, diversidade na semana.
+Ainda não: formalidade pedida pela ocasião, contraste desejado, acessórios, camada intermédia. A diversidade na semana (peças repetidas e o mesmo visual em dias seguidos) é do [planeamento](planeamento-semanal.md).
 
 ## Objetivo
 
