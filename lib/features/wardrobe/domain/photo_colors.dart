@@ -22,6 +22,11 @@ abstract final class PhotoColors {
   /// A borda é fundo se uma só cor ocupar pelo menos isto dela.
   static const backgroundShare = 0.6;
 
+  /// Distância OKLab até à cor típica da borda que ainda conta como fundo.
+  /// Apanha fundos de estúdio com gradiente (bege a creme), que caem em
+  /// duas cores de referência e nenhuma chega a [backgroundShare].
+  static const backgroundDistance = 0.06;
+
   /// Sem o fundo, tem de sobrar isto da imagem; senão a peça é da cor do
   /// fundo (ou ocupa a foto toda) e o fundo não se tira.
   static const minForeground = 0.15;
@@ -64,6 +69,7 @@ abstract final class PhotoColors {
         mask.share >= minMaskShare &&
         mask.share <= maxMaskShare;
     final grid = List<ReferenceColor?>.filled(w * h, null);
+    final labs = List<Oklab?>.filled(w * h, null);
     for (var y = 0; y < h; y++) {
       for (var x = 0; x < w; x++) {
         final p = image.getPixel(x, y);
@@ -72,13 +78,15 @@ abstract final class PhotoColors {
           continue;
         }
         final rgb = (p.r.toInt() << 16) | (p.g.toInt() << 8) | p.b.toInt();
-        grid[y * w + x] = _nearest(rgb);
+        final lab = Oklab.fromRgb(rgb);
+        labs[y * w + x] = lab;
+        grid[y * w + x] = _nearest(lab);
       }
     }
 
     // Fundo: a cor que domina a moldura exterior (1/10 de cada lado).
     final border = <ReferenceColor, int>{};
-    var borderTotal = 0;
+    final borderLabs = <Oklab>[];
     final bx = (w / 10).ceil();
     final by = (h / 10).ceil();
     for (var y = 0; y < h; y++) {
@@ -87,19 +95,32 @@ abstract final class PhotoColors {
         final c = grid[y * w + x];
         if (c == null) continue;
         border[c] = (border[c] ?? 0) + 1;
-        borderTotal++;
+        borderLabs.add(labs[y * w + x]!);
       }
     }
-    ReferenceColor? background;
+    final borderTotal = borderLabs.length;
+
+    // Fundo por cor de referência (fundos lisos) ou pela distância à cor
+    // típica da borda (fundos com gradiente).
+    bool Function(int i)? isBackground;
     if (borderTotal > 0) {
       final top = border.entries.reduce((a, b) => b.value > a.value ? b : a);
-      if (top.value / borderTotal >= backgroundShare) background = top.key;
+      final typical = _median(borderLabs);
+      const d2 = backgroundDistance * backgroundDistance;
+      final near = borderLabs.where((l) => l.distance2(typical) <= d2).length;
+      if (near / borderTotal >= backgroundShare) {
+        isBackground = (i) =>
+            grid[i] == top.key || labs[i]!.distance2(typical) <= d2;
+      } else if (top.value / borderTotal >= backgroundShare) {
+        isBackground = (i) => grid[i] == top.key;
+      }
     }
 
-    Map<ReferenceColor, int> count({ReferenceColor? without}) {
+    Map<ReferenceColor, int> count({bool Function(int i)? without}) {
       final out = <ReferenceColor, int>{};
-      for (final c in grid) {
-        if (c == null || c == without) continue;
+      for (var i = 0; i < grid.length; i++) {
+        final c = grid[i];
+        if (c == null || (without != null && without(i))) continue;
         out[c] = (out[c] ?? 0) + 1;
       }
       return out;
@@ -109,16 +130,25 @@ abstract final class PhotoColors {
     final total = all.values.fold(0, (s, v) => s + v);
     if (total == 0) return const [];
     var counts = all;
-    if (background != null && !useMask) {
-      final rest = count(without: background);
+    if (isBackground != null && !useMask) {
+      final rest = count(without: isBackground);
       final kept = rest.values.fold(0, (s, v) => s + v);
       if (kept / total >= minForeground) counts = rest;
     }
     return _proportions(counts);
   }
 
-  static ReferenceColor _nearest(int rgb) {
-    final lab = Oklab.fromRgb(rgb);
+  /// Mediana por canal: a cor típica, sem ser puxada pela peça na borda.
+  static Oklab _median(List<Oklab> labs) {
+    double mid(List<double> v) => (v..sort())[v.length ~/ 2];
+    return Oklab(
+      mid([for (final l in labs) l.l]),
+      mid([for (final l in labs) l.a]),
+      mid([for (final l in labs) l.b]),
+    );
+  }
+
+  static ReferenceColor _nearest(Oklab lab) {
     var best = _refs.first;
     var bestD = lab.distance2(best.$2);
     for (final r in _refs.skip(1)) {

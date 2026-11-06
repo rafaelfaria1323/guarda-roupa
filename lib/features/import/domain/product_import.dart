@@ -79,6 +79,7 @@ final class ProductPreview {
     this.description,
     this.color,
     this.material,
+    this.category,
     this.images = const [],
     this.variants = const [],
     this.sources = const {},
@@ -97,6 +98,9 @@ final class ProductPreview {
   final String? description;
   final String? color;
   final String? material;
+
+  /// A categoria da loja ("Homem > Casacos"), só uma pista.
+  final String? category;
 
   final List<String> images;
   final List<ImportVariant> variants;
@@ -123,6 +127,7 @@ final class ProductPreview {
       description: _string(p['description']),
       color: _string(p['color']),
       material: _string(p['material']),
+      category: _string(p['category']),
       images: [for (final i in _list(p['images'])) ?_string(i)],
       variants: [
         for (final v in _list(p['variants']))

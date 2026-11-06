@@ -21,6 +21,12 @@ export interface ProductPreview {
   description?: string;
   color?: string;
   material?: string;
+  /**
+   * A categoria da loja (`category` do produto, ou o caminho de navegação
+   * `BreadcrumbList`, "Homem > Casacos"). Só uma pista para a categoria da
+   * peça: a loja usa as suas próprias palavras.
+   */
+  category?: string;
   images: string[];
   variants: Variant[];
   /** De onde veio cada campo preenchido. */
@@ -45,7 +51,7 @@ export function parseProduct(
     confirm: [],
   };
   const set = (
-    field: 'name' | 'brand' | 'description' | 'color' | 'material',
+    field: 'name' | 'brand' | 'description' | 'color' | 'material' | 'category',
     value: string | undefined,
     source: Source,
     max = MAX.short,
@@ -62,6 +68,7 @@ export function parseProduct(
     set('description', text(ld.description), 'json-ld', MAX.text);
     set('color', text(ld.color), 'json-ld');
     set('material', text(ld.material), 'json-ld');
+    set('category', asArray(ld.category).map(text).filter(Boolean).join(' > '), 'json-ld');
     addImages(out, imagesOf(ld.image), pageUrl, 'json-ld');
     for (const v of asArray(ld.hasVariant)) {
       if (!isObject(v) || out.variants.length >= MAX.variants) continue;
@@ -98,6 +105,8 @@ export function parseProduct(
   );
   set('color', meta['product:color'], 'open-graph');
   set('material', meta['product:material'], 'open-graph');
+  set('category', meta['product:category'], 'open-graph');
+  set('category', breadcrumbs(html, out.name), 'json-ld');
   addImages(out, og.images, pageUrl, 'open-graph');
 
   // HTML simples: só conta como produto com uma imagem, nunca só o título.
@@ -141,6 +150,32 @@ function jsonLdProduct(html: string): Json | null {
     }
   }
   return fallback;
+}
+
+/** Os nomes do `BreadcrumbList` (sem o próprio produto), "A > B". */
+function breadcrumbs(html: string, product?: string): string | undefined {
+  const re = /<script\b[^>]*type\s*=\s*["']?application\/ld\+json["']?[^>]*>([\s\S]*?)<\/script>/gi;
+  for (const m of html.matchAll(re)) {
+    let data: unknown;
+    try {
+      data = JSON.parse(m[1].trim());
+    } catch {
+      continue;
+    }
+    for (const node of flatten(data)) {
+      if (!asArray(node['@type']).map(String).includes('BreadcrumbList')) continue;
+      const names = asArray(node.itemListElement)
+        .filter(isObject)
+        .sort((a, b) => Number(a.position ?? 0) - Number(b.position ?? 0))
+        .map((e) => text(e.name) ?? (isObject(e.item) ? text(e.item.name) : undefined))
+        .filter((n): n is string => n != null && n.trim() !== '');
+      const trail = product == null
+        ? names
+        : names.filter((n) => n.trim().toLowerCase() !== product.toLowerCase());
+      if (trail.length > 0) return trail.join(' > ');
+    }
+  }
+  return undefined;
 }
 
 function flatten(data: unknown): Json[] {

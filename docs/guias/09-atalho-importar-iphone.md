@@ -55,7 +55,7 @@ Para ficar com cara de app na folha de partilha: no topo do atalho, toca no nome
 1. No Safari, abre a página **de uma peça** (não uma lista nem a página inicial).
 2. **Partilhar → Importar para o fio**. Na primeira vez, o iPhone pergunta se o atalho pode aceder ao site e ao fio: **Permitir**.
 3. Aparece a notificação "Enviada para o fio".
-4. Abre o fio: a peça entra sozinha no Armário, com o nome, a marca, a primeira foto, as cores da foto e o link nas notas. A categoria é adivinhada pelo nome ("Outro" se não souber). Abre o cartão para corrigir o que estiver mal. Podes mandar várias seguidas.
+4. Abre o fio: a peça entra sozinha no Armário, com o nome, a marca, a primeira foto, as cores (pelo nome da cor na loja, ou pela foto sem o fundo) e o link nas notas. A categoria vem do nome ou da categoria da loja ("Outro" se não souber). Abre o cartão para corrigir o que estiver mal. Podes mandar várias seguidas.
 
 ## Se não funcionar
 

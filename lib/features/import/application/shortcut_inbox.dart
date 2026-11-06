@@ -9,6 +9,7 @@ import '../../wardrobe/domain/garment_category.dart';
 import '../../wardrobe/domain/garment_color.dart';
 import '../../wardrobe/domain/garment_photo.dart';
 import '../../wardrobe/domain/photo_colors.dart';
+import '../../wardrobe/domain/reference_color.dart';
 import '../../wardrobe/domain/wardrobe_repository.dart';
 import '../domain/product_import.dart';
 
@@ -16,8 +17,10 @@ import '../domain/product_import.dart';
 /// introduzidas à mão: o que a loja diz entra, o resto fica por omissão e o
 /// utilizador muda depois no cartão.
 ///
-/// - **Categoria:** pelo nome do produto; sem palavra conhecida, "Outro".
-/// - **Cores:** da foto de capa, por confirmar (`confirmed: false`).
+/// - **Categoria:** pelo nome do produto, depois pela categoria ou caminho
+///   da loja e pelo link; sem palavra conhecida, "Outro".
+/// - **Cores:** pelo nome da cor na loja, quando há uma só; senão da foto
+///   de capa. Sempre por confirmar (`confirmed: false`).
 /// - **Foto:** só a primeira imagem (cada cópia conta para a quota).
 /// - **Notas:** descrição, cor e tamanho da loja (se houver só um) e o link.
 ///
@@ -49,12 +52,16 @@ Future<int> addInboxToWardrobe({
         }
       }
     }
-    final colors = photo == null
+    final storeColors = colorsFromText(_onlyColor(p));
+    final colors = storeColors.isNotEmpty
+        ? _split(storeColors)
+        : photo == null
         ? const <GarmentColor>[]
         : _colors(photo.thumb);
     final draft = GarmentDraft(
       category:
           categoryFromText(p.name) ??
+          categoryFromTrail(p.category) ??
           categoryFromText(Uri.tryParse(p.url)?.path) ??
           GarmentCategory.other,
       name: imported.name,
@@ -78,6 +85,27 @@ Future<int> addInboxToWardrobe({
 ImportVariant? _onlyVariant(ProductPreview p) {
   final colors = {for (final v in p.variants) ?v.color};
   return colors.length == 1 ? ImportVariant(color: colors.first) : null;
+}
+
+/// O nome da cor, se a página só tiver uma.
+String? _onlyColor(ProductPreview p) {
+  final colors = {?p.color, for (final v in p.variants) ?v.color};
+  return colors.length == 1 ? colors.first : null;
+}
+
+/// "Preto / Branco": a primeira cor pesa mais.
+List<GarmentColor> _split(List<ReferenceColor> colors) {
+  const shares = [
+    [1.0],
+    [0.6, 0.4],
+    [0.5, 0.3, 0.2],
+  ];
+  final chosen = colors.take(3).toList();
+  final split = shares[chosen.length - 1];
+  return [
+    for (final (i, c) in chosen.indexed)
+      GarmentColor.create(rgb: c.rgb, proportion: split[i])!,
+  ];
 }
 
 List<GarmentColor> _colors(Uint8List thumb) {
