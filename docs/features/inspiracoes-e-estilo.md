@@ -21,7 +21,7 @@ Estado: abordagem assistida confirmada; interpretação visual avançada adiada.
   - proporções: justo em cima e largo em baixo, largo em cima e justo em baixo, tudo justo, tudo largo, camada comprida, parte de cima curta.
   Sem etiquetas, a inspiração mostra "Sem etiquetas", nada é inventado.
 - Não é posse: não cria nem referencia peças e não aparece no guarda-roupa.
-- **Preferências** (segundo segmento do separador Estilo): "Gosto" ou "Evito" de uma cor, padrão, textura, formalidade ou combinação (base neutra, um só destaque, tons próximos, claro com escuro, contraste suave).
+- **Preferências** (segundo segmento do separador Perfil): "Gosto" ou "Evito" de uma cor, padrão, textura, formalidade ou combinação (base neutra, um só destaque, tons próximos, claro com escuro, contraste suave).
   - O contexto são as ocasiões em que vale; sem ocasiões, vale sempre.
   - Só pode haver uma preferência ativa para o mesmo assunto, valor e contexto. A app explica quando já existe.
   - Ao editar, o assunto e a origem ficam; mudam o valor, a posição e o contexto.
@@ -67,7 +67,7 @@ Decisão do utilizador a 2026-11-06: **Partilhar → fio** (não a API oficial) 
 
   Partilha a caixa das peças (até 20 envios, 7 dias, a mesma quota). Não autoriza imagens.
 - **Nunca se lê o Pinterest:** o robots.txt do Pinterest recusa qualquer leitor automático (`User-agent: *` → `Disallow: /`, verificado a 2026-11-06), e as imagens (`i.pinimg.com`) não têm CORS. Por isso nem a função nem a PWA pedem páginas ou imagens. Um link do Pinterest ou do Instagram colado em Importar de um link não é lido nem gasta quota: a app diz para o partilhar pelo atalho (`inspiration_site`).
-- **Na app:** no Estilo › Inspirações, cada Pin à espera aparece num cartão, "Do atalho · Pinterest", com três escolhas:
+- **Na app:** no Perfil › Inspirações, cada Pin à espera aparece num cartão, "Do atalho · Pinterest", com três escolhas:
   - **Só o link:** a inspiração fica logo com o link, o título e a descrição nas notas;
   - **Com imagem:** abre o editor preenchido e pergunta "Guardar uma cópia da imagem?". O fio não a vai buscar: o utilizador transfere-a no Pinterest (⋯ → Transferir imagem) e escolhe-a na galeria. A cópia é privada, com o link de origem, para uso pessoal. O Pin sai da caixa ao guardar; se o utilizador sair sem guardar, o cartão fica;
   - **Descartar** (×).

@@ -78,10 +78,13 @@ Guardar no formulário volta à ficha; duplicar abre o formulário da cópia; ar
 
 ## Navegação
 
-- **Hoje:** saudação, tempo, sugestão do dia, "Vesti hoje" e a semana.
+Cinco separadores, como no design v3 (2026-11-06):
+
+- **Hoje:** saudação, tempo, sugestão do dia e "Vesti hoje".
 - **Armário:** peças por tipo, pesquisa, estados de lavandaria.
 - **Conjuntos:** composições guardadas e ocasiões.
-- **Estilo:** inspirações e preferências.
+- **Semana:** o plano dos próximos dias, que se enche sozinho.
+- **Perfil:** a conta, um resumo (peças, conjuntos, inspirações), a entrada para Definições e o estilo (inspirações e preferências).
 
 Conta, sincronização e backup em definições, com estado de sync visível também nos contextos relevantes. Em ecrãs largos, substituir navegação inferior por lateral sem criar outra aplicação.
 

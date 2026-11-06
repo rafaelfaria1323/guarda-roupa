@@ -37,6 +37,16 @@ void main() {
     await settle(tester);
   }
 
+  Future<void> openWeek(WidgetTester tester) async {
+    await tester.tap(
+      find.descendant(
+        of: find.byType(NavigationBar),
+        matching: find.text('Semana'),
+      ),
+    );
+    await settle(tester);
+  }
+
   Finder day(int i, String part, {bool skipOffstage = true}) =>
       find.byKey(Key('week-day-$i-$part'), skipOffstage: skipOffstage);
 
@@ -86,6 +96,7 @@ void main() {
         ),
       ],
     );
+    await openWeek(tester);
     await tester.scrollUntilVisible(
       day(0, 'state'),
       200,
@@ -171,6 +182,7 @@ void main() {
         ),
       ],
     );
+    await openWeek(tester);
     await tester.runAsync(
       () =>
           PowerSyncWardrobeRepository(db: app.db, ownerId: 'user-a').addGarment(
@@ -213,6 +225,7 @@ void main() {
         ),
       ],
     );
+    await openWeek(tester);
     await seed(tester, app.db);
     await autoPlanned(tester);
 
@@ -264,6 +277,7 @@ void main() {
         ),
       ],
     );
+    await openWeek(tester);
     await seed(tester, app.db);
     await autoPlanned(tester);
     expect(day(2, 'changed'), findsNothing);

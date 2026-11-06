@@ -5,10 +5,9 @@ import '../../../l10n/app_localizations.dart';
 import '../../engine/presentation/today_suggestions_card.dart';
 import '../../wear/application/wear_providers.dart';
 import '../../wear/presentation/today_wear_card.dart';
-import 'week_plan_card.dart';
 
-/// "Hoje" (visual fio v2): uma saudação, o tempo, a sugestão do dia como
-/// um flat-lay, o que já vestiste e a semana como um fio com nós.
+/// "Hoje": uma saudação, o tempo, a sugestão do dia como um flat-lay e o
+/// que já vestiste. A semana tem separador próprio ([WeekScreen]).
 class PlannerScreen extends StatelessWidget {
   const PlannerScreen({super.key});
 
@@ -21,8 +20,6 @@ class PlannerScreen extends StatelessWidget {
       TodaySuggestionsCard(),
       SizedBox(height: 28),
       TodayWearCard(),
-      SizedBox(height: 28),
-      WeekPlanCard(),
     ],
   );
 }

@@ -111,6 +111,12 @@ void main() {
 
     // Usar em "Vesti hoje".
     await openToday(tester);
+    tester
+        .state<ScaffoldMessengerState>(find.byType(ScaffoldMessenger).first)
+        .clearSnackBars();
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('wear-today')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('wear-today')));
     await settle(tester);
     await tester.tap(find.byKey(const Key('wear-from-outfit')));

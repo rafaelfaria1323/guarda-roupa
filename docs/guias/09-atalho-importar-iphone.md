@@ -63,7 +63,7 @@ O mesmo atalho serve para inspirações, sem mudar nada:
 
 1. No Safari, abre o Pin (ou a publicação). Na app do Pinterest: ⋯ → **Copiar link** e abre-o no Safari.
 2. **Partilhar → Importar para o fio**. A notificação diz "Inspiração enviada para o fio".
-3. No fio, em **Estilo**, aparece um cartão "Do atalho · Pinterest":
+3. No fio, em **Perfil** (inspirações), aparece um cartão "Do atalho · Pinterest":
    - **Só o link:** guarda o link, o título e a descrição;
    - **Com imagem:** o fio não vai buscar a imagem ao Pinterest. Antes, guarda-a no iPhone (no Pinterest: ⋯ → **Transferir imagem**) e escolhe-a na galeria. A cópia fica privada, só na tua conta;
    - **×:** descarta.

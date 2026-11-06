@@ -29,6 +29,12 @@ void main() {
     await addGarment(tester, category: 'T-shirt', name: 'Branca');
 
     await openToday(tester);
+    tester
+        .state<ScaffoldMessengerState>(find.byType(ScaffoldMessenger).first)
+        .clearSnackBars();
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('wear-today')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('wear-today')));
     await settle(tester);
     await tester.tap(pick('Branca'));
@@ -143,6 +149,12 @@ void main() {
 
     // Calças só pedem lavagem às 4 utilizações; uma nódoa marca-as já.
     await openToday(tester);
+    tester
+        .state<ScaffoldMessengerState>(find.byType(ScaffoldMessenger).first)
+        .clearSnackBars();
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('wear-today')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('wear-today')));
     await settle(tester);
     final dirty = find.byWidgetPredicate(

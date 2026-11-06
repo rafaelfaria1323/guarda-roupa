@@ -67,6 +67,12 @@ void main() {
     expect(find.text('Ainda não registaste o que vestiste hoje.'), findsOne);
 
     // Registar.
+    tester
+        .state<ScaffoldMessengerState>(find.byType(ScaffoldMessenger).first)
+        .clearSnackBars();
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('wear-today')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('wear-today')));
     await settle(tester);
     expect(find.text('O que vestiste hoje?'), findsOne);
@@ -121,6 +127,11 @@ void main() {
 
     // Corrigir: afinal foi a ganga.
     await openToday(tester);
+    // O aviso de "registada" não pode tapar o botão.
+    tester
+        .state<ScaffoldMessengerState>(find.byType(ScaffoldMessenger).first)
+        .clearSnackBars();
+    await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       keyStarting('wear-correct-'),
       100,

@@ -6,7 +6,7 @@ import '../wardrobe/presentation/wardrobe_flow_test.dart'
     show inList, openWardrobe;
 
 Future<void> openStyle(WidgetTester tester) async {
-  await tester.tap(find.text('Estilo'));
+  await tester.tap(find.text('Perfil'));
   await settle(tester);
 }
 
