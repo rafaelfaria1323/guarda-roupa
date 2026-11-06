@@ -57,6 +57,17 @@ Para ficar com cara de app na folha de partilha: no topo do atalho, toca no nome
 3. Aparece a notificação "Enviada para o fio".
 4. Abre o fio: a peça entra sozinha no Armário, com o nome, a marca, a primeira foto, as cores (pelo nome da cor na loja, ou pela foto sem o fundo) e o link nas notas. A categoria vem do nome ou da categoria da loja ("Outro" se não souber). Abre o cartão para corrigir o que estiver mal. Podes mandar várias seguidas.
 
+## Pins do Pinterest e publicações do Instagram
+
+O mesmo atalho serve para inspirações, sem mudar nada:
+
+1. No Safari, abre o Pin (ou a publicação). Na app do Pinterest: ⋯ → **Copiar link** e abre-o no Safari.
+2. **Partilhar → Importar para o fio**. A notificação diz "Inspiração enviada para o fio".
+3. No fio, em **Estilo**, aparece um cartão "Do atalho · Pinterest":
+   - **Só o link:** guarda o link, o título e a descrição;
+   - **Com imagem:** o fio não vai buscar a imagem ao Pinterest. Antes, guarda-a no iPhone (no Pinterest: ⋯ → **Transferir imagem**) e escolhe-a na galeria. A cópia fica privada, só na tua conta;
+   - **×:** descarta.
+
 ## Se não funcionar
 
 | O que acontece | O que fazer |

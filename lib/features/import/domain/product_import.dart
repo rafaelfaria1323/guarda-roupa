@@ -176,6 +176,14 @@ final class RateLimited extends ImportFailure {
   const RateLimited();
 }
 
+/// Um link do Pinterest ou do Instagram: é uma inspiração, que só entra
+/// pelo atalho (a função não lê estes sites).
+final class InspirationSiteLink extends ImportFailure {
+  const InspirationSiteLink(this.site);
+
+  final String? site;
+}
+
 /// Sem sessão ou conta fora da allowlist.
 final class NotAllowed extends ImportFailure {
   const NotAllowed();
@@ -255,7 +263,11 @@ abstract interface class ProductImporter {
   /// importar", da mais recente para a mais antiga.
   Future<Result<List<InboxItem>, ImportFailure>> inbox();
 
-  /// Tira uma peça da caixa (usada ou descartada).
+  /// As inspirações (Pins, publicações do Instagram) que o atalho mandou,
+  /// na mesma caixa, da mais recente para a mais antiga.
+  Future<Result<List<InspirationInboxItem>, ImportFailure>> inspirationInbox();
+
+  /// Tira uma peça ou inspiração da caixa (usada ou descartada).
   Future<Result<void, ImportFailure>> discardInbox(String id);
 
   /// Há uma chave do atalho ativa?
@@ -292,6 +304,51 @@ final class InboxItem {
     final p = ProductPreview.fromJson(preview.cast<String, Object?>());
     if (p == null) return null;
     return InboxItem(id: id, preview: p, createdAt: created);
+  }
+}
+
+/// Uma inspiração mandada pelo atalho a partir de um Pin (ou publicação do
+/// Instagram) aberto no Safari: só o link, o título e a descrição da
+/// página. Sem imagem: o fio não a pede ao site.
+final class InspirationInboxItem {
+  const InspirationInboxItem({
+    required this.id,
+    required this.site,
+    required this.url,
+    required this.createdAt,
+    this.title,
+    this.description,
+  });
+
+  final String id;
+
+  /// "Pinterest" ou "Instagram".
+  final String site;
+  final String url;
+  final String? title;
+  final String? description;
+  final DateTime createdAt;
+
+  /// `null` se a linha não for uma inspiração com a forma esperada.
+  static InspirationInboxItem? fromJson(Map<String, Object?> json) {
+    final id = json['id'];
+    final preview = json['preview'];
+    final created = DateTime.tryParse('${json['created_at']}');
+    if (id is! String || preview is! Map || created == null) return null;
+    if (preview['kind'] != 'inspiration') return null;
+    final url = preview['url'];
+    if (url is! String || url.isEmpty) return null;
+    final site = preview['site'];
+    final found = preview['inspiration'];
+    String? text(Object? v) => v is String && v.trim().isNotEmpty ? v : null;
+    return InspirationInboxItem(
+      id: id,
+      site: site is String ? site : '',
+      url: url,
+      title: found is Map ? text(found['title']) : null,
+      description: found is Map ? text(found['description']) : null,
+      createdAt: created,
+    );
   }
 }
 

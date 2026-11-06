@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +10,8 @@ import '../../../app/router.dart';
 import '../../../core/domain/result.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../account_sync/application/providers.dart';
+import '../../import/application/import_providers.dart';
+import '../../import/domain/product_import.dart';
 import '../../local_ai/application/local_ai_providers.dart';
 import '../../local_ai/application/similar_garments_finder.dart';
 import '../../wardrobe/application/photo_providers.dart';
@@ -29,10 +33,15 @@ import 'preference_messages.dart';
 
 /// Criar (`id == null`) ou editar uma inspiração. As etiquetas são só as
 /// que o utilizador escolhe; nada é deduzido do link.
+///
+/// Com [fromInbox] (um Pin mandado pelo atalho, "Com imagem"), começa com o
+/// link, o título e a descrição do Pin e abre logo a galeria, para a imagem
+/// que o utilizador transferiu. Ao guardar, o Pin sai da caixa.
 class InspirationEditorScreen extends ConsumerStatefulWidget {
-  const InspirationEditorScreen({this.id, super.key});
+  const InspirationEditorScreen({this.id, this.fromInbox, super.key});
 
   final String? id;
+  final InspirationInboxItem? fromInbox;
 
   @override
   ConsumerState<InspirationEditorScreen> createState() =>
@@ -69,6 +78,22 @@ class _InspirationEditorScreenState
   (int, int)? _similarProgress;
 
   bool get _editing => widget.id != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.fromInbox case final item?) {
+      _title.text = item.title ?? '';
+      _link.text = item.url;
+      _notes.text = item.description ?? '';
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final repo = ref.read(inspirationRepositoryProvider);
+        if (mounted && repo != null) {
+          unawaited(_pickImage(repo, PhotoSource.gallery));
+        }
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -518,11 +543,20 @@ class _InspirationEditorScreenState
   Future<bool> _confirmRights() async {
     if (_rightsConfirmed) return true;
     final l10n = AppLocalizations.of(context);
+    final pin = widget.fromInbox;
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.inspirationImageRightsTitle),
-        content: Text(l10n.inspirationImageRightsBody),
+        title: Text(
+          pin == null
+              ? l10n.inspirationImageRightsTitle
+              : l10n.inspirationInboxImageTitle,
+        ),
+        content: Text(
+          pin == null
+              ? l10n.inspirationImageRightsBody
+              : l10n.inspirationInboxImageBody(pin.site),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -531,7 +565,11 @@ class _InspirationEditorScreenState
           FilledButton(
             key: const Key('inspiration-image-rights-confirm'),
             onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.inspirationImageRightsConfirm),
+            child: Text(
+              pin == null
+                  ? l10n.inspirationImageRightsConfirm
+                  : l10n.inspirationInboxImageConfirm,
+            ),
           ),
         ],
       ),
@@ -652,6 +690,11 @@ class _InspirationEditorScreenState
     if (!mounted) return;
     setState(() => _saving = false);
     if (!reportInspiration(context, result)) return;
+    if (widget.fromInbox case final item?) {
+      // Já é uma inspiração: sai da caixa (se falhar, volta a aparecer).
+      final importer = ref.read(productImporterProvider);
+      if (importer != null) unawaited(importer.discardInbox(item.id));
+    }
     messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(l10n.inspirationSaved)));

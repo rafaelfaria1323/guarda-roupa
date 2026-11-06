@@ -661,6 +661,28 @@
   "inspirationImageRightsTitle": "Imagem tua ou autorizada?",
   "inspirationImageRightsBody": "Guarda só imagens que tiraste ou que tens autorização para guardar. Para referências de outras pessoas, guarda o link.",
   "inspirationImageRightsConfirm": "É minha ou autorizada",
+  "inspirationInboxFrom": "Do atalho · {site}",
+  "@inspirationInboxFrom": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "inspirationInboxAsk": "Guardas só o link, ou também uma cópia da imagem?",
+  "inspirationInboxLinkOnly": "Só o link",
+  "inspirationInboxWithImage": "Com imagem",
+  "inspirationInboxDiscard": "Descartar",
+  "inspirationInboxImageTitle": "Guardar uma cópia da imagem?",
+  "inspirationInboxImageBody": "O fio não vai buscar imagens ao {site}. Guarda-a primeiro no iPhone (no {site}: ⋯ → Transferir imagem) e escolhe-a a seguir na galeria.\n\nA cópia fica privada, só na tua conta, com o link de origem. A imagem é de quem a publicou: guarda-a só para uso pessoal.",
+  "@inspirationInboxImageBody": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "inspirationInboxImageConfirm": "Escolher imagem",
   "inspirationProportions": "Proporções",
   "proportionLabel": "{proportion, select, fitted_top_relaxed_bottom{Justo em cima, largo em baixo} relaxed_top_fitted_bottom{Largo em cima, justo em baixo} all_fitted{Tudo justo} all_relaxed{Tudo largo} long_layer{Camada comprida} cropped_top{Parte de cima curta} other{Outra}}",
   "@proportionLabel": {
@@ -951,7 +973,7 @@
   "importConfirmLater": "A categoria e as cores escolhes a seguir, no formulário. Nada é guardado até carregares em Guardar.",
   "importUse": "Usar na peça nova",
   "importManual": "Preencher à mão",
-  "importFailure": "{kind, select, notPublic{Este link aponta para um endereço interno e não se abre.} invalid{Este link não parece válido.} blocked{Esta loja bloqueia leituras automáticas. Preenche à mão: o link fica nas notas.} notFound{A página não existe ou já não está à venda.} failed{Não foi possível ler a página.} noMetadata{A página não tem os dados do produto.} rateLimited{Muitas importações seguidas. Tenta mais tarde.} notAllowed{A importação precisa de sessão iniciada com uma conta autorizada.} other{A importação não está disponível agora. Verifica a ligação.}}",
+  "importFailure": "{kind, select, notPublic{Este link aponta para um endereço interno e não se abre.} invalid{Este link não parece válido.} blocked{Esta loja bloqueia leituras automáticas. Preenche à mão: o link fica nas notas.} notFound{A página não existe ou já não está à venda.} failed{Não foi possível ler a página.} noMetadata{A página não tem os dados do produto.} inspiration{Os Pins e as publicações do Instagram são inspirações, não peças. Abre-o no Safari e partilha-o com o atalho do fio: fica no Estilo.} rateLimited{Muitas importações seguidas. Tenta mais tarde.} notAllowed{A importação precisa de sessão iniciada com uma conta autorizada.} other{A importação não está disponível agora. Verifica a ligação.}}",
   "@importFailure": {
     "placeholders": {
       "kind": {

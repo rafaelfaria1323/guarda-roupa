@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/import/domain/product_import.dart';
 import '../features/engine/presentation/comfort_settings_screen.dart';
 import '../features/local_ai/presentation/local_ai_settings_screen.dart';
 import '../features/weather/presentation/weather_location_screen.dart';
@@ -118,7 +119,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.newInspiration,
-        builder: (context, state) => const InspirationEditorScreen(),
+        builder: (context, state) => InspirationEditorScreen(
+          fromInbox: state.extra is InspirationInboxItem
+              ? state.extra! as InspirationInboxItem
+              : null,
+        ),
       ),
       GoRoute(
         path: '/estilo/inspiracao/:id',

@@ -2,6 +2,7 @@ import { isBotChallenge } from './challenge.ts';
 import { fetchImage, fetchPage } from './fetch_limited.ts';
 import { parseProduct, type ProductPreview, type Source } from './parse.ts';
 import { readSharedPage, type SharedPage, sharedPageHtml } from './shared_page.ts';
+import { inspirationSite, readInspiration } from './inspiration_sites.ts';
 import { siteName } from './stores.ts';
 import { checkPublic, type Resolver } from './url_guard.ts';
 
@@ -110,6 +111,12 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
   const raw = (typeof page === 'string' ? page : image) as string;
   const check = await checkPublic(raw, deps.resolve);
   if (!check.ok) return json({ result: check.reason });
+  // Pinterest e Instagram não se leem (robots.txt) e não são peças: são
+  // inspirações, que só entram pelo atalho. Não gasta quota.
+  const inspiration = typeof page === 'string' ? inspirationSite(check.url.hostname) : null;
+  if (inspiration != null) {
+    return json({ result: 'inspiration_site', site: inspiration.name });
+  }
 
   const quota = await deps.claimQuota(authorization, apiKey);
   if (quota === 'unauthorized') {
@@ -254,7 +261,8 @@ function say(text: string, status = 200): Response {
  */
 async function toInbox(req: Request, key: string, deps: Deps): Promise<Response> {
   if (req.method !== 'POST') return say('Usa o atalho a partir do Safari.', 405);
-  if (deps.submitInbox == null) return say('O fio não está disponível agora.', 503);
+  const send = deps.submitInbox;
+  if (send == null) return say('O fio não está disponível agora.', 503);
   let body: unknown;
   try {
     body = await req.json();
@@ -268,6 +276,27 @@ async function toInbox(req: Request, key: string, deps: Deps): Promise<Response>
   }
   const check = await checkPublic(fields.url, deps.resolve);
   if (!check.ok) return say('Este link não se pode importar.', 400);
+
+  const apiKey = req.headers.get('apikey') ?? new URL(req.url).searchParams.get('apikey');
+  const site = inspirationSite(check.url.hostname);
+  if (site != null) {
+    const found = readInspiration(page, check.url, site);
+    const preview = {
+      result: 'ok',
+      kind: 'inspiration',
+      site: site.name,
+      url: found.url,
+      inspiration: { title: found.title, description: found.description },
+      via: 'shared',
+    };
+    return await submit(
+      send,
+      key,
+      apiKey,
+      { url: found.url, preview, images: [] },
+      `Inspiração enviada para o fio: ${found.title ?? site.name}.`,
+    );
+  }
 
   const product = parseProduct(sharedPageHtml(page), check.url);
   if (product == null) {
@@ -285,20 +314,32 @@ async function toInbox(req: Request, key: string, deps: Deps): Promise<Response>
     product,
     via: 'shared',
   };
-  const apiKey = req.headers.get('apikey') ?? new URL(req.url).searchParams.get('apikey');
+  return await submit(
+    send,
+    key,
+    apiKey,
+    { url: check.url.href, preview, images: offeredImages(product) },
+    `Enviada para o fio: ${product.name ?? siteName(check.url.hostname)}.`,
+  );
+}
+
+/** Entrega na caixa e diz o resultado em texto, para a notificação. */
+async function submit(
+  send: NonNullable<Deps['submitInbox']>,
+  key: string,
+  apiKey: string | null,
+  entry: { url: string; preview: unknown; images: string[] },
+  sent: string,
+): Promise<Response> {
   let result: InboxResult;
   try {
-    result = await deps.submitInbox(key, apiKey, {
-      url: check.url.href,
-      preview,
-      images: offeredImages(product),
-    });
+    result = await send(key, apiKey, entry);
   } catch {
     return say('O fio não está disponível agora. Tenta daqui a pouco.', 503);
   }
   switch (result) {
     case 'ok':
-      return say(`Enviada para o fio: ${product.name ?? siteName(check.url.hostname)}.`);
+      return say(sent);
     case 'invalid_key':
       return say('A chave do atalho não é válida. Cria uma nova no fio.', 401);
     case 'forbidden':
@@ -306,6 +347,6 @@ async function toInbox(req: Request, key: string, deps: Deps): Promise<Response>
     case 'rate_limited':
       return say('Muitas importações seguidas. Tenta mais tarde.', 429);
     case 'full':
-      return say('Já tens 20 peças por importar. Trata delas no fio primeiro.', 409);
+      return say('Já tens 20 envios por tratar. Abre o fio primeiro.', 409);
   }
 }

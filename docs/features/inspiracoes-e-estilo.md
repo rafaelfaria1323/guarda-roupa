@@ -50,6 +50,26 @@ Sem imagem acessível, um link continua a ser um bookmark válido. Não mostrar 
 
 ## Pinterest
 
+### Pelo atalho do iPhone (2026-11-06, P-13)
+
+Decisão do utilizador a 2026-11-06: **Partilhar → fio** (não a API oficial) e, para a imagem, **perguntar sempre**.
+
+- **Enviar:** no Safari, com um Pin (ou uma publicação do Instagram) aberto, Partilhar → **Importar para o fio**. É o mesmo atalho das lojas ([guia](../guias/09-atalho-importar-iphone.md)), sem mudanças. A notificação diz "Inspiração enviada para o fio: …".
+- **Na função:** uma página de `pinterest.*`, `pin.it` ou `instagram.com` é uma inspiração, não uma peça (`inspiration_sites.ts`). Ficam na caixa do atalho:
+  - o link canónico (`og:url`, só se for do mesmo site);
+  - o título (`og:title`, sem o "| Pinterest" do fim, até 120 caracteres);
+  - a descrição (`og:description`, até 1000 caracteres).
+
+  Partilha a caixa das peças (até 20 envios, 7 dias, a mesma quota). Não autoriza imagens.
+- **Nunca se lê o Pinterest:** o robots.txt do Pinterest recusa qualquer leitor automático (`User-agent: *` → `Disallow: /`, verificado a 2026-11-06), e as imagens (`i.pinimg.com`) não têm CORS. Por isso nem a função nem a PWA pedem páginas ou imagens. Um link do Pinterest ou do Instagram colado em Importar de um link não é lido nem gasta quota: a app diz para o partilhar pelo atalho (`inspiration_site`).
+- **Na app:** no Estilo › Inspirações, cada Pin à espera aparece num cartão, "Do atalho · Pinterest", com três escolhas:
+  - **Só o link:** a inspiração fica logo com o link, o título e a descrição nas notas;
+  - **Com imagem:** abre o editor preenchido e pergunta "Guardar uma cópia da imagem?". O fio não a vai buscar: o utilizador transfere-a no Pinterest (⋯ → Transferir imagem) e escolhe-a na galeria. A cópia é privada, com o link de origem, para uso pessoal. O Pin sai da caixa ao guardar; se o utilizador sair sem guardar, o cartão fica;
+  - **Descartar** (×).
+- **Etiquetas:** como sempre, só as que o utilizador escolhe. O título e a descrição do Pin não geram etiquetas.
+
+### Limites
+
 Guardar URL é viável como referência. Extrair automaticamente imagem, autoria e conteúdo de um Pin depende de permissões e acesso efetivo à plataforma.
 
 Não afirmar que a API permite consultar qualquer link arbitrário. Não contornar autenticação, termos ou proteção anti-bot.

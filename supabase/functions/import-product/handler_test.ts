@@ -446,3 +446,74 @@ Deno.test('atalho direto: cada resposta da base tem a sua mensagem', async () =>
     assertEquals((await res.text()).length > 0, true);
   }
 });
+
+// Pinterest e Instagram: inspirações, nunca pedidas ao site.
+const pinShortcut = {
+  fio: 1,
+  url: 'https://pt.pinterest.com/pin/24558760455894205/',
+  title: 'Pin em Estilo',
+  ld: [],
+  meta: [
+    ['og:site_name', 'Pinterest'],
+    ['og:image', 'https://i.pinimg.com/736x/b8/58/a4/x.jpg'],
+    ['og:url', 'https://www.pinterest.com/pin/minimalist-fashion--24558760455894205/'],
+    ['og:title', 'Minimalist Fashion Inspiration | Pinterest'],
+    ['og:description', 'Blazer,   calças largas e sabrinas.'],
+  ],
+};
+
+Deno.test('atalho num Pin: inspiração na caixa, sem pedir nada ao Pinterest', async () => {
+  const { d, log, sent } = inboxDeps();
+  const res = await handle(toInbox(pinShortcut), d);
+  assertEquals(res.status, 200);
+  assertEquals(await res.text(), 'Inspiração enviada para o fio: Minimalist Fashion Inspiration.');
+  assertEquals(log.fetched, []);
+  assertEquals(sent.length, 1);
+  assertEquals(sent[0].images, []);
+  assertEquals(sent[0].url, 'https://www.pinterest.com/pin/minimalist-fashion--24558760455894205/');
+  assertEquals(sent[0].preview, {
+    result: 'ok',
+    kind: 'inspiration',
+    site: 'Pinterest',
+    url: 'https://www.pinterest.com/pin/minimalist-fashion--24558760455894205/',
+    inspiration: {
+      title: 'Minimalist Fashion Inspiration',
+      description: 'Blazer, calças largas e sabrinas.',
+    },
+    via: 'shared',
+  });
+});
+
+Deno.test('atalho num Pin sem meta tags: fica o link, com o nome do site', async () => {
+  const { d, sent } = inboxDeps();
+  const res = await handle(
+    toInbox({ fio: 1, url: 'https://pin.it/abc', title: 'Pinterest', ld: [], meta: [] }),
+    d,
+  );
+  assertEquals(await res.text(), 'Inspiração enviada para o fio: Pinterest.');
+  const preview = sent[0].preview as Record<string, unknown>;
+  assertEquals(preview.url, 'https://pin.it/abc');
+  assertEquals(preview.inspiration, { title: undefined, description: undefined });
+});
+
+Deno.test('atalho num Pin: og:url de outro site não substitui o link', async () => {
+  const { d, sent } = inboxDeps();
+  await handle(
+    toInbox({
+      ...pinShortcut,
+      meta: [['og:url', 'https://outro.example/pin'], ['og:title', 'Look']],
+    }),
+    d,
+  );
+  assertEquals(sent[0].url, pinShortcut.url);
+});
+
+Deno.test('link do Pinterest ou Instagram colado na app: não se lê nem gasta quota', async () => {
+  for (const url of ['https://www.pinterest.com/pin/1/', 'https://www.instagram.com/p/x/']) {
+    const { d, log } = deps(() => html('não pode ser pedido'));
+    const body = await (await handle(post({ url }), d)).json();
+    assertEquals(body.result, 'inspiration_site');
+    assertEquals(log.fetched, []);
+    assertEquals(log.claims, 0);
+  }
+});

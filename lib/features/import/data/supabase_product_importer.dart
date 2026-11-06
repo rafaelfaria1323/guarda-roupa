@@ -133,6 +133,18 @@ final class SupabaseProductImporter implements ProductImporter {
       };
 
   @override
+  Future<Result<List<InspirationInboxItem>, ImportFailure>>
+  inspirationInbox() async => switch (await _rpc('list_import_inbox')) {
+    Ok(:final value) => Ok([
+      if (value is List)
+        for (final row in value)
+          if (row is Map)
+            ?InspirationInboxItem.fromJson(row.cast<String, Object?>()),
+    ]),
+    Err(:final failure) => Err(failure),
+  };
+
+  @override
   Future<Result<void, ImportFailure>> discardInbox(String id) async =>
       switch (await _rpc('discard_import_inbox', {'p_id': id})) {
         Ok() => const Ok(null),
@@ -194,6 +206,7 @@ final class SupabaseProductImporter implements ProductImporter {
         'no_metadata' => const NoMetadata(),
         'rate_limited' => const RateLimited(),
         'fetch_failed' => FetchFailed(json['reason'] as String?),
+        'inspiration_site' => InspirationSiteLink(json['site'] as String?),
         _ => _status(status),
       };
 }
