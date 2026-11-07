@@ -40,7 +40,7 @@ Decisão do utilizador (2026-11-04): aceitar **qualquer link** de loja, não só
     - cada campo com a origem (“dados da página”, “pré-visualização da página: confirma”, “título da página: confirma”);
     - a descrição;
     - a escolha da variante (“Qual é a tua?”);
-    - as imagens a copiar. Por omissão copia-se uma, porque cada cópia conta para a quota; a imagem da variante escolhida passa a ser a escolhida.
+    - as imagens a copiar. Por omissão copia-se uma, porque cada cópia conta para a quota; a imagem da variante escolhida passa a ser a escolhida. Com a IA local, a app marca sozinha a [foto só da peça](#foto-só-da-peça) ("A procurar a foto só da peça…"); tocar numa imagem ou numa variante manda mais do que essa escolha.
   - “Usar na peça nova” preenche o nome, a marca (ou o site), o material e as notas: descrição, cor na loja, tamanho e o link, que nunca é cortado.
   - As imagens juntam-se às fotos por guardar, processadas como as da galeria.
   - **A categoria e as cores escolhem-se sempre no formulário**; nada é gravado antes de “Guardar”.
@@ -87,12 +87,20 @@ O atalho não tem sessão, por isso autentica-se com uma **chave pessoal** criad
 - **Na app — entram sozinhas no Armário (decisão do utilizador a 2026-11-06):** quando o Armário abre ou a app volta ao primeiro plano, cada peça da caixa passa a cartão, como se tivesse sido introduzida à mão (`shortcut_inbox.dart`). O que não vier da loja fica por omissão e muda-se depois no cartão:
   - **categoria** pelo nome do produto, depois pela categoria da loja (JSON-LD `category`, `product:category` ou o *breadcrumb* `BreadcrumbList`, que a função devolve em `category`) e por fim pelo caminho do link (`category_from_text.dart`, palavras em português, inglês e espanhol; senão "Outro"). Ganha a primeira palavra forte do texto; palavras de tecido ou estilo ("ganga", "malha", "polo", "sweat") só contam se não houver outra, para "Camisa de ganga" ser camisa;
   - **cores:** se a loja só der uma cor e o nome for conhecido ("Azul-marinho", "Navy", "Crudo"…), usa-se esse nome (até 3 cores, por exemplo "Azul / branco"); senão vêm da foto de capa, que tira o fundo de estúdio mesmo em gradiente ([fotografias](fotografias-e-ficheiros.md)). Sempre por confirmar (`confirmed: false`);
-  - **foto:** só a primeira imagem, porque cada cópia gasta quota;
+  - **foto:** uma só, a que mostra só a peça ([abaixo](#foto-só-da-peça)); sem a IA local, a primeira;
   - nome, marca e material da loja; nas **notas**, a descrição, a cor da loja quando só há uma e o link (o tamanho fica para o utilizador).
   Cada peça sai da caixa depois de criada; se falhar, fica para a próxima vez. Um aviso diz quantas entraram. Para as importações por link, com a pré-visualização, mantém-se a regra de confirmar no formulário.
 - **Ainda à mão, se preciso:** as peças que estejam na caixa também aparecem no topo de Importar de um link (usar ou descartar).
 - **Pins e Instagram (2026-11-06):** a mesma caixa recebe inspirações. Uma página do Pinterest ou do Instagram partilhada pelo atalho vai para o Perfil (inspirações), não para o Armário ([inspirações](inspiracoes-e-estilo.md#pinterest)). Um link destes sites colado em Importar de um link não é lido, porque o robots.txt do Pinterest recusa leitores automáticos: a app diz para o partilhar pelo atalho.
 - **Riscos:** quem tiver a chave só consegue pôr peças na caixa do dono, dentro da quota e do limite de 20; não lê nada. Uma chave perdida desliga-se na app.
+
+### Foto só da peça
+
+**Decisão do utilizador a 2026-11-07:** a primeira foto da loja costuma ser o manequim e confundia a peça. Agora a app escolhe sozinha a foto que mostra só a peça (`pickProductPhoto`, `product_photo.dart`), no atalho e em Importar de um link.
+
+- Com o FashionCLIP neste dispositivo ([IA local](ia-local.md#foto-só-da-peça-na-importação--feito-2026-11-07)), copia as fotos pela ordem da página, até 4, e pára na primeira que conta como "só a peça". Se nenhuma passar, fica a mais próxima disso, se não parecer ter pessoa; senão a primeira.
+- Cada cópia gasta quota como antes. Se a primeira já for só a peça, copia-se só essa. Em Importar de um link, as fotos já copiadas não se copiam outra vez ao "Usar na peça nova".
+- Sem o modelo (ainda não descarregado ou desligado), fica a primeira foto, como antes.
 
 ### Estado por loja (uso real)
 

@@ -130,6 +130,12 @@ Postos de parte:
   - Os cossenos de pares da mesma etiqueta (mediana 0,61) e de etiquetas diferentes (0,48) sobrepõem-se muito, por isso não há limite mínimo: mostra-se só uma ordem.
   - Inspirações costumam ser looks inteiros e não peças soltas. Isto não foi medido: está por ver com imagens reais do utilizador.
 
+**Foto só da peça na importação — feito (2026-11-07):**
+
+- **Na app:** ao importar de uma loja, o mesmo FashionCLIP compara cada foto com dois textos, "pessoa a vestir" e "peça sozinha" (`assets/models/fashionclip_photo_kind.json`, de `tool/models/photo_kind_embeddings.py`). A nota é a diferença dos cossenos; a partir de 0,02 a foto conta como só a peça ([importação](importacao-de-links.md#foto-só-da-peça)).
+- **Medição:** 208 fotos de lojas (DeepFashion In-shop: frente, lado e costas contra "flat"; Polyvore), com o encoder q4. AUC 0,93 com as etiquetas do conjunto; revistos os erros, só 2 estavam mesmo mal (costas de um vestido, numa pessoa). Os outros eram etiquetas erradas do conjunto, como "flat" com pessoa.
+- **Por ver:** fotos reais das lojas do utilizador (Zara, Uniqlo) no telemóvel.
+
 ## Alternativas
 
 | Opção | Avaliação |

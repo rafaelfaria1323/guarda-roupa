@@ -12,6 +12,7 @@ import '../../wardrobe/domain/photo_colors.dart';
 import '../../wardrobe/domain/reference_color.dart';
 import '../../wardrobe/domain/wardrobe_repository.dart';
 import '../domain/product_import.dart';
+import '../domain/product_photo.dart';
 
 /// Passa as peças que o atalho mandou para o Armário, como se tivessem sido
 /// introduzidas à mão: o que a loja diz entra, o resto fica por omissão e o
@@ -21,7 +22,8 @@ import '../domain/product_import.dart';
 ///   da loja e pelo link; sem palavra conhecida, "Outro".
 /// - **Cores:** pelo nome da cor na loja, quando há uma só; senão da foto
 ///   de capa. Sempre por confirmar (`confirmed: false`).
-/// - **Foto:** só a primeira imagem (cada cópia conta para a quota).
+/// - **Foto:** uma só, a que mostra só a peça ([pickProductPhoto]; sem
+///   [scorer], a primeira). Cada cópia conta para a quota.
 /// - **Notas:** descrição, cor e tamanho da loja (se houver só um) e o link.
 ///
 /// Cada peça sai da caixa depois de criada; se algo falhar, fica lá para a
@@ -33,6 +35,7 @@ Future<int> addInboxToWardrobe({
   required Future<PhotoProcessing> Function(Uint8List) processPhoto,
   required String Function(String) storeColor,
   required String Function(String) size,
+  ProductPhotoScorer? scorer,
 }) async {
   var created = 0;
   // Da mais antiga para a mais recente: o Armário fica pela ordem de envio.
@@ -45,11 +48,17 @@ Future<int> addInboxToWardrobe({
       size: size,
     );
     ProcessedPhoto? photo;
-    if (p.images.isNotEmpty) {
-      if (await importer.image(p.images.first) case Ok(value: final bytes)) {
-        if (await processPhoto(bytes) case Ok(value: final processed)) {
-          photo = processed;
-        }
+    final picked = await pickProductPhoto(
+      p.images,
+      fetch: (url) async => switch (await importer.image(url)) {
+        Ok(value: final bytes) => bytes,
+        Err() => null,
+      },
+      scorer: scorer,
+    );
+    if (picked != null) {
+      if (await processPhoto(picked.bytes) case Ok(value: final processed)) {
+        photo = processed;
       }
     }
     final storeColors = colorsFromText(_onlyColor(p));
