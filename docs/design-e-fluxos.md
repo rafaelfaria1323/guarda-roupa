@@ -49,7 +49,7 @@ Letra: **Manrope** em tudo (títulos a 600–700, mais apertados). OFL, incluíd
    - mostrar outro, que passa à sugestão seguinte e, no fim, pede um novo lote ao motor.
 
    Uma sugestão que já é um conjunto guardado diz "Um dos teus conjuntos" a verde, por baixo dos nomes, e não mostra o botão de guardar. Com uma peça trocada diz "De um dos teus conjuntos, com Preta em vez de Azul" e o botão fica (guarda a variante como outro).
-5. **Pedir ao stylist** (só com o Gemini ligado), como antes.
+5. **Pedir ao stylist** (só com o Gemini ligado): ver [Cartão do Stylist](#cartão-do-stylist-v3-aplicado).
 6. **Atalhos**: três cartões iguais com um círculo verde-claro: "Adicionar peça", "Novo conjunto" e "Planear a semana" (abre o separador Semana).
 7. **Lavandaria**, só quando há peças por lavar, a lavar, a secar ou na limpeza: "2 peças na lavandaria", as primeiras pelo nome e "Ver" (abre o cesto).
 8. **Vesti hoje.** Sem registo: uma linha e o botão "Vesti hoje". Com registo: "Hoje vestiste" com as peças recortadas, "Corrigir" e "Desfazer".
@@ -57,6 +57,15 @@ Letra: **Manrope** em tudo (títulos a 600–700, mais apertados). OFL, incluíd
 A semana passou para o separador Semana ([planeamento semanal](features/planeamento-semanal.md)).
 
 Os textos longos de ajuda (o que conta como uso, as regras da semana) saíram do ecrã; as regras continuam nas features.
+
+## Cartão do Stylist (v3, aplicado)
+
+`StylistSection` segue o ecrã "ai_stylist" do Stitch (2026-11-06) num cartão próprio por baixo da sugestão do motor (e em "Montar com o que tenho"), sem percentagens de harmonia, marcas, "regressa à rotação" nem looks alternativos. Antes de pedir: estrela num círculo verde-claro, "Ideia do stylist", a explicação curta e "Pedir ao stylist" a toda a largura. Depois:
+
+1. A ideia como no look do dia (colagem, nome do stylist e as peças).
+2. O porquê do stylist numa caixa com aspas.
+3. "Vou vestir isto" e, ao lado, os botões redondos de guardar como conjunto e outra ideia — iguais aos do cartão de cima.
+4. "Pedir mudança" por baixo.
 
 ## Ecrã Armário (v3, aplicado)
 
