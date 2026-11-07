@@ -16,6 +16,7 @@ import '../domain/availability.dart';
 import '../domain/garment.dart';
 import '../domain/wardrobe_repository.dart';
 import 'garment_cutout.dart';
+import 'wardrobe_screen.dart' show garmentStatus;
 
 /// A ficha da peça em modo de ver (visual fio v2): a peça, uma frase sobre
 /// como tem sido usada, onde está, as últimas vezes e "Vou vestir hoje".
@@ -83,15 +84,14 @@ class _Body extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final muted = theme.textTheme.bodyLarge?.copyWith(
-      color: theme.colorScheme.onSurfaceVariant,
-    );
+    final colors = AppColors.of(context);
     final category = l10n.categoryLabel(garment.category.id);
-    final subtitle = [
+    final overline = [
       if (garment.name != null) category,
       ?garment.brand,
       if (garment.isArchived) l10n.garmentArchived,
     ].join(' · ');
+    final material = garment.attributes.material;
 
     return Scaffold(
       appBar: AppBar(
@@ -105,27 +105,89 @@ class _Body extends ConsumerWidget {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
         children: [
-          Center(
+          _Hero(garment: garment),
+          const SizedBox(height: 12),
+          Card(
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: GarmentCutout(garment: garment, size: 210, angle: -0.05),
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (overline.isNotEmpty)
+                    Text(
+                      overline.toUpperCase(),
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: colors.onSurfaceMuted,
+                        letterSpacing: 0.8,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  const SizedBox(height: 2),
+                  Text(
+                    garment.name ?? category,
+                    key: const Key('garment-detail-name'),
+                    style: theme.textTheme.headlineMedium,
+                  ),
+                  if (garment.colors.isNotEmpty || material != null) ...[
+                    const SizedBox(height: 12),
+                    DecoratedBox(
+                      // Só com material é que a faixa ganha fundo; com cores
+                      // apenas, ficam os círculos soltos.
+                      decoration: BoxDecoration(
+                        color: material == null ? null : colors.surfaceMuted,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Padding(
+                        padding: material == null
+                            ? EdgeInsets.zero
+                            : const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                        child: Row(
+                          children: [
+                            for (final c in garment.colors.take(4))
+                              Padding(
+                                padding: const EdgeInsets.only(right: 4),
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF000000 | c.rgb),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: colors.outline),
+                                  ),
+                                  child: const SizedBox.square(dimension: 18),
+                                ),
+                              ),
+                            if (material != null) ...[
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  material,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodyMedium,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 12),
+          _UseStats(garment: garment),
+          const SizedBox(height: 22),
           Text(
-            garment.name ?? category,
-            key: const Key('garment-detail-name'),
-            style: theme.textTheme.headlineLarge,
+            l10n.garmentWhere,
+            style: theme.textTheme.titleLarge?.copyWith(fontSize: 18),
           ),
-          if (subtitle.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(subtitle, style: muted),
-          ],
-          const SizedBox(height: 14),
-          _UseSentence(garment: garment),
-          const SizedBox(height: 18),
+          const SizedBox(height: 8),
           Semantics(
             label: l10n.garmentWhere,
             container: true,
@@ -158,11 +220,12 @@ class _Body extends ConsumerWidget {
           _LastTimes(garment: garment),
           const SizedBox(height: 28),
           if (!garment.isArchived)
-            FilledButton(
+            FilledButton.icon(
               key: const Key('garment-wear-today'),
               onPressed: () =>
                   context.push(AppRoutes.wearWith([garment.id.value])),
-              child: Text(l10n.garmentWearToday),
+              icon: const Icon(Icons.done_all),
+              label: Text(l10n.garmentWearToday),
             ),
         ],
       ),
@@ -170,16 +233,97 @@ class _Body extends ConsumerWidget {
   }
 }
 
-/// "Usada 12 vezes, a última há 6 dias. Mais 3 usos e pede lavagem."
-class _UseSentence extends ConsumerWidget {
-  const _UseSentence({required this.garment});
+/// A peça em grande num fundo de linho, com onde está por cima.
+class _Hero extends ConsumerWidget {
+  const _Hero({required this.garment});
 
   final Garment garment;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
+    final laundry = ref.watch(laundryStatesProvider)?[garment.id];
+    final (label, dot) =
+        garmentStatus(l10n, colors, garment, laundry) ??
+        (l10n.availabilityLabel(garment.availability.id), colors.accent);
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: AspectRatio(
+          aspectRatio: 1,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.surfaceMuted,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: LayoutBuilder(
+                    builder: (context, box) => Center(
+                      child: GarmentCutout(
+                        garment: garment,
+                        size: box.biggest.shortestSide * 0.66,
+                        angle: -0.03,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 12,
+                  top: 12,
+                  child: DecoratedBox(
+                    key: const Key('garment-detail-status'),
+                    decoration: BoxDecoration(
+                      color: colors.surface.withValues(alpha: 0.92),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: dot,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const SizedBox.square(dimension: 7),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            label,
+                            style: Theme.of(context).textTheme.labelMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Três números: quantas vezes foi usada, a última vez e quantos usos
+/// faltam até pedir lavagem.
+class _UseStats extends ConsumerWidget {
+  const _UseStats({required this.garment});
+
+  final Garment garment;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final repo = ref.watch(wearRepositoryProvider);
     final laundry = ref.watch(laundryStatesProvider)?[garment.id];
     final today = todayFrom(ref.watch(clockProvider));
@@ -189,37 +333,88 @@ class _UseSentence extends ConsumerWidget {
       builder: (context, snapshot) {
         final events = snapshot.data;
         if (events == null) return const SizedBox.shrink();
-        final last = events.isEmpty
-            ? ''
-            : l10n.relativeDay(events.first.wornOn.daysUntil(today));
-        final String? care = switch (laundry) {
-          null => null,
-          final s when s.washRecommended => l10n.laundryDueNow,
-          final s when s.threshold > 0 => l10n.laundryUsesLeft(
-            s.threshold - s.usesSinceCleaning,
+        final (String care, bool due) = switch (laundry) {
+          final s? when s.washRecommended => (l10n.garmentStatCareNow, true),
+          final s? when s.threshold > 0 => (
+            l10n.garmentStatCareUses(s.threshold - s.usesSinceCleaning),
+            false,
           ),
-          _ => null,
+          _ => ('—', false),
         };
-        return Text.rich(
-          TextSpan(
+        return IntrinsicHeight(
+          key: const Key('garment-use-stats'),
+          child: Row(
+            spacing: 8,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextSpan(text: l10n.garmentUseSentence(events.length, last)),
-              if (care != null)
-                TextSpan(
-                  text: ' $care',
-                  style: laundry!.washRecommended
-                      ? TextStyle(
-                          color: AppColors.of(context).onCareSoft,
-                          fontWeight: FontWeight.w600,
-                        )
-                      : null,
-                ),
+              _Stat(
+                key: const Key('garment-stat-worn'),
+                label: l10n.garmentStatWorn,
+                value: '${events.length}',
+              ),
+              _Stat(
+                key: const Key('garment-stat-last'),
+                label: l10n.garmentStatLast,
+                value: events.isEmpty
+                    ? l10n.garmentStatNever
+                    : l10n.relativeDay(events.first.wornOn.daysUntil(today)),
+              ),
+              _Stat(
+                key: const Key('garment-stat-care'),
+                label: l10n.garmentStatCare,
+                value: care,
+                warn: due,
+              ),
             ],
           ),
-          key: const Key('garment-use-sentence'),
-          style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
         );
       },
+    );
+  }
+}
+
+class _Stat extends StatelessWidget {
+  const _Stat({
+    required this.label,
+    required this.value,
+    this.warn = false,
+    super.key,
+  });
+
+  final String label;
+  final String value;
+  final bool warn;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
+    return Expanded(
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: colors.onSurfaceMuted,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontSize: 19,
+                  color: warn ? colors.onCareSoft : null,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
