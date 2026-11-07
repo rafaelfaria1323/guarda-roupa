@@ -3,24 +3,30 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../app/router.dart';
+import '../../../app/theme.dart';
 import '../../../core/domain/result.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../care/application/care_providers.dart';
+import '../../engine/domain/comfort.dart';
 import '../../engine/domain/plan_review.dart';
 import '../../engine/domain/suggestion.dart';
 import '../../engine/domain/weekly_planner.dart';
 import '../../outfits/domain/outfit.dart';
 import '../../wardrobe/domain/garment.dart';
 import '../../wardrobe/domain/garment_attributes.dart';
+import '../../wardrobe/domain/garment_photo.dart';
+import '../../wardrobe/presentation/garment_cutout.dart';
 import '../../wear/application/wear_providers.dart';
+import '../../wear/domain/calendar_day.dart';
 import '../../wear/presentation/today_wear_card.dart';
 import '../application/plan_providers.dart';
 import '../domain/plan_entry.dart';
 import '../domain/plan_repository.dart';
 import 'week_autopilot.dart';
-import 'week_thread.dart';
+import 'week_strip.dart';
 
 /// "Esta semana" (incremento 6, P-19): um cartão por dia com a ocasião, se
 /// é provisório, as peças e o estado. O que se faz sozinho está em
@@ -34,6 +40,22 @@ class WeekPlanCard extends ConsumerStatefulWidget {
 
 class _WeekPlanCardState extends ConsumerState<WeekPlanCard> {
   var _busy = false;
+
+  /// Para a faixa dos dias levar ao cartão de cada um.
+  final _dayKeys = List.generate(7, (_) => GlobalKey());
+
+  void _showDay(int i) {
+    if (i >= _dayKeys.length) return;
+    final target = _dayKeys[i].currentContext;
+    if (target == null) return;
+    unawaited(
+      Scrollable.ensureVisible(
+        target,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      ),
+    );
+  }
 
   Future<void> _generate() async {
     final l10n = AppLocalizations.of(context);
@@ -69,29 +91,68 @@ class _WeekPlanCardState extends ConsumerState<WeekPlanCard> {
         g.id: g,
     };
 
+    final weather =
+        ref.watch(weekWeatherProvider).value ??
+        const <CalendarDay, WeatherConditions>{};
+    final locale = Localizations.localeOf(context).toLanguageTag();
+
     return Column(
       key: const Key('week-plan'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Expanded(
-              child: Text(l10n.weekTitle, style: theme.textTheme.titleLarge),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    DateFormat.yMMMM(locale)
+                        .format(today.toLocalDateTime())
+                        .toUpperCase(),
+                    key: const Key('week-month'),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: AppColors.of(context).onSurfaceMuted,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(l10n.weekTitle, style: theme.textTheme.headlineSmall),
+                ],
+              ),
             ),
-            TextButton(
+            FilledButton.tonalIcon(
               key: const Key('week-generate'),
               onPressed: _busy || view == null ? null : _generate,
-              child: Text(l10n.weekGenerate),
+              icon: const Icon(Icons.auto_awesome_outlined, size: 18),
+              label: Text(l10n.weekGenerate),
             ),
           ],
         ),
+        const SizedBox(height: 16),
         if (view == null)
           const Center(child: CircularProgressIndicator())
         else ...[
-          WeekThread(days: view, today: today, garments: garments),
-          const SizedBox(height: 8),
+          WeekStrip(
+            days: view,
+            today: today,
+            garments: garments,
+            weather: weather,
+            onSelect: _showDay,
+          ),
+          const SizedBox(height: 12),
           for (final (i, d) in view.indexed)
-            _DayTile(index: i, view: d, search: searched[d.day]),
+            KeyedSubtree(
+              key: i < _dayKeys.length ? _dayKeys[i] : null,
+              child: _DayTile(
+                index: i,
+                view: d,
+                search: searched[d.day],
+                weather: weather[d.day],
+              ),
+            ),
         ],
       ],
     );
@@ -99,11 +160,17 @@ class _WeekPlanCardState extends ConsumerState<WeekPlanCard> {
 }
 
 class _DayTile extends ConsumerWidget {
-  const _DayTile({required this.index, required this.view, this.search});
+  const _DayTile({
+    required this.index,
+    required this.view,
+    this.search,
+    this.weather,
+  });
 
   final int index;
   final WeekDayView view;
   final DayPlan? search;
+  final WeatherConditions? weather;
 
   static String _issueText(
     AppLocalizations l10n,
@@ -177,266 +244,376 @@ class _DayTile extends ConsumerWidget {
     );
 
     final key = 'week-day-$index';
-    return Padding(
+    final colors = AppColors.of(context);
+    final isToday = view.day == today;
+    final pieces = [for (final i in draft.items) ?garments[i.garmentId]];
+    return Card(
       key: Key(key),
-      padding: const EdgeInsets.only(top: 8),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerLowest,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Wrap(
-                spacing: 8,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  Text(
-                    view.day == today
-                        ? '${l10n.weekToday} · '
-                              '${l10n.weekDay(view.day.toLocalDateTime())}'
-                        : l10n.weekDay(view.day.toLocalDateTime()),
-                    style: theme.textTheme.titleSmall,
-                  ),
-                  Text(
-                    l10n.weekState(state?.name ?? 'none'),
-                    key: Key('$key-state'),
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              DropdownButton<Occasion?>(
-                key: Key('$key-occasion'),
-                isExpanded: true,
-                value: view.occasion,
-                onChanged: editable
-                    ? (o) => _save(
-                        context,
-                        ref,
-                        with_(occasion: o, changeOccasion: true),
-                      )
-                    : null,
-                items: [
-                  DropdownMenuItem(child: Text(l10n.weekOccasionUndecided)),
-                  for (final o in Occasion.values)
-                    DropdownMenuItem(
-                      value: o,
-                      child: Text(l10n.occasionLabel(o.id)),
-                    ),
-                ],
-              ),
-              FilterChip(
-                key: Key('$key-tentative'),
-                label: Text(l10n.weekTentative),
-                selected: view.tentative,
-                onSelected: editable
-                    ? (v) => _save(context, ref, with_(tentative: v))
-                    : null,
-              ),
-              const SizedBox(height: 4),
-              if (draft.items.isNotEmpty)
-                Text(names(draft.items), key: Key('$key-items'))
-              else
-                Text(
-                  state == PlanDayState.accepted
-                      ? l10n.weekLeftEmpty
-                      : l10n.weekNothing,
-                  key: Key('$key-items'),
-                ),
-              if (ref.watch(weekAccessoriesProvider)[view.day]
-                  case final extras? when extras.isNotEmpty)
-                Text(
-                  l10n.suggestionsAccessories(
-                    [
-                      for (final a in extras)
-                        '${garmentLabel(l10n, a.garment)} '
-                            '(${[for (final n in a.notes.whereType<WeatherAccessoryNote>()) l10n.noteWeatherAccessory(n.reason.id)].join(', ')})',
-                    ].join(', '),
-                  ),
-                  key: Key('$key-accessories'),
-                  style: theme.textTheme.bodySmall,
-                ),
-              if (view.wear case final wear?)
-                Text(
-                  [
-                    for (final id in wear.garmentIds)
-                      garmentLabel(l10n, garments[id]),
-                  ].join(' · '),
-                  key: Key('$key-worn'),
-                  style: theme.textTheme.bodySmall,
-                ),
-              if (search case final s?
-                  when state == PlanDayState.proposed ||
-                      s.status == DayPlanStatus.notFound) ...[
-                if (s.repeats.isNotEmpty)
-                  Text(
-                    l10n.weekRepeats,
-                    key: Key('$key-repeats'),
-                    style: TextStyle(color: theme.colorScheme.error),
-                  ),
-                if (s.alikePrevious)
-                  Text(
-                    l10n.weekAlikePrevious,
-                    key: Key('$key-alike'),
-                    style: theme.textTheme.bodySmall,
-                  ),
-                if (s.status == DayPlanStatus.notFound)
-                  Text(
-                    l10n.weekNotFound,
-                    key: Key('$key-not-found'),
-                    style: TextStyle(color: theme.colorScheme.error),
-                  ),
-              ],
-              if (review case final r? when r.affected) ...[
-                const SizedBox(height: 4),
-                Text(
-                  l10n.weekChanged,
-                  key: Key('$key-changed'),
-                  style: TextStyle(color: theme.colorScheme.error),
-                ),
-                for (final issue in r.issues)
-                  Text(
-                    '· ${_issueText(l10n, issue, garments)}',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                if (r.proposal case final p?
-                    when editable &&
-                        !ignored.contains(dayChangeKey(view.day, p))) ...[
-                  for (final line in dayChangeLines(
-                    l10n,
-                    draft.items,
-                    p,
-                    garments,
-                  ))
-                    Text(line, style: theme.textTheme.bodySmall),
-                  Wrap(
+      margin: const EdgeInsets.only(top: 12),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Wrap(
                     spacing: 8,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      if (p.added.isNotEmpty ||
-                          p.items.length != draft.items.length)
-                        TextButton(
-                          key: Key('$key-change-apply'),
-                          onPressed: () async {
-                            final result = await applyDayChange(ref, view);
-                            if (result is Err<PlanEntry, PlanFailure> &&
-                                context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(l10n.weekSaveFailed)),
-                              );
-                            }
-                          },
-                          child: Text(l10n.weekChangeApply),
-                        ),
-                      TextButton(
-                        key: Key('$key-change-ignore'),
-                        onPressed: () => ref
-                            .read(ignoredDayChangesProvider.notifier)
-                            .ignore(dayChangeKey(view.day, p)),
-                        child: Text(l10n.weekChangeIgnore),
+                      Text(
+                        l10n.weekDay(view.day.toLocalDateTime()),
+                        style: theme.textTheme.titleMedium,
                       ),
+                      if (isToday)
+                        _Pill(
+                          text: l10n.weekToday.toUpperCase(),
+                          background: colors.accentSoft,
+                          foreground: colors.accent,
+                        ),
                     ],
                   ),
+                ),
+                if (weather case final w?) ...[
+                  Icon(
+                    WeekStrip.weatherIcon(w),
+                    size: 16,
+                    color: colors.onSurfaceMuted,
+                  ),
+                  const SizedBox(width: 2),
+                  Text(
+                    '${w.feelsLikeC.round()}°',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: colors.onSurfaceMuted,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                 ],
+                _Pill(
+                  textKey: Key('$key-state'),
+                  text: l10n.weekState(state?.name ?? 'none'),
+                  background: colors.surfaceMuted,
+                  foreground: colors.onSurface,
+                ),
               ],
-              if (entry?.proposal case final p?) ...[
-                const SizedBox(height: 4),
-                Text(l10n.weekProposal, key: Key('$key-proposal')),
-                Text(
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  DropdownButtonHideUnderline(
+                    child: DropdownButton<Occasion?>(
+                      key: Key('$key-occasion'),
+                      isExpanded: true,
+                      icon: const Icon(Icons.expand_more),
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: colors.accent,
+                      ),
+                      value: view.occasion,
+                      onChanged: editable
+                          ? (o) => _save(
+                              context,
+                              ref,
+                              with_(occasion: o, changeOccasion: true),
+                            )
+                          : null,
+                      items: [
+                        DropdownMenuItem(
+                          child: Text(l10n.weekOccasionUndecided),
+                        ),
+                        for (final o in Occasion.values)
+                          DropdownMenuItem(
+                            value: o,
+                            child: Text(l10n.occasionLabel(o.id)),
+                          ),
+                      ],
+                    ),
+                  ),
+                  FilterChip(
+                    key: Key('$key-tentative'),
+                    visualDensity: VisualDensity.compact,
+                    label: Text(l10n.weekTentative),
+                    selected: view.tentative,
+                    onSelected: editable
+                        ? (v) => _save(context, ref, with_(tentative: v))
+                        : null,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            if (draft.items.isNotEmpty)
+              Row(
+                children: [
+                  if (pieces.isNotEmpty) ...[
+                    _Pieces(pieces: pieces),
+                    const SizedBox(width: 12),
+                  ],
+                  Expanded(
+                    child: Text(
+                      names(draft.items),
+                      key: Key('$key-items'),
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                ],
+              )
+            else
+              Text(
+                state == PlanDayState.accepted
+                    ? l10n.weekLeftEmpty
+                    : l10n.weekNothing,
+                key: Key('$key-items'),
+              ),
+            if (ref.watch(weekAccessoriesProvider)[view.day] case final extras?
+                when extras.isNotEmpty)
+              Text(
+                l10n.suggestionsAccessories(
                   [
-                    if (p.changesOccasion)
-                      p.occasion == null
-                          ? l10n.weekOccasionUndecided
-                          : l10n.occasionLabel(p.occasion!.id),
-                    if (p.tentative == true) l10n.weekTentative,
-                    if (p.items case final items?)
-                      items.isEmpty ? l10n.weekNothing : names(items),
-                    if (p.status case final s?) l10n.weekState(s.id),
-                  ].join(' · '),
+                    for (final a in extras)
+                      '${garmentLabel(l10n, a.garment)} '
+                          '(${[for (final n in a.notes.whereType<WeatherAccessoryNote>()) l10n.noteWeatherAccessory(n.reason.id)].join(', ')})',
+                  ].join(', '),
+                ),
+                key: Key('$key-accessories'),
+                style: theme.textTheme.bodySmall,
+              ),
+            if (view.wear case final wear?)
+              Text(
+                [
+                  for (final id in wear.garmentIds)
+                    garmentLabel(l10n, garments[id]),
+                ].join(' · '),
+                key: Key('$key-worn'),
+                style: theme.textTheme.bodySmall,
+              ),
+            if (search case final s?
+                when state == PlanDayState.proposed ||
+                    s.status == DayPlanStatus.notFound) ...[
+              if (s.repeats.isNotEmpty)
+                Text(
+                  l10n.weekRepeats,
+                  key: Key('$key-repeats'),
+                  style: TextStyle(color: theme.colorScheme.error),
+                ),
+              if (s.alikePrevious)
+                Text(
+                  l10n.weekAlikePrevious,
+                  key: Key('$key-alike'),
                   style: theme.textTheme.bodySmall,
                 ),
+              if (s.status == DayPlanStatus.notFound)
+                Text(
+                  l10n.weekNotFound,
+                  key: Key('$key-not-found'),
+                  style: TextStyle(color: theme.colorScheme.error),
+                ),
+            ],
+            if (review case final r? when r.affected) ...[
+              const SizedBox(height: 4),
+              Text(
+                l10n.weekChanged,
+                key: Key('$key-changed'),
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+              for (final issue in r.issues)
+                Text(
+                  '· ${_issueText(l10n, issue, garments)}',
+                  style: theme.textTheme.bodySmall,
+                ),
+              if (r.proposal case final p?
+                  when editable &&
+                      !ignored.contains(dayChangeKey(view.day, p))) ...[
+                for (final line in dayChangeLines(
+                  l10n,
+                  draft.items,
+                  p,
+                  garments,
+                ))
+                  Text(line, style: theme.textTheme.bodySmall),
                 Wrap(
                   spacing: 8,
                   children: [
+                    if (p.added.isNotEmpty ||
+                        p.items.length != draft.items.length)
+                      TextButton(
+                        key: Key('$key-change-apply'),
+                        onPressed: () async {
+                          final result = await applyDayChange(ref, view);
+                          if (result is Err<PlanEntry, PlanFailure> &&
+                              context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(l10n.weekSaveFailed)),
+                            );
+                          }
+                        },
+                        child: Text(l10n.weekChangeApply),
+                      ),
                     TextButton(
-                      key: Key('$key-proposal-apply'),
+                      key: Key('$key-change-ignore'),
                       onPressed: () => ref
-                          .read(planRepositoryProvider)
-                          ?.resolveProposal(entry!.id, accept: true),
-                      child: Text(l10n.weekProposalApply),
-                    ),
-                    TextButton(
-                      key: Key('$key-proposal-keep'),
-                      onPressed: () => ref
-                          .read(planRepositoryProvider)
-                          ?.resolveProposal(entry!.id, accept: false),
-                      child: Text(l10n.weekProposalKeep),
+                          .read(ignoredDayChangesProvider.notifier)
+                          .ignore(dayChangeKey(view.day, p)),
+                      child: Text(l10n.weekChangeIgnore),
                     ),
                   ],
                 ),
               ],
+            ],
+            if (entry?.proposal case final p?) ...[
+              const SizedBox(height: 4),
+              Text(l10n.weekProposal, key: Key('$key-proposal')),
+              Text(
+                [
+                  if (p.changesOccasion)
+                    p.occasion == null
+                        ? l10n.weekOccasionUndecided
+                        : l10n.occasionLabel(p.occasion!.id),
+                  if (p.tentative == true) l10n.weekTentative,
+                  if (p.items case final items?)
+                    items.isEmpty ? l10n.weekNothing : names(items),
+                  if (p.status case final s?) l10n.weekState(s.id),
+                ].join(' · '),
+                style: theme.textTheme.bodySmall,
+              ),
               Wrap(
                 spacing: 8,
                 children: [
-                  if (editable && state == PlanDayState.proposed)
-                    TextButton.icon(
-                      key: Key('$key-accept'),
-                      onPressed: () => _save(
-                        context,
-                        ref,
-                        with_(status: PlanStatus.accepted),
-                      ),
-                      icon: const Icon(Icons.push_pin_outlined),
-                      label: Text(l10n.weekAccept),
-                    ),
-                  if (editable && state == PlanDayState.accepted)
-                    TextButton.icon(
-                      key: Key('$key-reopen'),
-                      onPressed: () => _save(
-                        context,
-                        ref,
-                        with_(status: PlanStatus.proposed),
-                      ),
-                      icon: const Icon(Icons.edit_outlined),
-                      label: Text(l10n.weekReopen),
-                    ),
-                  if (editable &&
-                      view.tentative &&
-                      !(state == PlanDayState.accepted && draft.items.isEmpty))
-                    TextButton.icon(
-                      key: Key('$key-leave-empty'),
-                      onPressed: () => _save(
-                        context,
-                        ref,
-                        with_(items: const [], status: PlanStatus.accepted),
-                      ),
-                      icon: const Icon(Icons.event_busy_outlined),
-                      label: Text(l10n.weekLeaveEmpty),
-                    ),
-                  if (view.day == today &&
-                      entry != null &&
-                      draft.items.isNotEmpty &&
-                      state != PlanDayState.confirmed)
-                    TextButton.icon(
-                      key: Key('$key-wear'),
-                      onPressed: () => context.push(
-                        AppRoutes.wearWith([
-                          for (final i in draft.items) i.garmentId.value,
-                        ], planEntryId: entry.id),
-                      ),
-                      icon: const Icon(Icons.check),
-                      label: Text(l10n.weekWearThis),
-                    ),
+                  TextButton(
+                    key: Key('$key-proposal-apply'),
+                    onPressed: () => ref
+                        .read(planRepositoryProvider)
+                        ?.resolveProposal(entry!.id, accept: true),
+                    child: Text(l10n.weekProposalApply),
+                  ),
+                  TextButton(
+                    key: Key('$key-proposal-keep'),
+                    onPressed: () => ref
+                        .read(planRepositoryProvider)
+                        ?.resolveProposal(entry!.id, accept: false),
+                    child: Text(l10n.weekProposalKeep),
+                  ),
                 ],
               ),
             ],
-          ),
+            Wrap(
+              spacing: 8,
+              children: [
+                if (editable && state == PlanDayState.proposed)
+                  TextButton.icon(
+                    key: Key('$key-accept'),
+                    onPressed: () =>
+                        _save(context, ref, with_(status: PlanStatus.accepted)),
+                    icon: const Icon(Icons.push_pin_outlined),
+                    label: Text(l10n.weekAccept),
+                  ),
+                if (editable && state == PlanDayState.accepted)
+                  TextButton.icon(
+                    key: Key('$key-reopen'),
+                    onPressed: () =>
+                        _save(context, ref, with_(status: PlanStatus.proposed)),
+                    icon: const Icon(Icons.edit_outlined),
+                    label: Text(l10n.weekReopen),
+                  ),
+                if (editable &&
+                    view.tentative &&
+                    !(state == PlanDayState.accepted && draft.items.isEmpty))
+                  TextButton.icon(
+                    key: Key('$key-leave-empty'),
+                    onPressed: () => _save(
+                      context,
+                      ref,
+                      with_(items: const [], status: PlanStatus.accepted),
+                    ),
+                    icon: const Icon(Icons.event_busy_outlined),
+                    label: Text(l10n.weekLeaveEmpty),
+                  ),
+                if (view.day == today &&
+                    entry != null &&
+                    draft.items.isNotEmpty &&
+                    state != PlanDayState.confirmed)
+                  FilledButton.icon(
+                    key: Key('$key-wear'),
+                    onPressed: () => context.push(
+                      AppRoutes.wearWith([
+                        for (final i in draft.items) i.garmentId.value,
+                      ], planEntryId: entry.id),
+                    ),
+                    icon: const Icon(Icons.done_all),
+                    label: Text(l10n.weekWearThis),
+                  ),
+              ],
+            ),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+/// Um selo pequeno em pílula ("HOJE", o estado do dia).
+class _Pill extends StatelessWidget {
+  const _Pill({
+    required this.text,
+    required this.background,
+    required this.foreground,
+    this.textKey,
+  });
+
+  /// Fica no texto, para os testes o lerem.
+  final Key? textKey;
+  final String text;
+  final Color background;
+  final Color foreground;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: background,
+      borderRadius: BorderRadius.circular(999),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      child: Text(
+        text,
+        key: textKey,
+        style: Theme.of(context).textTheme.labelSmall
+            ?.copyWith(color: foreground, fontWeight: FontWeight.w600),
+      ),
+    ),
+  );
+}
+
+/// As peças do dia recortadas, umas por cima das outras.
+class _Pieces extends StatelessWidget {
+  const _Pieces({required this.pieces});
+
+  final List<Garment> pieces;
+
+  @override
+  Widget build(BuildContext context) {
+    final shown = pieces.take(3).toList();
+    const size = 52.0;
+    const step = 30.0;
+    return SizedBox(
+      width: size + step * (shown.length - 1),
+      height: size,
+      child: Stack(
+        children: [
+          for (final (i, g) in shown.indexed)
+            Positioned(
+              left: i * step,
+              child: GarmentCutout(
+                garment: g,
+                size: size,
+                angle: i.isEven ? -0.04 : 0.05,
+                variant: PhotoVariant.thumb,
+              ),
+            ),
+        ],
       ),
     );
   }

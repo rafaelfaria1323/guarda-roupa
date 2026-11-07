@@ -97,6 +97,18 @@ void main() {
       ],
     );
     await openWeek(tester);
+    expect(find.text('NOVEMBRO DE 2026'), findsOne);
+    // Tocar num dia da faixa leva ao seu cartão.
+    expect(tester.getTopLeft(day(6, 'state')).dy, greaterThan(800));
+    await tester.tap(find.byKey(const Key('week-strip-6')));
+    await tester.pumpAndSettle();
+    expect(tester.getTopLeft(day(6, 'state')).dy, lessThan(800));
+    await tester.fling(
+      find.byType(Scrollable).first,
+      const Offset(0, 3000),
+      3000,
+    );
+    await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       day(0, 'state'),
       200,
