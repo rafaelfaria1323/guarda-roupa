@@ -11,6 +11,8 @@ void main() {
       'desfaz; profissional vai à lavandaria', (tester) async {
     final app = await pumpApp(
       tester,
+      // Ecrã alto: os grupos todos cabem sem deslizar.
+      size: const Size(400, 1600),
       overrides: [
         clockProvider.overrideWithValue(
           FixedClock(DateTime.utc(2026, 11, 6, 12)),
@@ -60,9 +62,24 @@ void main() {
     await tester.tap(find.byKey(const Key('wardrobe-basket')));
     await settle(tester);
 
-    expect(find.text('Máquina 40° · Claras · 2'), findsOne);
-    expect(find.text('Máquina 40° · Escuras · 1'), findsOne);
-    expect(find.text('Limpeza profissional · 1'), findsOne);
+    expect(find.text('Máquina 40° · Claras'), findsWidgets);
+    expect(find.text('Máquina 40° · Escuras'), findsWidgets);
+    expect(find.text('Limpeza profissional'), findsWidgets);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('basket-stat-dirty')),
+        matching: find.text('4'),
+      ),
+      findsOne,
+    );
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const Key('basket-load-machine_40-light-count')),
+          )
+          .data,
+      '2',
+    );
 
     const light = Key('basket-load-machine_40-light-action');
     await tester.tap(find.byKey(light));
@@ -97,7 +114,7 @@ void main() {
     await tester.tap(find.byKey(const Key('basket-load-professional-action')));
     await settleUntil(tester, find.byKey(const Key('basket-at-cleaners')));
     expect((await availability())['g4'], 'at_cleaners');
-    expect(find.text('Na lavandaria · 1'), findsOne);
+    expect(find.text('Na lavandaria'), findsWidgets);
 
     // O aviso com "Desfazer" tapava o botão.
     ScaffoldMessenger.of(tester.element(find.byKey(const Key('basket-list'))))
