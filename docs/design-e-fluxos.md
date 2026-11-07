@@ -101,6 +101,15 @@ Guardar no formulário volta à ficha; duplicar abre o formulário da cópia; ar
    - "Vou vestir hoje" (abre o registo com as peças já escolhidas) e "Editar".
 4. Botão "Novo conjunto" em pílula verde.
 
+## Ecrã Montar conjunto (v3, aplicado)
+
+`OutfitEditorScreen` (novo ou editar) segue o ecrã "outfit_builder" do Stitch (2026-11-06), sem percentagem de harmonia, temperatura ideal, marcas nem notas do stylist. De cima para baixo:
+
+1. Nome (opcional) e ocasiões em chips.
+2. Cartão **Composição**: selo "Tudo disponível" ou "1 peça não está disponível"; as peças escolhidas em grelha de duas colunas, cada uma com a foto recortada, o "×" para tirar, o estado a laranja quando não está disponível ("A lavar") e o papel escolhido por baixo do nome; no fim, "Conjunto completo." ou "Falta: …" e o total de peças.
+3. Cartão **Juntar peças**: filtros por grupo (Todos, Tops, Partes de baixo, Calçado…, só os que têm peças) e as peças restantes em grelha de três colunas, com "+" — tocar junta-a com o papel sugerido.
+4. "Guardar" e "Eliminar conjunto" ficam na barra de cima.
+
 ## Ecrã Semana (v3, aplicado)
 
 `WeekScreen` segue o ecrã "weekly_planner" do Stitch (2026-11-06), sem avisos inventados nem "planear com IA" (o plano já se faz sozinho). De cima para baixo:

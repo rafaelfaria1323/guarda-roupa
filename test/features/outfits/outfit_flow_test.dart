@@ -37,6 +37,15 @@ Future<void> tapVisible(WidgetTester tester, Finder finder) async {
   await tester.pumpAndSettle();
 }
 
+Finder addCard(String name) => find.descendant(
+  of: find.byWidgetPredicate(
+    (w) =>
+        w.key is ValueKey<String> &&
+        (w.key! as ValueKey<String>).value.startsWith('outfit-add-'),
+  ),
+  matching: find.text(name),
+);
+
 Future<void> saveOutfit(WidgetTester tester) async {
   await tester.tap(find.byKey(const Key('outfit-save')));
   await settleUntil(tester, find.byKey(const Key('outfit-save')), gone: true);
@@ -76,11 +85,20 @@ void main() {
     await tester.tap(find.byKey(const Key('outfit-occasion-casual')));
     await tester.tap(find.byKey(const Key('outfit-occasion-evening')));
     await tester.pump();
+    expect(find.byKey(const Key('outfit-group-all')), findsOne);
     for (final name in ['Branca', 'Pretas']) {
-      await tapVisible(tester, inList(name));
+      await tapVisible(tester, addCard(name));
     }
+    expect(
+      tester.widget<Text>(find.byKey(const Key('outfit-count'))).data,
+      '2 peças',
+    );
+    expect(find.text('Tudo disponível'), findsOne);
     expect(find.text('Falta: calçado. Podes guardar na mesma.'), findsOne);
-    await tapVisible(tester, inList('Brancos'));
+    // Filtrar por grupo: só o calçado fica na bandeja.
+    await tapVisible(tester, find.byKey(const Key('outfit-group-footwear')));
+    expect(addCard('Inverno'), findsNothing);
+    await tapVisible(tester, addCard('Brancos'));
     expect(find.text('Conjunto completo.'), findsOne, reason: 'sem casaco');
     await saveOutfit(tester);
 
@@ -108,6 +126,7 @@ void main() {
       tester.widget<Text>(find.byKey(Key('outfit-warning-$pretas'))).data,
       'A lavar',
     );
+    expect(find.text('1 peça não está disponível'), findsOne);
 
     // Trocar o papel e tirar a peça indisponível.
     await tapVisible(tester, find.byKey(Key('outfit-remove-$pretas')));
@@ -146,7 +165,7 @@ void main() {
     await openOutfits(tester);
     await tester.tap(find.text('Sexta'));
     await settle(tester);
-    await tapVisible(tester, inList('Pretas'));
+    await tapVisible(tester, addCard('Pretas'));
     await saveOutfit(tester);
     final wear = (await tester.runAsync(
       () => db.get('SELECT garment_ids FROM wear_events'),
