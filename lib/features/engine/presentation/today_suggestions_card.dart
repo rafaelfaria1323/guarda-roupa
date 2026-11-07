@@ -51,35 +51,40 @@ class TodaySuggestionsCard extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
         Card(
+          // Sem margem lateral: a linha das ocasiões desliza até à borda do
+          // cartão e é cortada aí, não fora dele.
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+            padding: const EdgeInsets.symmetric(vertical: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: colors.accent,
-                        shape: BoxShape.circle,
+                Padding(
+                  padding: _side,
+                  child: Row(
+                    children: [
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: colors.accent,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const SizedBox.square(dimension: 8),
                       ),
-                      child: const SizedBox.square(dimension: 8),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.suggestionsTitle,
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: colors.accent,
-                        fontWeight: FontWeight.w700,
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.suggestionsTitle,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: colors.accent,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 10),
                 // Uma só linha que desliza: a ocasião não deve ocupar o ecrã.
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
-                  clipBehavior: Clip.none,
+                  padding: _side,
                   child: Row(
                     children: [
                       for (final (o, key, label) in [
@@ -101,13 +106,15 @@ class TodaySuggestionsCard extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                if (result == null)
-                  const Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                else
-                  _Result(result: result),
+                Padding(
+                  padding: _side,
+                  child: result == null
+                      ? const Padding(
+                          padding: EdgeInsets.all(24),
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      : _Result(result: result),
+                ),
               ],
             ),
           ),
@@ -117,6 +124,8 @@ class TodaySuggestionsCard extends ConsumerWidget {
     );
   }
 }
+
+const _side = EdgeInsets.symmetric(horizontal: 16);
 
 class _WeatherLine extends ConsumerWidget {
   const _WeatherLine();
