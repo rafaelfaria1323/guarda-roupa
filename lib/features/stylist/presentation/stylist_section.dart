@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
+import '../../../app/theme.dart';
 import '../../../core/domain/result.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../engine/application/suggestion_providers.dart';
@@ -128,122 +129,181 @@ class _StylistSectionState extends ConsumerState<StylistSection> {
       color: theme.colorScheme.onSurfaceVariant,
     );
 
-    return Column(
+    final colors = AppColors.of(context);
+    final busy = const SizedBox.square(
+      dimension: 16,
+      child: CircularProgressIndicator(strokeWidth: 2),
+    );
+
+    return Padding(
       key: const Key('stylist'),
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 20),
-        if (pick == null)
-          OutlinedButton.icon(
-            key: const Key('stylist-ask'),
-            onPressed: _loading ? null : _run,
-            icon: _loading
-                ? const SizedBox.square(
-                    dimension: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.auto_awesome_outlined),
-            label: Text(
-              _loading
-                  ? l10n.stylistThinking
-                  : look
-                  ? l10n.stylistAskLook
-                  : l10n.stylistAsk,
-            ),
-          )
-        else ...[
-          Text(l10n.stylistTitle, style: theme.textTheme.titleMedium),
-          const SizedBox(height: 4),
-          SuggestionCandidateView(
-            key: ValueKey(_current.join(',')),
-            index: 0,
-            total: 1,
-            candidate: pick.candidate,
-            heading: pick.name ?? l10n.stylistTitle,
-            keyPrefix: 'stylist-pick',
-          ),
-          if (pick.why case final why?)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(why, key: const Key('stylist-why'), style: muted),
-            ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            crossAxisAlignment: WrapCrossAlignment.center,
+      padding: const EdgeInsets.only(top: 16),
+      child: Card(
+        margin: EdgeInsets.zero,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              FilledButton(
-                key: const Key('stylist-wear'),
-                onPressed: () => context.push(
-                  AppRoutes.wearWith([
-                    for (final i in pick.candidate.items) i.garment.id.value,
-                  ]),
+              Row(
+                children: [
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colors.accentSoft,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Icon(
+                        Icons.auto_awesome,
+                        size: 18,
+                        color: colors.onAccentSoft,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      l10n.stylistTitle,
+                      style: theme.textTheme.titleMedium,
+                    ),
+                  ),
+                ],
+              ),
+              if (pick == null) ...[
+                if (_error == null && !_loading) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    look ? l10n.stylistLookHint : l10n.stylistHint,
+                    style: muted,
+                  ),
+                ],
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.tonalIcon(
+                    key: const Key('stylist-ask'),
+                    onPressed: _loading ? null : _run,
+                    icon: _loading
+                        ? busy
+                        : const Icon(Icons.auto_awesome_outlined),
+                    label: Text(
+                      _loading
+                          ? l10n.stylistThinking
+                          : look
+                          ? l10n.stylistAskLook
+                          : l10n.stylistAsk,
+                    ),
+                  ),
                 ),
-                child: Text(l10n.suggestionsWearThis),
-              ),
-              TextButton(
-                key: const Key('stylist-another'),
-                onPressed: _loading ? null : _run,
-                child: Text(l10n.stylistAnother),
-              ),
-              TextButton.icon(
-                key: const Key('stylist-save'),
-                onPressed: _saving ? null : () => _save(pick),
-                icon: const Icon(Icons.bookmark_add_outlined),
-                label: Text(l10n.suggestionsSaveOutfit),
-              ),
+              ] else ...[
+                const SizedBox(height: 4),
+                SuggestionCandidateView(
+                  key: ValueKey(_current.join(',')),
+                  index: 0,
+                  total: 1,
+                  candidate: pick.candidate,
+                  heading: pick.name ?? l10n.stylistTitle,
+                  keyPrefix: 'stylist-pick',
+                ),
+                if (pick.why case final why?)
+                  Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: colors.surfaceMuted,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.format_quote_rounded,
+                          size: 18,
+                          color: colors.accent,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            why,
+                            key: const Key('stylist-why'),
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton.icon(
+                        key: const Key('stylist-wear'),
+                        onPressed: () => context.push(
+                          AppRoutes.wearWith([
+                            for (final i in pick.candidate.items)
+                              i.garment.id.value,
+                          ]),
+                        ),
+                        icon: const Icon(Icons.done_all),
+                        label: Text(l10n.suggestionsWearThis),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton.filledTonal(
+                      key: const Key('stylist-save'),
+                      tooltip: l10n.suggestionsSaveOutfit,
+                      onPressed: _saving ? null : () => _save(pick),
+                      icon: const Icon(Icons.bookmark_add_outlined),
+                    ),
+                    IconButton.filledTonal(
+                      key: const Key('stylist-another'),
+                      tooltip: l10n.stylistAnother,
+                      onPressed: _loading ? null : _run,
+                      icon: const Icon(Icons.refresh),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  key: const Key('stylist-change'),
+                  controller: _ask,
+                  enabled: !_loading,
+                  maxLength: 200,
+                  textInputAction: TextInputAction.send,
+                  decoration: InputDecoration(
+                    labelText: l10n.stylistChange,
+                    hintText: l10n.stylistChangeHint,
+                    counterText: '',
+                    suffixIcon: _loading
+                        ? Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: busy,
+                          )
+                        : IconButton(
+                            key: const Key('stylist-change-send'),
+                            tooltip: l10n.stylistChangeSend,
+                            icon: const Icon(Icons.send),
+                            onPressed: () => _sendChange(),
+                          ),
+                  ),
+                  onSubmitted: (_) => _sendChange(),
+                ),
+              ],
+              if (_error case final error?)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    error,
+                    key: const Key('stylist-error'),
+                    style: muted?.copyWith(color: theme.colorScheme.error),
+                  ),
+                ),
             ],
           ),
-          const SizedBox(height: 8),
-          TextField(
-            key: const Key('stylist-change'),
-            controller: _ask,
-            enabled: !_loading,
-            maxLength: 200,
-            textInputAction: TextInputAction.send,
-            decoration: InputDecoration(
-              labelText: l10n.stylistChange,
-              hintText: l10n.stylistChangeHint,
-              counterText: '',
-              suffixIcon: _loading
-                  ? const Padding(
-                      padding: EdgeInsets.all(12),
-                      child: SizedBox.square(
-                        dimension: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
-                  : IconButton(
-                      key: const Key('stylist-change-send'),
-                      tooltip: l10n.stylistChangeSend,
-                      icon: const Icon(Icons.send),
-                      onPressed: () => _sendChange(),
-                    ),
-            ),
-            onSubmitted: (_) => _sendChange(),
-          ),
-        ],
-        if (_error case final error?)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              error,
-              key: const Key('stylist-error'),
-              style: muted?.copyWith(color: theme.colorScheme.error),
-            ),
-          ),
-        if (pick == null && _error == null && !_loading)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              look ? l10n.stylistLookHint : l10n.stylistHint,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-      ],
+        ),
+      ),
     );
   }
 

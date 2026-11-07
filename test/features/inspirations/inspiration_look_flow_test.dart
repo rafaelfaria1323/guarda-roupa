@@ -149,6 +149,8 @@ void main() {
       scrollable: find.byType(Scrollable).last,
     );
     expect(find.text('Pedir ao stylist um look assim'), findsOne);
+    await tester.ensureVisible(ask);
+    await tester.pumpAndSettle();
     await tester.tap(ask);
     await settleUntil(tester, find.byKey(const Key('stylist-why')));
     final brief = stylist.briefs.single;

@@ -22,7 +22,7 @@ A foto ao espelho (ver o que se vestiu) ficou de fora por decisão do utilizador
 
 ## Pedir ao stylist (2026-11-06)
 
-Em **Hoje › Sugestões para hoje**, por baixo da sugestão do motor, aparece **Pedir ao stylist** quando o Gemini está ligado.
+Em **Hoje**, por baixo do cartão das sugestões, aparece o cartão **Ideia do stylist** com o botão **Pedir ao stylist** quando o Gemini está ligado (desenho em [Cartão do Stylist](../design-e-fluxos.md#cartão-do-stylist-v3-aplicado)).
 
 1. A app manda **só texto**: as peças disponíveis (não arquivadas, sem estar a lavar), cada uma com categoria, nome, cores, padrão, textura, aquecimento, formalidade, corte, comprimento, ocasiões, chuva/vento e quantas vezes se usou nos últimos 30 dias. Junta a ocasião escolhida, o tempo (sensação, chuva, vento, sol), as preferências ("gosto"/"evito") e as 20 inspirações mais recentes, só com as etiquetas confirmadas (título, cores, formalidade, padrões, texturas, ocasiões, proporções). O Gemini puxa o conjunto para essa linha quando serve para o dia. Nunca vão fotos, imagens ou links das inspirações, marcas, preços nem notas. Até 150 peças, as menos usadas primeiro; os ids são curtos (`p1`, `p2`…) e só a app sabe a que peça correspondem.
 2. O Gemini escolhe um conjunto (cada peça com o papel: top, camada, casaco, parte de baixo, peça única, calçado, acessório), dá-lhe um nome curto e explica porquê em pt-PT.
