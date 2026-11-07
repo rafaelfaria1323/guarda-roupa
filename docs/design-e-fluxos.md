@@ -127,6 +127,14 @@ Guardar no formulário volta à ficha; duplicar abre o formulário da cópia; ar
 2. **Faixa dos sete dias**: dia da semana, número, o tempo previsto (ícone e graus) e um nó com a cor da peça principal (tracejado se por decidir); hoje a verde. Tocar num dia leva ao seu cartão.
 3. **Um cartão por dia**: data, "HOJE", o tempo e o estado num selo; a ocasião (lista com "A decidir"); "Pode não acontecer"; as peças recortadas, umas por cima das outras, com os nomes; avisos e propostas como antes; "Aceitar", "Alterar", "Deixar vazio" e, hoje, "Vesti isto hoje" em botão verde.
 
+## Ecrã Perfil (v3, aplicado)
+
+`StyleScreen` segue o ecrã "profile_style_preferences" do Stitch (2026-11-07), só com o que a app já tem (sem tamanhos, marcas nem dados inventados). De cima para baixo:
+
+1. Cartão da **conta**: inicial do email, "PERFIL", o email e a seta para Definições; por baixo, quatro números — peças (ativas), conjuntos, inspirações e a percentagem de peças ativas usadas nos últimos 30 dias ("–" sem peças).
+2. Os segmentos **Inspirações** e **Preferências**, como antes; cada lista vive num cartão com título em maiúsculas pequenas. Os Pins à espera do atalho aparecem por cima das inspirações.
+3. Cartão **Atalhos**: localização da meteorologia (com o nome do sítio), conforto e tempo, cuidados e todas as definições.
+
 ## Navegação
 
 Cinco separadores, como no design v3 (2026-11-06):
@@ -135,7 +143,7 @@ Cinco separadores, como no design v3 (2026-11-06):
 - **Armário:** peças por tipo, pesquisa, estados de lavandaria.
 - **Conjuntos:** composições guardadas e ocasiões.
 - **Semana:** o plano dos próximos dias, que se enche sozinho.
-- **Perfil:** a conta, um resumo (peças, conjuntos, inspirações), a entrada para Definições e o estilo (inspirações e preferências).
+- **Perfil:** a conta, quatro números (peças, conjuntos, inspirações, usadas em 30 dias), o estilo (inspirações e preferências) e atalhos para Definições.
 
 Conta, sincronização e backup em definições, com estado de sync visível também nos contextos relevantes. Em ecrãs largos, substituir navegação inferior por lateral sem criar outra aplicação.
 

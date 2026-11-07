@@ -25,14 +25,29 @@ void main() {
         matching: find.text('Perfil'),
       ),
     );
-    await settleUntil(tester, find.textContaining('2 peças'));
-    expect(
-      tester.widget<Text>(find.byKey(const Key('profile-stats'))).data,
-      '2 peças · 0 conjuntos · 0 inspirações',
-    );
+    String stat(String key) =>
+        tester.widget<Text>(find.byKey(Key('profile-stat-$key'))).data!;
+    await settle(tester);
+    expect(stat('garments'), '2');
+    expect(stat('outfits'), '0');
+    expect(stat('inspirations'), '0');
+    expect(stat('rotation'), '0%', reason: 'nada vestido nos últimos 30 dias');
 
     await tester.tap(find.byKey(const Key('profile-settings')));
     await settle(tester);
     expect(find.text('Aspeto'), findsOne);
+    await tester.tap(find.byTooltip('Voltar'));
+    await settle(tester);
+
+    // Atalhos no fim da página.
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('profile-link-comfort')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('profile-link-comfort')));
+    await settle(tester);
+    expect(find.widgetWithText(AppBar, 'Conforto e tempo'), findsOne);
   });
 }

@@ -4,7 +4,7 @@ Estado: abordagem assistida confirmada; interpretação visual avançada adiada.
 
 ## Implementado (incremento 4)
 
-- Separador **Estilo**: lista de inspirações (título ou domínio do link, etiquetas e paleta) e editor com título, link, notas e etiquetas.
+- Separador **Perfil** (antes "Estilo"; desenho em [design](../design-e-fluxos.md#ecrã-perfil-v3-aplicado)): lista de inspirações (título ou domínio do link, etiquetas e paleta) e editor com título, link, notas e etiquetas.
 - Uma inspiração precisa de um título ou de um link. Um link sem esquema ganha `https://`. Só são aceites links `http(s)`: o servidor e a app recusam `javascript:` e outros esquemas.
 - O link é só guardado e pode ser copiado. A app não abre nem analisa a página, e a interface diz isso.
 - **Imagem** (opcional, uma por inspiração): câmara ou galeria, com o mesmo processamento das fotos das peças (1600 px + miniatura, sem EXIF/GPS).
