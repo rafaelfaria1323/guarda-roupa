@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import '../../../core/domain/result.dart';
 import '../../../l10n/app_localizations.dart';
 import '../domain/product_import.dart';
+import '../domain/product_photo.dart';
 import 'shortcut_setup_screen.dart';
 
 /// Colar um link de produto, ver o que se leu e escolher o que segue para a
@@ -15,6 +16,7 @@ class ImportLinkScreen extends StatefulWidget {
   const ImportLinkScreen({
     required this.importer,
     required this.maxImages,
+    this.scorer,
     super.key,
   });
 
@@ -22,6 +24,10 @@ class ImportLinkScreen extends StatefulWidget {
 
   /// Quantas fotos a peça ainda aceita.
   final int maxImages;
+
+  /// Escolhe sozinha a foto que mostra só a peça; `null` sem a IA local
+  /// (fica a primeira).
+  final ProductPhotoScorer? scorer;
 
   @override
   State<ImportLinkScreen> createState() => _ImportLinkScreenState();
@@ -37,6 +43,15 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
   ProductPreview? _preview;
   ImportVariant? _variant;
   final _images = <String>{};
+
+  /// Fotos já copiadas ao procurar a da peça: não se copiam outra vez.
+  final _fetched = <String, Uint8List>{};
+
+  /// A IA está a olhar para as fotos da loja.
+  bool _picking = false;
+
+  /// O utilizador mexeu nas fotos: a escolha da IA já não se sobrepõe.
+  bool _touched = false;
 
   /// Peças mandadas pelo atalho; `null` enquanto carrega ou se falhou.
   List<InboxItem>? _inbox;
@@ -76,6 +91,38 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
       _images.clear();
       if (p.images.isNotEmpty && widget.maxImages > 0) {
         _images.add(p.images.first);
+      }
+    });
+    unawaited(_pickPhoto(p));
+  }
+
+  /// Copia até [productPhotoTries] fotos da loja e marca a que mostra só a
+  /// peça, para a capa não ser o manequim. Só com mais de uma foto.
+  Future<void> _pickPhoto(ProductPreview p) async {
+    final scorer = widget.scorer;
+    _fetched.clear();
+    _touched = false;
+    final look = scorer != null && p.images.length > 1 && widget.maxImages > 0;
+    setState(() => _picking = look);
+    if (!look) return;
+    final picked = await pickProductPhoto(
+      p.images,
+      fetch: (url) async => switch (await widget.importer.image(url)) {
+        Ok(value: final bytes) => bytes,
+        Err() => null,
+      },
+      scorer: scorer,
+      fetched: (url, bytes) {
+        if (identical(_preview, p)) _fetched[url] = bytes;
+      },
+    );
+    if (!mounted || !identical(_preview, p)) return;
+    setState(() {
+      _picking = false;
+      if (picked != null && !_touched) {
+        _images
+          ..clear()
+          ..add(picked.url);
       }
     });
   }
@@ -135,6 +182,7 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
       _preview = null;
       _variant = null;
       _images.clear();
+      _picking = false;
     });
     final result = page != null
         ? await widget.importer.previewShared(page)
@@ -153,11 +201,13 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
           _failure = f;
       }
     });
+    if (result case Ok(value: final p)) unawaited(_pickPhoto(p));
   }
 
   void _choose(ImportVariant? variant) {
     setState(() {
       _variant = variant;
+      if (variant?.image != null) _touched = true;
       final image = variant?.image;
       final p = _preview!;
       if (image != null && p.images.contains(image) && widget.maxImages > 0) {
@@ -176,6 +226,10 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
     var failed = 0;
     // Pela ordem da página: a primeira fica como capa.
     for (final url in p.images.where(_images.contains)) {
+      if (_fetched[url] case final b?) {
+        bytes.add(b);
+        continue;
+      }
       switch (await widget.importer.image(url)) {
         case Ok(value: final b):
           bytes.add(b);
@@ -409,6 +463,14 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
       if (p.images.isNotEmpty && widget.maxImages > 0) ...[
         const SizedBox(height: 16),
         Text(l10n.importImages, style: theme.textTheme.titleSmall),
+        if (_picking) ...[
+          const SizedBox(height: 4),
+          Text(
+            l10n.importPickingPhoto,
+            key: const Key('import-picking-photo'),
+            style: theme.textTheme.bodySmall,
+          ),
+        ],
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -421,6 +483,7 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
                 index: i,
                 selected: _images.contains(url),
                 onTap: () => setState(() {
+                  _touched = true;
                   if (!_images.remove(url) &&
                       _images.length < widget.maxImages) {
                     _images.add(url);

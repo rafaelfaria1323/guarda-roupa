@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../account_sync/application/providers.dart';
+import '../../import/domain/product_photo.dart';
+import '../data/embedding_photo_scorer.dart';
 import '../data/model_store.dart';
 import '../data/onnx_background_remover.dart';
 import '../data/onnx_category_suggester.dart';
@@ -104,6 +106,13 @@ final imageEmbedderProvider = Provider<ImageEmbedder?>((ref) {
 final categorySuggesterProvider = Provider<CategorySuggester?>((ref) {
   final embedder = ref.watch(imageEmbedderProvider);
   return embedder == null ? null : EmbeddingCategorySuggester(embedder);
+});
+
+/// Escolhe a foto da loja que mostra só a peça, ou `null` sem o modelo
+/// neste dispositivo (fica a primeira foto).
+final productPhotoScorerProvider = Provider<ProductPhotoScorer?>((ref) {
+  final embedder = ref.watch(imageEmbedderProvider);
+  return embedder == null ? null : EmbeddingPhotoScorer(embedder);
 });
 
 /// Peças parecidas com uma imagem, ou `null` sem o modelo ou sem conta.

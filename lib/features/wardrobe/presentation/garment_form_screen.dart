@@ -272,6 +272,7 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
         builder: (_) => ImportLinkScreen(
           importer: importer,
           maxImages: PhotoRules.maxPerGarment - _pending.length,
+          scorer: ref.read(productPhotoScorerProvider),
         ),
       ),
     );

@@ -16,6 +16,7 @@ import '../../account_sync/application/providers.dart';
 import '../../import/application/import_providers.dart';
 import '../../import/application/shortcut_inbox.dart';
 import '../../import/domain/product_import.dart';
+import '../../local_ai/application/local_ai_providers.dart';
 import '../application/garment_copies.dart';
 import '../application/photo_providers.dart';
 import '../domain/availability.dart';
@@ -86,6 +87,7 @@ class _WardrobeScreenState extends ConsumerState<WardrobeScreen> {
         processPhoto: process,
         storeColor: l10n.importStoreColor,
         size: l10n.importSize,
+        scorer: ref.read(productPhotoScorerProvider),
       );
       if (created > 0) {
         messenger.showSnackBar(

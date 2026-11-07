@@ -8,11 +8,13 @@ import 'package:guarda_roupa/core/domain/result.dart';
 import 'package:guarda_roupa/features/import/application/import_providers.dart';
 import 'package:guarda_roupa/features/import/domain/product_import.dart';
 import 'package:guarda_roupa/features/import/presentation/import_link_screen.dart';
+import 'package:guarda_roupa/features/local_ai/application/local_ai_providers.dart';
 
 import '../../support/app_harness.dart';
 import '../../support/fake_photos.dart';
 import '../../support/test_database.dart';
 import '../wardrobe/presentation/wardrobe_flow_test.dart' show openWardrobe;
+import 'product_photo_test.dart' show ScriptedScorer;
 
 const url = 'https://www.zara.com/pt/pt/camisa-p1.html';
 
@@ -193,6 +195,77 @@ void main() {
     );
     final ops = (await tester.runAsync(() => pendingOperations(app.db)))!;
     expect(ops.map((o) => o['kind']), ['create', 'attach_photo']);
+  });
+
+  testWidgets('com a IA local, marca a foto só da peça e não a copia 2×', (
+    tester,
+  ) async {
+    final importer = FakeImporter();
+    final app = await pumpApp(
+      tester,
+      overrides: [
+        productImporterProvider.overrideWithValue(importer),
+        // A primeira é o manequim, a segunda só a peça.
+        productPhotoScorerProvider.overrideWithValue(
+          ScriptedScorer([-0.03, 0.05]),
+        ),
+      ],
+    );
+    await openWardrobe(tester);
+    await openImport(tester, url);
+    expect(importer.images, [
+      'https://static.zara.net/a.jpg',
+      'https://static.zara.net/b.jpg',
+    ]);
+    expect(find.byKey(const Key('import-picking-photo')), findsNothing);
+    Finder checked(int i) => find.descendant(
+      of: find.byKey(Key('import-image-$i')),
+      matching: find.byIcon(Icons.check_circle),
+    );
+    expect(checked(0), findsNothing);
+    expect(checked(1), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('import-use')),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byType(ImportLinkScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.tap(find.byKey(const Key('import-use')));
+    await settleUntil(tester, find.byKey(const Key('garment-save')));
+    await settle(tester);
+    expect(importer.images, hasLength(2), reason: 'reaproveita a cópia');
+    await chooseCategoryAndSave(tester);
+    final ops = (await tester.runAsync(() => pendingOperations(app.db)))!;
+    expect(ops.map((o) => o['kind']), ['create', 'attach_photo']);
+  });
+
+  testWidgets('atalho direto: com a IA local, a capa é a foto só da peça', (
+    tester,
+  ) async {
+    final importer = FakeImporter()
+      ..inboxItems.add(
+        InboxItem(id: 'i1', preview: sample, createdAt: DateTime(2026)),
+      );
+    await pumpApp(
+      tester,
+      overrides: [
+        productImporterProvider.overrideWithValue(importer),
+        productPhotoScorerProvider.overrideWithValue(
+          ScriptedScorer([-0.03, 0.05]),
+        ),
+      ],
+    );
+    await openWardrobe(tester);
+    await settleUntil(tester, find.textContaining('1 peça do atalho'));
+    expect(importer.images, [
+      'https://static.zara.net/a.jpg',
+      'https://static.zara.net/b.jpg',
+    ]);
   });
 
   testWidgets('página sem dados: diz porquê e deixa preencher à mão', (
