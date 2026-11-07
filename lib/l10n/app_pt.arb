@@ -2001,5 +2001,8 @@
       }
     }
   },
-  "outfitEditAction": "Editar"
+  "outfitEditAction": "Editar",
+  "outfitCanvas": "Composição",
+  "outfitAllAvailable": "Tudo disponível",
+  "outfitTapToAdd": "Toca numa peça para a juntar ao conjunto."
 }
