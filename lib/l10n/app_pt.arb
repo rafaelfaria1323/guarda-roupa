@@ -1267,17 +1267,6 @@
     }
   },
   "garmentEditAction": "Editar",
-  "garmentUseSentence": "{count, plural, =0{Ainda não foi usada.} =1{Usada 1 vez, {last}.} other{Usada {count} vezes, a última {last}.}}",
-  "@garmentUseSentence": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      },
-      "last": {
-        "type": "String"
-      }
-    }
-  },
   "relativeDay": "{days, plural, =0{hoje} =1{ontem} other{há {days} dias}}",
   "@relativeDay": {
     "placeholders": {
@@ -1981,5 +1970,18 @@
       }
     }
   },
-  "todayLaundryOpen": "Ver"
+  "todayLaundryOpen": "Ver",
+  "garmentStatWorn": "Vezes usada",
+  "garmentStatLast": "Última vez",
+  "garmentStatCare": "Até lavar",
+  "garmentStatCareNow": "Lavar já",
+  "garmentStatCareUses": "{left, plural, =1{1 uso} other{{left} usos}}",
+  "@garmentStatCareUses": {
+    "placeholders": {
+      "left": {
+        "type": "int"
+      }
+    }
+  },
+  "garmentStatNever": "nunca"
 }
