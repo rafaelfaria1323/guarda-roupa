@@ -85,8 +85,13 @@ void main() {
     await saveOutfit(tester);
 
     expect(find.text('Conjunto guardado.'), findsOne);
-    expect(inList('Sexta'), findsOne);
-    expect(find.textContaining('3 peças · Casual · Noite / saída'), findsOne);
+    expect(find.text('Sexta'), findsOne);
+    expect(find.text('3 peças'), findsOne);
+    expect(find.text('Casual · Noite / saída'), findsOne);
+    expect(find.text('Ainda não usado'), findsOne);
+    expect(find.text('1 conjunto guardado'), findsOne);
+    expect(find.text('Todos (1)'), findsOne);
+    expect(find.text('Casual (1)'), findsOne);
 
     // Indisponível: aviso, sem mudar o conjunto.
     await tester.runAsync(
@@ -96,7 +101,7 @@ void main() {
       ).setAvailability(GarmentId(pretas), Availability.washing),
     );
     await settleUntil(tester, find.textContaining('1 peça não está'));
-    await tester.tap(inList('Sexta'));
+    await tester.tap(find.text('Sexta'));
     await settle(tester);
     expect(find.byKey(Key('outfit-warning-$pretas')), findsOne);
     expect(
@@ -139,7 +144,7 @@ void main() {
 
     // Editar o conjunto não muda a utilização registada.
     await openOutfits(tester);
-    await tester.tap(inList('Sexta'));
+    await tester.tap(find.text('Sexta'));
     await settle(tester);
     await tapVisible(tester, inList('Pretas'));
     await saveOutfit(tester);
@@ -151,7 +156,7 @@ void main() {
     expect(find.textContaining('3 peças'), findsOne);
 
     // Eliminar.
-    await tester.tap(inList('Sexta'));
+    await tester.tap(find.text('Sexta'));
     await settle(tester);
     await tester.tap(find.byKey(const Key('outfit-delete')));
     await tester.pumpAndSettle();

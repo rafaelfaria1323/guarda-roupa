@@ -4,7 +4,7 @@ Estado: necessária no MVP.
 
 ## Implementado (incremento 4)
 
-- Separador **Conjuntos**: lista (nome ou as primeiras peças, nº de peças, ocasiões, “Incompleto” e aviso de peças indisponíveis) e editor com nome opcional (até 120 caracteres), ocasiões (casual, trabalho (smart casual), noite/saída), peças e papel de cada uma.
+- Separador **Conjuntos**: cartões (ver [Ecrã Conjuntos](../design-e-fluxos.md#ecrã-conjuntos-v3-aplicado)) e editor com nome opcional (até 120 caracteres), ocasiões (casual, trabalho (smart casual), noite/saída), peças e papel de cada uma.
 - O papel é sugerido pela categoria e pode ser corrigido. `main_top`, `bottom`, `one_piece` e `footwear` são únicos; `mid_layer`, `outer_layer` e `accessory` repetem-se. 1–20 peças, sem repetir a mesma.
 - “Falta: …” (calçado e top+parte de baixo, ou peça única) é só um aviso: um conjunto incompleto guarda-se na mesma. Casaco e acessórios nunca são obrigatórios.
 - Peças a lavar/a secar/indisponíveis, arquivadas ou eliminadas mantêm-se no conjunto com aviso; nada muda sozinho. Peças novas têm de estar ativas.
