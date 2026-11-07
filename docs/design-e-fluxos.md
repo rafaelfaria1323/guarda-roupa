@@ -101,6 +101,14 @@ Guardar no formulário volta à ficha; duplicar abre o formulário da cópia; ar
    - "Vou vestir hoje" (abre o registo com as peças já escolhidas) e "Editar".
 4. Botão "Novo conjunto" em pílula verde.
 
+## Ecrã Semana (v3, aplicado)
+
+`WeekScreen` segue o ecrã "weekly_planner" do Stitch (2026-11-06), sem avisos inventados nem "planear com IA" (o plano já se faz sozinho). De cima para baixo:
+
+1. O mês em maiúsculas pequenas, "A tua semana" e "Planear de novo".
+2. **Faixa dos sete dias**: dia da semana, número, o tempo previsto (ícone e graus) e um nó com a cor da peça principal (tracejado se por decidir); hoje a verde. Tocar num dia leva ao seu cartão.
+3. **Um cartão por dia**: data, "HOJE", o tempo e o estado num selo; a ocasião (lista com "A decidir"); "Pode não acontecer"; as peças recortadas, umas por cima das outras, com os nomes; avisos e propostas como antes; "Aceitar", "Alterar", "Deixar vazio" e, hoje, "Vesti isto hoje" em botão verde.
+
 ## Navegação
 
 Cinco separadores, como no design v3 (2026-11-06):
