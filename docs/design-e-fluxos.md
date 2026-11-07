@@ -87,6 +87,20 @@ Tocar numa peça abre a ficha em **modo de ver** (`GarmentDetailScreen`, `/guard
 
 Guardar no formulário volta à ficha; duplicar abre o formulário da cópia; arquivar e eliminar voltam ao Armário.
 
+## Ecrã Conjuntos (v3, aplicado)
+
+`OutfitsScreen` segue o ecrã "outfit_collection" do Stitch (2026-11-06), sem favoritos, temperatura nem sugestões do stylist. De cima para baixo:
+
+1. "Conjuntos" na barra e o total: "3 conjuntos guardados".
+2. Filtros por ocasião com contagem ("Todos (3)", "Casual (2)"), só com as ocasiões que algum conjunto tem.
+3. Um **cartão por conjunto**:
+   - colagem com até três peças recortadas (a primeira em grande, as outras empilhadas) e o selo "3 peças";
+   - o nome (ou as primeiras peças) e as ocasiões num selo à direita; com nome, as peças por baixo;
+   - "Usado 2 vezes · há 6 dias" (conta os dias em que todas as peças do conjunto foram vestidas juntas) ou "Ainda não usado", e "Incompleto" quando falta uma peça base;
+   - aviso a laranja quando há peças que não estão disponíveis;
+   - "Vou vestir hoje" (abre o registo com as peças já escolhidas) e "Editar".
+4. Botão "Novo conjunto" em pílula verde.
+
 ## Navegação
 
 Cinco separadores, como no design v3 (2026-11-06):

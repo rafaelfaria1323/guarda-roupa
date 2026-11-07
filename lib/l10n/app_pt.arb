@@ -1983,5 +1983,23 @@
       }
     }
   },
-  "garmentStatNever": "nunca"
+  "garmentStatNever": "nunca",
+  "outfitsAllOccasions": "Todos",
+  "outfitsSaved": "{count, plural, =0{Nenhum conjunto guardado} =1{1 conjunto guardado} other{{count} conjuntos guardados}}",
+  "@outfitsSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "outfitWorn": "{count, plural, =0{Ainda não usado} =1{Usado 1 vez} other{Usado {count} vezes}}",
+  "@outfitWorn": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "outfitEditAction": "Editar"
 }
