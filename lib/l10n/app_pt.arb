@@ -1926,20 +1926,6 @@
       }
     }
   },
-  "profileStats": "{garments, plural, =0{0 peças} =1{1 peça} other{{garments} peças}} · {outfits, plural, =0{0 conjuntos} =1{1 conjunto} other{{outfits} conjuntos}} · {inspirations, plural, =0{0 inspirações} =1{1 inspiração} other{{inspirations} inspirações}}",
-  "@profileStats": {
-    "placeholders": {
-      "garments": {
-        "type": "int"
-      },
-      "outfits": {
-        "type": "int"
-      },
-      "inspirations": {
-        "type": "int"
-      }
-    }
-  },
   "profileOpenSettings": "Abrir as definições",
   "wardrobeAllGroups": "Todas",
   "wardrobeGroupCount": "{label} ({count})",
@@ -2004,5 +1990,11 @@
   "outfitEditAction": "Editar",
   "outfitCanvas": "Composição",
   "outfitAllAvailable": "Tudo disponível",
-  "outfitTapToAdd": "Toca numa peça para a juntar ao conjunto."
+  "outfitTapToAdd": "Toca numa peça para a juntar ao conjunto.",
+  "profileStatGarments": "Peças",
+  "profileStatOutfits": "Conjuntos",
+  "profileStatInspirations": "Inspirações",
+  "profileStatRotation": "Usadas em 30 dias",
+  "profileShortcuts": "Atalhos",
+  "profileAllSettings": "Todas as definições"
 }

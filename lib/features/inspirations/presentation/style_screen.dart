@@ -5,6 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
+import '../../../app/theme.dart';
+import '../../wardrobe/domain/garment.dart';
+import '../../wear/application/wear_providers.dart';
+import '../../wear/domain/wear_event.dart';
+import '../../weather/application/weather_providers.dart';
 import '../../../core/domain/result.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../l10n/app_localizations.dart';
@@ -42,56 +47,241 @@ class _ProfileHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final colors = AppColors.of(context);
     final email = ref.watch(currentUserProvider).value?.email ?? '';
-    final garments = ref.watch(allGarmentsProvider).value?.length ?? 0;
+    final all = ref.watch(allGarmentsProvider).value ?? const <Garment>[];
+    final active = {
+      for (final g in all)
+        if (!g.isArchived) g.id,
+    };
     final outfits = ref.watch(outfitsProvider).value?.length ?? 0;
     final inspirations = ref.watch(inspirationsProvider).value?.length ?? 0;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: theme.colorScheme.primaryContainer,
-                foregroundColor: theme.colorScheme.onPrimaryContainer,
-                child: Text(
-                  email.isEmpty ? '·' : email.characters.first.toUpperCase(),
-                  style: theme.textTheme.titleMedium,
+    // Peças ativas vestidas pelo menos uma vez nos últimos 30 dias.
+    final since = todayFrom(ref.watch(clockProvider)).addDays(-29);
+    final worn = {
+      for (final w in ref.watch(allWearsProvider).value ?? const <WearEvent>[])
+        if (w.wornOn.compareTo(since) >= 0)
+          for (final id in w.garmentIds)
+            if (active.contains(id)) id,
+    };
+    final rotation = active.isEmpty
+        ? '–'
+        : '${(worn.length * 100 / active.length).round()}%';
+    return Card(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 8, 16),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 26,
+                  backgroundColor: colors.accentSoft,
+                  foregroundColor: colors.onAccentSoft,
+                  child: Text(
+                    email.isEmpty ? '·' : email.characters.first.toUpperCase(),
+                    style: theme.textTheme.titleLarge,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      email,
-                      style: theme.textTheme.titleMedium,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      l10n.profileStats(garments, outfits, inspirations),
-                      key: const Key('profile-stats'),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.navProfile.toUpperCase(),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: colors.onSurfaceMuted,
+                          letterSpacing: 1.2,
+                        ),
                       ),
-                    ),
-                  ],
+                      Text(
+                        email,
+                        style: theme.textTheme.titleMedium,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  key: const Key('profile-settings'),
+                  tooltip: l10n.profileOpenSettings,
+                  icon: const Icon(Icons.chevron_right),
+                  onPressed: () => context.push(AppRoutes.settings),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: colors.surfaceMuted,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Row(
+                    children: [
+                      for (final (key, value, label) in [
+                        (
+                          'garments',
+                          '${active.length}',
+                          l10n.profileStatGarments,
+                        ),
+                        ('outfits', '$outfits', l10n.profileStatOutfits),
+                        (
+                          'inspirations',
+                          '$inspirations',
+                          l10n.profileStatInspirations,
+                        ),
+                        ('rotation', rotation, l10n.profileStatRotation),
+                      ])
+                        Expanded(
+                          child: Column(
+                            children: [
+                              Text(
+                                value,
+                                key: Key('profile-stat-$key'),
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                label.toUpperCase(),
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: colors.onSurfaceMuted,
+                                  letterSpacing: 0.6,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
-              IconButton(
-                key: const Key('profile-settings'),
-                tooltip: l10n.profileOpenSettings,
-                icon: const Icon(Icons.chevron_right),
-                onPressed: () => context.push(AppRoutes.settings),
-              ),
-            ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Os atalhos para o que se muda mais vezes, como nos "serviços" do design.
+class _Shortcuts extends ConsumerWidget {
+  const _Shortcuts();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final colors = AppColors.of(context);
+    final place = ref.watch(weatherLocationProvider).value?.name;
+    Widget row(
+      String key,
+      IconData icon,
+      String title,
+      String? subtitle,
+      String route,
+    ) => ListTile(
+      key: Key('profile-link-$key'),
+      leading: CircleAvatar(
+        radius: 18,
+        backgroundColor: colors.surfaceMuted,
+        foregroundColor: colors.onSurface,
+        child: Icon(icon, size: 20),
+      ),
+      title: Text(title),
+      subtitle: subtitle == null || subtitle.isEmpty ? null : Text(subtitle),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => context.push(route),
+    );
+    return _Section(
+      title: l10n.profileShortcuts,
+      icon: Icons.tune,
+      child: Column(
+        children: [
+          row(
+            'weather',
+            Icons.place_outlined,
+            l10n.weatherLocationTitle,
+            place,
+            AppRoutes.weatherLocation,
           ),
+          row(
+            'comfort',
+            Icons.thermostat_outlined,
+            l10n.comfortTitle,
+            null,
+            AppRoutes.comfortSettings,
+          ),
+          row(
+            'care',
+            Icons.local_laundry_service_outlined,
+            l10n.careSettingsTitle,
+            null,
+            AppRoutes.careSettings,
+          ),
+          row(
+            'settings',
+            Icons.settings_outlined,
+            l10n.profileAllSettings,
+            null,
+            AppRoutes.settings,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Cartão com título em maiúsculas pequenas e um ícone, como no design.
+class _Section extends StatelessWidget {
+  const _Section({
+    required this.title,
+    required this.icon,
+    required this.child,
+  });
+
+  final String title;
+  final IconData icon;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
+    return Card(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+              child: Row(
+                children: [
+                  Icon(icon, size: 18, color: colors.onSurfaceMuted),
+                  const SizedBox(width: 8),
+                  Text(
+                    title.toUpperCase(),
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: colors.onSurfaceMuted,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            child,
+          ],
         ),
       ),
     );
@@ -188,11 +378,12 @@ class _StyleScreenState extends ConsumerState<StyleScreen> {
         icon: const Icon(Icons.add),
         label: Text(inspirations ? l10n.inspirationAdd : l10n.preferenceAdd),
       ),
-      body: Column(
+      body: ListView(
+        padding: const EdgeInsets.only(bottom: 88),
         children: [
           const _ProfileHeader(),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: SizedBox(
               width: double.infinity,
               child: SegmentedButton<_StyleView>(
@@ -218,21 +409,18 @@ class _StyleScreenState extends ConsumerState<StyleScreen> {
               ),
             ),
           ),
-          Expanded(
-            child: inspirations
-                ? _InspirationList(
-                    inbox: [
-                      for (final item in _inbox)
-                        _InboxCard(
-                          item: item,
-                          onLinkOnly: () => unawaited(_keepLink(item)),
-                          onWithImage: () => unawaited(_withImage(item)),
-                          onDiscard: () => unawaited(_discard(item)),
-                        ),
-                    ],
-                  )
-                : const _PreferenceList(),
-          ),
+          if (inspirations) ...[
+            for (final item in _inbox)
+              _InboxCard(
+                item: item,
+                onLinkOnly: () => unawaited(_keepLink(item)),
+                onWithImage: () => unawaited(_withImage(item)),
+                onDiscard: () => unawaited(_discard(item)),
+              ),
+            _InspirationList(hasInbox: _inbox.isNotEmpty),
+          ] else
+            const _PreferenceList(),
+          const _Shortcuts(),
         ],
       ),
     );
@@ -240,30 +428,37 @@ class _StyleScreenState extends ConsumerState<StyleScreen> {
 }
 
 class _InspirationList extends ConsumerWidget {
-  const _InspirationList({required this.inbox});
+  const _InspirationList({required this.hasInbox});
 
-  /// Os cartões dos Pins à espera, por cima da lista.
-  final List<Widget> inbox;
+  /// Há Pins à espera por cima: sem estado vazio.
+  final bool hasInbox;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     return switch (ref.watch(inspirationsProvider)) {
-      AsyncData(value: final list) when list.isEmpty && inbox.isEmpty =>
-        EmptyState(
-          icon: Icons.auto_awesome_outlined,
-          message: l10n.styleEmpty,
-          hint: l10n.styleEmptyHint,
-        ),
-      AsyncData(value: final list) => ListView(
-        padding: const EdgeInsets.only(bottom: 88),
-        children: [
-          ...inbox,
-          for (final i in list) _InspirationTile(inspiration: i),
-        ],
+      AsyncData(value: final list) when list.isEmpty && hasInbox =>
+        const SizedBox.shrink(),
+      AsyncData(value: final list) when list.isEmpty => EmptyState(
+        icon: Icons.auto_awesome_outlined,
+        message: l10n.styleEmpty,
+        hint: l10n.styleEmptyHint,
       ),
-      AsyncError() => Center(child: Text(l10n.wardrobeLoadError)),
-      _ => const Center(child: CircularProgressIndicator()),
+      AsyncData(value: final list) => _Section(
+        title: l10n.styleInspirations,
+        icon: Icons.auto_awesome_outlined,
+        child: Column(
+          children: [for (final i in list) _InspirationTile(inspiration: i)],
+        ),
+      ),
+      AsyncError() => Padding(
+        padding: const EdgeInsets.all(32),
+        child: Center(child: Text(l10n.wardrobeLoadError)),
+      ),
+      _ => const Padding(
+        padding: EdgeInsets.all(32),
+        child: Center(child: CircularProgressIndicator()),
+      ),
     };
   }
 }
@@ -284,15 +479,24 @@ class _PreferenceList extends ConsumerWidget {
         message: l10n.preferencesEmpty,
         hint: l10n.preferencesEmptyHint,
       ),
-      AsyncData(value: final list) => ListView(
-        padding: const EdgeInsets.only(bottom: 88),
-        children: [
-          for (final p in list)
-            _PreferenceTile(preference: p, origin: origins[p.inspirationId]),
-        ],
+      AsyncData(value: final list) => _Section(
+        title: l10n.stylePreferences,
+        icon: Icons.thumbs_up_down_outlined,
+        child: Column(
+          children: [
+            for (final p in list)
+              _PreferenceTile(preference: p, origin: origins[p.inspirationId]),
+          ],
+        ),
       ),
-      AsyncError() => Center(child: Text(l10n.wardrobeLoadError)),
-      _ => const Center(child: CircularProgressIndicator()),
+      AsyncError() => Padding(
+        padding: const EdgeInsets.all(32),
+        child: Center(child: Text(l10n.wardrobeLoadError)),
+      ),
+      _ => const Padding(
+        padding: EdgeInsets.all(32),
+        child: Center(child: CircularProgressIndicator()),
+      ),
     };
   }
 }
