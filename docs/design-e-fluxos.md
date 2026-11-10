@@ -147,6 +147,16 @@ Não há desenho do Stitch para este ecrã (Nova peça e Editar). Segue a mesma 
 
 "Guardar" continua no topo, sempre visível.
 
+## Vesti hoje e Definições (v3, aplicado)
+
+Também sem desenho do Stitch; mesma linguagem (2026-11-10).
+
+- **O que vestiste hoje?**: o aviso em texto suave, a contagem de peças escolhidas e "Usar um conjunto" por cima, e as peças num só cartão, em linhas separadas, com miniatura de cantos redondos.
+- **Definições**: quatro grupos, cada um com título por cima e as linhas num cartão — Conta e sincronização (a sessão, o estado da sincronização, terminar sessão), Aspeto (Automático, Claro, Escuro), Preferências (lembretes, localização da meteorologia, conforto e tempo, lavagem e rotação, IA local) e Cópia de segurança.
+- **Lavagem e rotação por categoria**: um cartão por categoria com os dois valores.
+- **Conforto e tempo**: os três limites num cartão; "Repor valores de origem" por baixo.
+- A localização e a IA local já seguiam este estilo.
+
 ## Navegação
 
 Cinco separadores, como no design v3 (2026-11-06):

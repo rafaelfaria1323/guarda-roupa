@@ -79,45 +79,63 @@ class _ComfortSettingsScreenState extends ConsumerState<ComfortSettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text(l10n.comfortIntro, style: theme.textTheme.bodyMedium),
-          const SizedBox(height: 16),
-          _Stepper(
-            id: 'hot',
-            label: l10n.comfortHot,
-            value: l10n.comfortDegrees(t.hotFromC.round()),
-            help: l10n.comfortHotHelp,
-            onMinus: () => edit((b) => hot(b, -1)),
-            onPlus: () => edit((b) => hot(b, 1)),
-            canMinus: hot(t, -1).isValid,
-            canPlus: hot(t, 1).isValid,
-          ),
-          _Stepper(
-            id: 'cold',
-            label: l10n.comfortCold,
-            value: l10n.comfortDegrees(t.coldBelowC.round()),
-            help: l10n.comfortColdHelp,
-            onMinus: () => edit((b) => cold(b, -1)),
-            onPlus: () => edit((b) => cold(b, 1)),
-            canMinus: cold(t, -1).isValid,
-            canPlus: cold(t, 1).isValid,
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Text(
-              l10n.comfortMild(t.coldBelowC.round(), t.hotFromC.round()),
-              key: const Key('comfort-mild'),
-              style: theme.textTheme.bodySmall,
+          Text(
+            l10n.comfortIntro,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-          _Stepper(
-            id: 'wind',
-            label: l10n.comfortWind,
-            value: l10n.comfortKmh(t.windyFromKmh.round()),
-            help: l10n.comfortWindHelp,
-            onMinus: () => edit((b) => wind(b, -5)),
-            onPlus: () => edit((b) => wind(b, 5)),
-            canMinus: wind(t, -5).isValid,
-            canPlus: wind(t, 5).isValid,
+          const SizedBox(height: 16),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _Stepper(
+                    id: 'hot',
+                    label: l10n.comfortHot,
+                    value: l10n.comfortDegrees(t.hotFromC.round()),
+                    help: l10n.comfortHotHelp,
+                    onMinus: () => edit((b) => hot(b, -1)),
+                    onPlus: () => edit((b) => hot(b, 1)),
+                    canMinus: hot(t, -1).isValid,
+                    canPlus: hot(t, 1).isValid,
+                  ),
+                  _Stepper(
+                    id: 'cold',
+                    label: l10n.comfortCold,
+                    value: l10n.comfortDegrees(t.coldBelowC.round()),
+                    help: l10n.comfortColdHelp,
+                    onMinus: () => edit((b) => cold(b, -1)),
+                    onPlus: () => edit((b) => cold(b, 1)),
+                    canMinus: cold(t, -1).isValid,
+                    canPlus: cold(t, 1).isValid,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Text(
+                      l10n.comfortMild(
+                        t.coldBelowC.round(),
+                        t.hotFromC.round(),
+                      ),
+                      key: const Key('comfort-mild'),
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ),
+                  _Stepper(
+                    id: 'wind',
+                    label: l10n.comfortWind,
+                    value: l10n.comfortKmh(t.windyFromKmh.round()),
+                    help: l10n.comfortWindHelp,
+                    onMinus: () => edit((b) => wind(b, -5)),
+                    onPlus: () => edit((b) => wind(b, 5)),
+                    canMinus: wind(t, -5).isValid,
+                    canPlus: wind(t, 5).isValid,
+                  ),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 8),
           Align(

@@ -30,125 +30,132 @@ class SettingsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
       body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
-          ListTile(
-            leading: const Icon(Icons.account_circle_outlined),
-            title: Text(l10n.settingsAccount),
-            subtitle: Text(
-              email == null
-                  ? l10n.settingsSignedIn
-                  : l10n.settingsSignedInAs(email),
-            ),
-          ),
-          ListTile(leading: Icon(syncIcon), title: Text(syncLabel)),
-          if (sync.conflicts > 0)
-            ListTile(
-              leading: const Icon(Icons.report_outlined),
-              title: Text(l10n.syncConflicts(sync.conflicts)),
-            ),
-          ListTile(
-            leading: const Icon(Icons.logout),
-            title: Text(l10n.settingsSignOut),
-            onTap: () => _confirmSignOut(context, ref),
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.dark_mode_outlined),
-            title: Text(l10n.themeTitle),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: SizedBox(
-              width: double.infinity,
-              child: SegmentedButton<ThemeMode>(
-                key: const Key('theme-mode'),
-                showSelectedIcon: false,
-                segments: [
-                  for (final m in [
-                    ThemeMode.system,
-                    ThemeMode.light,
-                    ThemeMode.dark,
-                  ])
-                    ButtonSegment(
-                      value: m,
-                      label: Text(
-                        l10n.themeMode(m.name),
-                        maxLines: 1,
-                        softWrap: false,
-                        overflow: TextOverflow.fade,
-                      ),
-                    ),
-                ],
-                selected: {ref.watch(themeModeProvider)},
-                onSelectionChanged: (s) =>
-                    ref.read(themeModeProvider.notifier).set(s.single),
+          _Group(
+            title: l10n.settingsAccount,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.account_circle_outlined),
+                title: Text(
+                  email == null
+                      ? l10n.settingsSignedIn
+                      : l10n.settingsSignedInAs(email),
+                ),
               ),
-            ),
-          ),
-          const Divider(height: 1),
-          ListTile(
-            title: Text(
-              l10n.settingsBackup,
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            dense: true,
-          ),
-          if (ref.watch(reminderBackendProvider) != null)
-            ListTile(
-              key: const Key('reminder-settings'),
-              leading: const Icon(Icons.notifications_outlined),
-              title: Text(l10n.remindersTitle),
-              subtitle: Text(switch (ref.watch(reminderStateProvider).value) {
-                final s? => reminderSummary(l10n, s.settings),
-                null => '',
-              }),
-              onTap: () => context.push(AppRoutes.reminderSettings),
-            ),
-          ListTile(
-            key: const Key('weather-location'),
-            leading: const Icon(Icons.place_outlined),
-            title: Text(l10n.weatherLocationTitle),
-            subtitle: Text(
-              ref.watch(weatherLocationProvider).value?.name ?? '',
-            ),
-            onTap: () => context.push(AppRoutes.weatherLocation),
-          ),
-          ListTile(
-            key: const Key('comfort-settings'),
-            leading: const Icon(Icons.thermostat_outlined),
-            title: Text(l10n.comfortTitle),
-            subtitle: Text(switch (ref.watch(comfortThresholdsProvider).value) {
-              final t? => l10n.comfortSummary(
-                t.hotFromC.round(),
-                t.coldBelowC.round(),
-                t.windyFromKmh.round(),
+              ListTile(leading: Icon(syncIcon), title: Text(syncLabel)),
+              if (sync.conflicts > 0)
+                ListTile(
+                  leading: const Icon(Icons.report_outlined),
+                  title: Text(l10n.syncConflicts(sync.conflicts)),
+                ),
+              ListTile(
+                leading: const Icon(Icons.logout),
+                title: Text(l10n.settingsSignOut),
+                onTap: () => _confirmSignOut(context, ref),
               ),
-              null => '',
-            }),
-            onTap: () => context.push(AppRoutes.comfortSettings),
+            ],
           ),
-          ListTile(
-            key: const Key('care-settings'),
-            leading: const Icon(Icons.local_laundry_service_outlined),
-            title: Text(l10n.careSettingsTitle),
-            onTap: () => context.push(AppRoutes.careSettings),
+          _Group(
+            title: l10n.themeTitle,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<ThemeMode>(
+                    key: const Key('theme-mode'),
+                    showSelectedIcon: false,
+                    segments: [
+                      for (final m in [
+                        ThemeMode.system,
+                        ThemeMode.light,
+                        ThemeMode.dark,
+                      ])
+                        ButtonSegment(
+                          value: m,
+                          label: Text(
+                            l10n.themeMode(m.name),
+                            maxLines: 1,
+                            softWrap: false,
+                            overflow: TextOverflow.fade,
+                          ),
+                        ),
+                    ],
+                    selected: {ref.watch(themeModeProvider)},
+                    onSelectionChanged: (s) =>
+                        ref.read(themeModeProvider.notifier).set(s.single),
+                  ),
+                ),
+              ),
+            ],
           ),
-          ListTile(
-            key: const Key('local-ai-settings'),
-            leading: const Icon(Icons.auto_awesome_outlined),
-            title: Text(l10n.localAiTitle),
-            subtitle: Text(
-              [
-                    LocalModels.background,
-                    LocalModels.category,
-                  ].any((m) => ref.watch(localModelProvider(m)) is ModelReady)
-                  ? l10n.localAiSummaryOn
-                  : l10n.localAiSummaryOff,
-            ),
-            onTap: () => context.push(AppRoutes.localAiSettings),
+          _Group(
+            title: l10n.settingsPreferences,
+            children: [
+              if (ref.watch(reminderBackendProvider) != null)
+                ListTile(
+                  key: const Key('reminder-settings'),
+                  leading: const Icon(Icons.notifications_outlined),
+                  title: Text(l10n.remindersTitle),
+                  subtitle: Text(switch (ref
+                      .watch(reminderStateProvider)
+                      .value) {
+                    final s? => reminderSummary(l10n, s.settings),
+                    null => '',
+                  }),
+                  onTap: () => context.push(AppRoutes.reminderSettings),
+                ),
+              ListTile(
+                key: const Key('weather-location'),
+                leading: const Icon(Icons.place_outlined),
+                title: Text(l10n.weatherLocationTitle),
+                subtitle: Text(
+                  ref.watch(weatherLocationProvider).value?.name ?? '',
+                ),
+                onTap: () => context.push(AppRoutes.weatherLocation),
+              ),
+              ListTile(
+                key: const Key('comfort-settings'),
+                leading: const Icon(Icons.thermostat_outlined),
+                title: Text(l10n.comfortTitle),
+                subtitle: Text(switch (ref
+                    .watch(comfortThresholdsProvider)
+                    .value) {
+                  final t? => l10n.comfortSummary(
+                    t.hotFromC.round(),
+                    t.coldBelowC.round(),
+                    t.windyFromKmh.round(),
+                  ),
+                  null => '',
+                }),
+                onTap: () => context.push(AppRoutes.comfortSettings),
+              ),
+              ListTile(
+                key: const Key('care-settings'),
+                leading: const Icon(Icons.local_laundry_service_outlined),
+                title: Text(l10n.careSettingsTitle),
+                onTap: () => context.push(AppRoutes.careSettings),
+              ),
+              ListTile(
+                key: const Key('local-ai-settings'),
+                leading: const Icon(Icons.auto_awesome_outlined),
+                title: Text(l10n.localAiTitle),
+                subtitle: Text(
+                  [LocalModels.background, LocalModels.category].any(
+                        (m) => ref.watch(localModelProvider(m)) is ModelReady,
+                      )
+                      ? l10n.localAiSummaryOn
+                      : l10n.localAiSummaryOff,
+                ),
+                onTap: () => context.push(AppRoutes.localAiSettings),
+              ),
+            ],
           ),
-          const ExportBackupTile(),
-          const RestoreBackupTile(),
+          _Group(
+            title: l10n.settingsBackup,
+            children: const [ExportBackupTile(), RestoreBackupTile()],
+          ),
         ],
       ),
     );
@@ -238,5 +245,41 @@ class SettingsScreen extends ConsumerWidget {
       if (confirmed != true) return;
     }
     await signOut(ref);
+  }
+}
+
+/// Um grupo de Definições: título por cima e as linhas num cartão.
+class _Group extends StatelessWidget {
+  const _Group({required this.title, required this.children});
+
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
+            child: Text(title, style: theme.textTheme.titleSmall),
+          ),
+          Card(
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                for (final (i, child) in children.indexed) ...[
+                  if (i > 0) const Divider(height: 1, indent: 56),
+                  child,
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

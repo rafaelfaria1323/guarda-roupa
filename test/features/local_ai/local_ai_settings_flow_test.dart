@@ -29,6 +29,8 @@ void main() {
       find.text('Desligada: as sugestões usam o método simples'),
       findsOneWidget,
     );
+    await tester.ensureVisible(tile);
+    await tester.pumpAndSettle();
     await tester.tap(tile);
     await settle(tester);
     return store;

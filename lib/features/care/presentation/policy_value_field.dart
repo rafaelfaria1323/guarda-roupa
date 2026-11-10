@@ -74,13 +74,21 @@ class PolicyValueField extends StatelessWidget {
     return DropdownButtonFormField<int?>(
       initialValue: current,
       isExpanded: true,
+      // Cabe dentro do cartão da categoria sem cortar o texto.
+      style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: 15),
       decoration: InputDecoration(labelText: label),
       items: [
         DropdownMenuItem<int?>(
-          child: Text(l10n.laundryDefault(describe(defaultValue))),
+          child: Text(
+            l10n.laundryDefault(describe(defaultValue)),
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
         for (final n in all)
-          DropdownMenuItem<int?>(value: n, child: Text(describe(n))),
+          DropdownMenuItem<int?>(
+            value: n,
+            child: Text(describe(n), overflow: TextOverflow.ellipsis),
+          ),
       ],
       onChanged: onChanged,
     );

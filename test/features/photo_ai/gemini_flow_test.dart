@@ -217,6 +217,8 @@ void main() {
           )
           .first,
     );
+    await tester.ensureVisible(tile);
+    await tester.pumpAndSettle();
     await tester.tap(tile);
     await settle(tester);
     final toggle = find.byKey(const Key('gemini-photos'));
