@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/platform/status_bar.dart';
 import '../l10n/app_localizations.dart';
 import 'router.dart';
 import 'theme.dart';
@@ -18,6 +19,10 @@ class GuardaRoupaApp extends ConsumerWidget {
       darkTheme: buildAppTheme(Brightness.dark),
       themeMode: ref.watch(themeModeProvider),
       routerConfig: ref.watch(routerProvider),
+      builder: (context, child) => StatusBarColor(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        child: child!,
+      ),
       locale: const Locale('pt'),
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
