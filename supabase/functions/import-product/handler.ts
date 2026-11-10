@@ -2,7 +2,7 @@ import { isBotChallenge } from './challenge.ts';
 import { fetchImage, fetchPage } from './fetch_limited.ts';
 import { parseProduct, type ProductPreview, type Source } from './parse.ts';
 import { readSharedPage, type SharedPage, sharedPageHtml } from './shared_page.ts';
-import { inspirationSite, readInspiration } from './inspiration_sites.ts';
+import { inspirationSite, readInspiration, readSharedImage } from './inspiration_sites.ts';
 import { siteName } from './stores.ts';
 import { checkPublic, type Resolver } from './url_guard.ts';
 
@@ -281,12 +281,18 @@ async function toInbox(req: Request, key: string, deps: Deps): Promise<Response>
   const site = inspirationSite(check.url.hostname);
   if (site != null) {
     const found = readInspiration(page, check.url, site);
+    // A imagem do Pin, se o Safari do utilizador a leu na página.
+    const image = readSharedImage(fields.image);
     const preview = {
       result: 'ok',
       kind: 'inspiration',
       site: site.name,
       url: found.url,
-      inspiration: { title: found.title, description: found.description },
+      inspiration: {
+        title: found.title,
+        description: found.description,
+        ...(image == null ? {} : { image }),
+      },
       via: 'shared',
     };
     return await submit(

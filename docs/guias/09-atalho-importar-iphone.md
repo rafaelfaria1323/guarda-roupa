@@ -34,7 +34,29 @@ A chave só serve para pôr peças na tua caixa. Se o iPhone se perder, toca em 
      .filter(([k]) => /^(og:|twitter:|product:|description$)/i.test(k))
      .map(([k, v]) => [k.slice(0, 100), v.slice(0, 2000)])
      .slice(0, 80);
-   completion(JSON.stringify({ fio: 1, url: location.href, title: document.title, ld, meta }));
+   // Num Pin, junta a imagem que a página já mostra (reduzida).
+   const load = src => new Promise((ok, no) => {
+     const i = new Image();
+     i.crossOrigin = 'anonymous';
+     i.onload = () => ok(i);
+     i.onerror = no;
+     i.src = src;
+   });
+   const pinImage = async () => {
+     if (!/(^|\.)pinterest\.[a-z.]+$/.test(location.hostname)) return undefined;
+     const src = (meta.find(([k]) => k.toLowerCase() === 'og:image') || [])[1];
+     if (!src || !src.startsWith('https://i.pinimg.com/')) return undefined;
+     const i = await load(src).catch(async () =>
+       load(URL.createObjectURL(await (await fetch(src)).blob())));
+     const k = Math.min(1, 1280 / Math.max(i.naturalWidth, i.naturalHeight));
+     const c = document.createElement('canvas');
+     c.width = Math.round(i.naturalWidth * k);
+     c.height = Math.round(i.naturalHeight * k);
+     c.getContext('2d').drawImage(i, 0, 0, c.width, c.height);
+     return c.toDataURL('image/jpeg', 0.8).split(',')[1];
+   };
+   pinImage().catch(() => undefined).then(image =>
+     completion(JSON.stringify({ fio: 1, url: location.href, title: document.title, ld, meta, image })));
    ```
 
 5. Adiciona **Obter conteúdo do URL** (*Get Contents of URL*):
@@ -59,14 +81,22 @@ Para ficar com cara de app na folha de partilha: no topo do atalho, toca no nome
 
 ## Pins do Pinterest e publicações do Instagram
 
-O mesmo atalho serve para inspirações, sem mudar nada:
+O mesmo atalho serve para inspirações:
 
 1. No Safari, abre o Pin (ou a publicação). Na app do Pinterest: ⋯ → **Copiar link** e abre-o no Safari.
 2. **Partilhar → Importar para o fio**. A notificação diz "Inspiração enviada para o fio".
-3. No fio, em **Perfil** (inspirações), aparece um cartão "Do atalho · Pinterest":
+3. No fio, em **Perfil** (inspirações), aparece um cartão "Do atalho · Pinterest", já com a imagem do Pin:
    - **Só o link:** guarda o link, o título e a descrição;
-   - **Com imagem:** o fio não vai buscar a imagem ao Pinterest. Antes, guarda-a no iPhone (no Pinterest: ⋯ → **Transferir imagem**) e escolhe-a na galeria. A cópia fica privada, só na tua conta;
+   - **Com imagem:** abre a inspiração já com a imagem. A cópia fica privada, só na tua conta;
    - **×:** descarta.
+
+### A imagem do Pin (2026-11-10)
+
+O script do passo 4 passou a trazer a imagem dos Pins. **Se criaste o atalho antes de 2026-11-10**, abre-o na app Atalhos, apaga o texto da ação "Executar JavaScript na página web" e cola o script de cima. O resto do atalho não muda.
+
+Como funciona: é o teu Safari, na página do Pin que abriste, que lê a imagem que a página já mostra (o Pinterest deixa as páginas dele lerem as suas imagens), a reduz (até 1280 pontos) e a manda junto. O fio continua sem pedir nada ao Pinterest. Só para o Pinterest: no Instagram vem só o link.
+
+Se o cartão aparecer sem imagem (atalho antigo, ou o Pinterest não deixou), "Com imagem" pede-a como antes: guarda-a no iPhone (no Pinterest: ⋯ → **Transferir imagem**) e escolhe-a na galeria.
 
 ## Se não funcionar
 
@@ -82,4 +112,4 @@ O mesmo atalho serve para inspirações, sem mudar nada:
 | O fio diz "O que está copiado não veio do atalho" | Correr o atalho outra vez na página da peça. Outra cópia pelo meio apaga a do atalho |
 | O fio diz "A página não tem os dados do produto" | A loja mudou a página; mandar o link para afinar |
 
-O que o atalho manda só tem dados da página do produto: o link, o título, os dados estruturados e as meta tags. Não tem cookies nem nada da tua conta na loja. O fio guarda a pré-visualização na caixa até a usares ou descartares (no máximo 7 dias); da chave só guarda uma impressão digital (hash).
+O que o atalho manda só tem dados da página do produto: o link, o título, os dados estruturados e as meta tags (e, num Pin, a imagem). Não tem cookies nem nada da tua conta na loja. O fio guarda a pré-visualização na caixa até a usares ou descartares (no máximo 7 dias); da chave só guarda uma impressão digital (hash).

@@ -703,7 +703,7 @@
   "inspirationInboxWithImage": "Com imagem",
   "inspirationInboxDiscard": "Descartar",
   "inspirationInboxImageTitle": "Guardar uma cópia da imagem?",
-  "inspirationInboxImageBody": "O fio não vai buscar imagens ao {site}. Guarda-a primeiro no iPhone (no {site}: ⋯ → Transferir imagem) e escolhe-a a seguir na galeria.\n\nA cópia fica privada, só na tua conta, com o link de origem. A imagem é de quem a publicou: guarda-a só para uso pessoal.",
+  "inspirationInboxImageBody": "Este envio veio sem imagem (o atalho novo já a traz; vê o guia do atalho). O fio não vai buscar imagens ao {site}. Guarda-a primeiro no iPhone (no {site}: ⋯ → Transferir imagem) e escolhe-a a seguir na galeria.\n\nA cópia fica privada, só na tua conta, com o link de origem. A imagem é de quem a publicou: guarda-a só para uso pessoal.",
   "@inspirationInboxImageBody": {
     "placeholders": {
       "site": {
@@ -2018,5 +2018,6 @@
   "labelScanAutoHolding": "Segura firme…",
   "labelScanAutoOn": "Disparo automático ligado",
   "labelScanAutoOff": "Disparo automático desligado",
-  "labelScanAutoGaveUp": "Não consegui sozinho. Tira a foto com o botão redondo."
+  "labelScanAutoGaveUp": "Não consegui sozinho. Tira a foto com o botão redondo.",
+  "inspirationInboxAskImage": "Veio com a imagem do Pin. Guardas só o link, ou também a imagem? A cópia fica privada, só na tua conta."
 }
