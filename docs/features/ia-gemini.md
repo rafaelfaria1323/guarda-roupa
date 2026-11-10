@@ -16,9 +16,20 @@ Ligar em **Definições › IA local › Gemini (opcional) › Usar o Gemini nes
 |---|---|---|
 | **Várias peças de uma vez** | Categoria, nome curto (pt-PT, sem marca), até 3 cores com a proporção, padrão, textura, aquecimento e formalidade | Segue pela categoria do FashionCLIP e pelas cores da foto. Sem chave, sem quota ou fora da lista, avisa uma vez e as restantes fotos seguem sem o Gemini |
 | Peça: **Preencher pela foto (Gemini)** (com uma foto) | O mesmo, a partir da capa. Muda a categoria e as cores; o nome e os atributos só se estiverem vazios | Mensagem; o formulário fica como estava |
-| Peça: **Ler a etiqueta (Gemini)** | Lavagem (máquina 30/40/60, à mão, lavandaria), máquina de secar, composição e outros cuidados, em pt-PT | Mensagem; a foto da etiqueta nunca se guarda |
+| Peça: **Ler a etiqueta (Gemini)** | Abre o ecrã [Ler etiqueta](#ecrã-ler-etiqueta-2026-11-10). Lavagem (máquina 30/40/60, à mão, lavandaria), máquina de secar, composição e outros cuidados, em pt-PT, a partir de 1 a 3 fotos da mesma etiqueta | Mensagem no próprio ecrã, a dizer o que fazer; as fotos da etiqueta nunca se guardam |
 
 A foto ao espelho (ver o que se vestiu) ficou de fora por decisão do utilizador (2026-11-06).
+
+## Ecrã "Ler etiqueta" (2026-11-10)
+
+Pedido do utilizador: não se percebia como usar, e as etiquetas das Levi's 501 davam sempre "não se conseguiu ler", mesmo com o Gemini ligado. Causas prováveis: a foto era do rótulo de couro ou da etiqueta do tamanho (não da etiqueta de cuidados, que está cosida por dentro e dobrada em várias páginas), só cabia uma foto e o modelo mais leve falhava na letra miúda.
+
+- **Ecrã próprio, escuro como uma câmara:** os 3 passos em cima (onde está a etiqueta de cuidados e que não é o rótulo de couro nem a do tamanho; desdobrar e boa luz; aproximar e tirar uma foto de cada lado ou página), a câmara ao vivo no meio com uma moldura "Põe a etiqueta aqui", e em baixo **Da galeria**, o botão redondo para tirar a foto e **Ler N fotos**.
+- **Até 3 fotos** da mesma etiqueta, vão juntas num só pedido (gasta 1 da quota da app). Cada miniatura tem um "x" para a tirar.
+- **O Gemini diz o que viu** (`found`): a etiqueta de cuidados, só o rótulo da marca ou do tamanho, ou nada. Nos dois últimos, o ecrã explica o que procurar e limpa as fotos; se viu a etiqueta mas não a leu, pede para chegar mais perto ou tirar mais uma foto. Só fecha quando há algo lido, e o formulário mostra-o para confirmar (com "Desfazer").
+- **Modelo mais forte para etiquetas:** `gemini-flash-latest` (secret `GEMINI_LABEL_MODEL` para trocar). Se esse falhar por quota ou indisponível, a função tenta o modelo de sempre. As fotos das peças continuam no modelo leve.
+- **Sem câmara ao vivo** (navegador sem permissão, sem câmara): o ecrã avisa e o botão redondo abre a câmara do sistema; a galeria funciona sempre.
+- Câmara pelo pacote `camera` (no navegador, `getUserMedia`, câmara de trás, a maior resolução que der). Código: `lib/features/photo_ai/presentation/label_scan_screen.dart` e `lib/features/photo_ai/application/label_camera.dart` (troca-se nos testes).
 
 ## Pedir ao stylist (2026-11-06)
 
@@ -48,13 +59,13 @@ No Resumo do armário, o Gemini sugere peças a comprar com marcas e uma pesquis
 
 ## Como funciona
 
-- **App:** `lib/features/photo_ai/`. `SupabasePhotoReader` manda a foto principal (JPEG ≤ 1600 px) em base64 para a Edge Function `describe-photo`, com a sessão. A opção guarda-se em `local_settings` (`gemini_photos`).
+- **App:** `lib/features/photo_ai/`. `SupabasePhotoReader` manda a foto principal (JPEG ≤ 1600 px) em base64 para a Edge Function `describe-photo`, com a sessão; nas etiquetas, até 3 fotos em `images`. A opção guarda-se em `local_settings` (`gemini_photos`).
 - **Função `describe-photo`** (`supabase/functions/describe-photo/`):
-  1. Valida o pedido (tipo, base64, ≤ 1,5 MB) antes de gastar quota.
+  1. Valida o pedido (tipo, base64, ≤ 1,5 MB por foto; 1 foto nas peças, 1 a 3 nas etiquetas) antes de gastar quota.
   2. Pede à base a quota (`claim_photo_ai_quota`). A base confirma a sessão e a allowlist.
-  3. Chama o Gemini com a resposta presa a um esquema JSON e `temperature: 0`.
+  3. Chama o Gemini com a resposta presa a um esquema JSON e `temperature: 0`. Nas etiquetas usa o modelo mais forte e, se falhar por quota ou indisponível, o de sempre.
   4. Devolve só valores que a app conhece: categorias, cores de referência, padrões… O resto vem `null`.
-- **Chave:** secret `GEMINI_API_KEY` no GitHub. O workflow "Supabase" passa-a aos secrets da função; sem ele, a função responde 503 e a app usa o que tem. O modelo é `gemini-flash-lite-latest` (o alias segue a versão atual) e muda-se com o secret da função `GEMINI_MODEL`, sem mexer no código.
+- **Chave:** secret `GEMINI_API_KEY` no GitHub. O workflow "Supabase" passa-a aos secrets da função; sem ele, a função responde 503 e a app usa o que tem. O modelo é `gemini-flash-lite-latest` (o alias segue a versão atual) e muda-se com o secret da função `GEMINI_MODEL`, sem mexer no código. As etiquetas usam `gemini-flash-latest` (secret `GEMINI_LABEL_MODEL`).
 - Os registos da função só têm o estado HTTP, nunca a foto nem a chave.
 
 Dados em [modelo de dados](../modelo-de-dados.md#leitura-de-fotos-com-o-gemini-2026-11-06).

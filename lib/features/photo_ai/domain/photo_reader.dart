@@ -12,8 +12,36 @@ abstract interface class PhotoReader {
   /// O que a foto de uma peça mostra.
   Future<Result<GarmentReading, PhotoReadFailure>> readGarment(Uint8List jpeg);
 
-  /// O que diz a etiqueta de cuidados.
-  Future<Result<LabelReading, PhotoReadFailure>> readLabel(Uint8List jpeg);
+  /// O que diz a etiqueta de cuidados, em 1 a [maxLabelPhotos] fotos da
+  /// mesma etiqueta (frente, verso, páginas da etiqueta dobrada).
+  Future<Result<LabelReading, PhotoReadFailure>> readLabel(
+    List<Uint8List> jpegs,
+  );
+}
+
+/// Fotos por leitura de etiqueta (o servidor aceita até 3).
+const maxLabelPhotos = 3;
+
+/// O que o Gemini viu nas fotos da etiqueta.
+enum LabelFound {
+  /// A etiqueta de cuidados (símbolos ou composição).
+  careLabel('care_label'),
+
+  /// Só o rótulo da marca (por exemplo o de couro) ou a etiqueta do tamanho.
+  otherLabel('brand_or_size_label'),
+
+  /// Nenhuma etiqueta.
+  notLabel('not_label');
+
+  const LabelFound(this.id);
+  final String id;
+
+  static LabelFound? fromId(String? id) {
+    for (final f in values) {
+      if (f.id == id) return f;
+    }
+    return null;
+  }
 }
 
 enum PhotoReadFailure {
@@ -95,15 +123,24 @@ final class GarmentReading {
 }
 
 final class LabelReading {
-  const LabelReading({this.wash, this.tumbleDry, this.material, this.care});
+  const LabelReading({
+    this.found,
+    this.wash,
+    this.tumbleDry,
+    this.material,
+    this.care,
+  });
 
   factory LabelReading.fromJson(Map<String, Object?> json) => LabelReading(
+    found: LabelFound.fromId(_string(json['found'])),
     wash: WashCare.fromId(_string(json['wash'])),
     tumbleDry: json['tumble_dry'] is bool ? json['tumble_dry']! as bool : null,
     material: _text(json['material'], GarmentAttributes.maxMaterialLength),
     care: _text(json['care'], GarmentAttributes.maxCareLength),
   );
 
+  /// `null` em respostas antigas, sem este campo.
+  final LabelFound? found;
   final WashCare? wash;
   final bool? tumbleDry;
   final String? material;

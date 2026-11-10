@@ -8,6 +8,7 @@ environment:
 
 dependencies:
   archive: ^4.0.7
+  camera: ^0.12.2
   crypto: ^3.0.8
   file_saver: ^0.7.0
   file_selector: ^1.1.0

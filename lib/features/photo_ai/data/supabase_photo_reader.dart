@@ -27,25 +27,32 @@ final class SupabasePhotoReader implements PhotoReader {
 
   static const _timeout = Duration(seconds: 40);
 
+  /// Etiquetas: um modelo mais lento e, se falhar, outro (ver o servidor).
+  static const _labelTimeout = Duration(seconds: 90);
+
   @override
   Future<Result<GarmentReading, PhotoReadFailure>> readGarment(
     Uint8List jpeg,
-  ) async => switch (await _post('garment', jpeg)) {
-    Ok(:final value) => Ok(GarmentReading.fromJson(value)),
-    Err(:final failure) => Err(failure),
-  };
+  ) async =>
+      switch (await _post('garment', {'image': base64Encode(jpeg)}, _timeout)) {
+        Ok(:final value) => Ok(GarmentReading.fromJson(value)),
+        Err(:final failure) => Err(failure),
+      };
 
   @override
   Future<Result<LabelReading, PhotoReadFailure>> readLabel(
-    Uint8List jpeg,
-  ) async => switch (await _post('label', jpeg)) {
+    List<Uint8List> jpegs,
+  ) async => switch (await _post('label', {
+    'images': [for (final j in jpegs.take(maxLabelPhotos)) base64Encode(j)],
+  }, _labelTimeout)) {
     Ok(:final value) => Ok(LabelReading.fromJson(value)),
     Err(:final failure) => Err(failure),
   };
 
   Future<Result<Map<String, Object?>, PhotoReadFailure>> _post(
     String kind,
-    Uint8List jpeg,
+    Map<String, Object> photos,
+    Duration timeout,
   ) async {
     final token = accessToken();
     if (token == null) return const Err(PhotoReadFailure.notAllowed);
@@ -58,13 +65,9 @@ final class SupabasePhotoReader implements PhotoReader {
               'apikey': apiKey,
               'content-type': 'application/json',
             },
-            body: jsonEncode({
-              'kind': kind,
-              'image': base64Encode(jpeg),
-              'mime': 'image/jpeg',
-            }),
+            body: jsonEncode({'kind': kind, ...photos, 'mime': 'image/jpeg'}),
           )
-          .timeout(_timeout);
+          .timeout(timeout);
       final Object? json;
       try {
         json = jsonDecode(utf8.decode(response.bodyBytes));

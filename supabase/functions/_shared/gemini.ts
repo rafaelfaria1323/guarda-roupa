@@ -11,7 +11,12 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
 const envKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 const geminiKey = Deno.env.get('GEMINI_API_KEY') ?? '';
 // O alias "-latest" segue o modelo atual da família, sem mudar o código.
-const model = Deno.env.get('GEMINI_MODEL') || 'gemini-flash-lite-latest';
+const defaultModel = Deno.env.get('GEMINI_MODEL') || 'gemini-flash-lite-latest';
+/**
+ * Etiquetas: letra miúda e símbolos pedem um modelo mais forte. Se este
+ * falhar (quota ou indisponível), `describe-photo` volta ao de cima.
+ */
+export const labelModel = Deno.env.get('GEMINI_LABEL_MODEL') || 'gemini-flash-latest';
 
 export const geminiConfigured = geminiKey !== '';
 
@@ -41,7 +46,9 @@ export async function generate(
   parts: Part[],
   schema: unknown,
   temperature = 0,
+  options: { model?: string; timeoutMs?: number } = {},
 ): Promise<Generated> {
+  const model = options.model ?? defaultModel;
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
     {
@@ -55,12 +62,12 @@ export async function generate(
           temperature,
         },
       }),
-      signal: AbortSignal.timeout(30_000),
+      signal: AbortSignal.timeout(options.timeoutMs ?? 30_000),
     },
   );
   if (!res.ok) {
     // Sem a chave nem o conteúdo no registo: só o estado.
-    console.error(`gemini ${res.status}`);
+    console.error(`gemini ${model} ${res.status}`);
     await res.body?.cancel();
     return { status: res.status };
   }

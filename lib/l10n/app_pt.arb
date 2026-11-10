@@ -1989,5 +1989,27 @@
   "profileStatInspirations": "Inspirações",
   "profileStatRotation": "Usadas em 30 dias",
   "profileShortcuts": "Atalhos",
-  "profileAllSettings": "Todas as definições"
+  "profileAllSettings": "Todas as definições",
+  "labelScanTitle": "Ler etiqueta",
+  "labelScanStep1": "Procura a etiqueta de cuidados: a de tecido, cosida por dentro (nas calças, numa costura de lado ou na cintura). Não é o rótulo de couro nem a do tamanho.",
+  "labelScanStep2": "Desdobra-a e estica-a, com boa luz.",
+  "labelScanStep3": "Aproxima até as letras ficarem nítidas. Se tiver mais páginas ou texto atrás, tira uma foto de cada (até 3).",
+  "labelScanFrame": "Põe a etiqueta aqui",
+  "labelScanNoCamera": "Não deu para abrir a câmara aqui. Usa o botão redondo para tirar a foto, ou escolhe uma da galeria.",
+  "labelScanCapture": "Tirar foto",
+  "labelScanGallery": "Da galeria",
+  "labelScanRemove": "Tirar esta foto",
+  "labelScanRead": "{count, plural, =0{Ler etiqueta} =1{Ler 1 foto} other{Ler {count} fotos}}",
+  "@labelScanRead": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "labelScanReading": "A ler a etiqueta…",
+  "labelScanFull": "Já tens 3 fotos. Lê-as, ou tira uma para trocar.",
+  "labelScanOther": "Isso é o rótulo da marca ou a etiqueta do tamanho. Procura a etiqueta de tecido com os símbolos de lavar, cosida por dentro.",
+  "labelScanNotLabel": "Não se viu nenhuma etiqueta. Aproxima a câmara da etiqueta de cuidados.",
+  "labelScanUnreadable": "Viu-se a etiqueta, mas não deu para ler. Desdobra-a, chega mais perto e com mais luz, ou tira mais uma foto."
 }
