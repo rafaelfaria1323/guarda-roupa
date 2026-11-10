@@ -140,21 +140,35 @@ class _WearPickerScreenState extends ConsumerState<WearPickerScreen> {
             if (byCategory != 0) return byCategory;
             return (a.name ?? '').compareTo(b.name ?? '');
           });
+        final theme = Theme.of(context);
+        final rows = [
+          for (final units in GarmentTwins.group(sorted))
+            if (units.length == 1)
+              _pickTile(l10n, units.single, rotation)
+            else
+              _twinsTile(l10n, units, lastWorn),
+        ];
         return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text(l10n.wearPickHint),
+              padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
+              child: Text(
+                l10n.wearPickHint,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.only(left: 4),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
                       l10n.wearSelected(_selected.length),
                       key: const Key('wear-selected'),
-                      style: Theme.of(context).textTheme.labelLarge,
+                      style: theme.textTheme.titleSmall,
                     ),
                   ),
                   if (outfits.isNotEmpty)
@@ -167,11 +181,18 @@ class _WearPickerScreenState extends ConsumerState<WearPickerScreen> {
                 ],
               ),
             ),
-            for (final units in GarmentTwins.group(sorted))
-              if (units.length == 1)
-                _pickTile(l10n, units.single, rotation)
-              else
-                _twinsTile(l10n, units, lastWorn),
+            const SizedBox(height: 8),
+            Card(
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                children: [
+                  for (final (i, row) in rows.indexed) ...[
+                    if (i > 0) const Divider(height: 1, indent: 72),
+                    row,
+                  ],
+                ],
+              ),
+            ),
           ],
         );
       },
@@ -246,12 +267,15 @@ class _WearPickerScreenState extends ConsumerState<WearPickerScreen> {
     );
   }
 
-  static Widget _thumb(Garment g) => g.photos.isEmpty
-      ? const SizedBox.square(
-          dimension: 40,
-          child: Icon(Icons.checkroom_outlined),
-        )
-      : GarmentPhotoView(photo: g.photos.first, size: 40);
+  static Widget _thumb(Garment g) => ClipRRect(
+    borderRadius: const BorderRadius.all(Radius.circular(10)),
+    child: g.photos.isEmpty
+        ? const SizedBox.square(
+            dimension: 44,
+            child: Icon(Icons.checkroom_outlined),
+          )
+        : GarmentPhotoView(photo: g.photos.first, size: 44),
+  );
 
   /// Marca as peças de um conjunto guardado (substitui a seleção). Peças
   /// que já não existem ficam de fora, com aviso; o utilizador ajusta antes

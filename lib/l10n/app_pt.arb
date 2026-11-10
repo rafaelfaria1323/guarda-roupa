@@ -2012,5 +2012,6 @@
   "labelScanOther": "Isso é o rótulo da marca ou a etiqueta do tamanho. Procura a etiqueta de tecido com os símbolos de lavar, cosida por dentro.",
   "labelScanNotLabel": "Não se viu nenhuma etiqueta. Aproxima a câmara da etiqueta de cuidados.",
   "labelScanUnreadable": "Viu-se a etiqueta, mas não deu para ler. Desdobra-a, chega mais perto e com mais luz, ou tira mais uma foto.",
-  "garmentAbout": "Sobre a peça"
+  "garmentAbout": "Sobre a peça",
+  "settingsPreferences": "Preferências"
 }
