@@ -55,4 +55,12 @@ final class FakePhotoStorage implements PhotoStorage {
 
   @override
   Future<void> remove(List<String> paths) async => paths.forEach(files.remove);
+
+  /// `true`: o ficheiro ainda não chegou ao Storage.
+  bool linksFail = false;
+
+  @override
+  Future<Uri> temporaryLink(String path) async => linksFail
+      ? throw StateError('404 $path')
+      : Uri.parse('https://storage.example/$path?token=t');
 }

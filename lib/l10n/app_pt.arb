@@ -2019,5 +2019,9 @@
   "labelScanAutoOn": "Disparo automático ligado",
   "labelScanAutoOff": "Disparo automático desligado",
   "labelScanAutoGaveUp": "Não consegui sozinho. Tira a foto com o botão redondo.",
-  "inspirationInboxAskImage": "Veio com a imagem do Pin. Guardas só o link, ou também a imagem? A cópia fica privada, só na tua conta."
+  "inspirationInboxAskImage": "Veio com a imagem do Pin. Guardas só o link, ou também a imagem? A cópia fica privada, só na tua conta.",
+  "lensSearch": "Procurar no Google Lens",
+  "lensSearchBody": "A imagem vai ser enviada à Google para a pesquisa. No Lens, toca na peça que queres encontrar para ver lojas com ela ou com parecidas.",
+  "lensSearchOpen": "Abrir o Google Lens",
+  "lensSearchUnavailable": "Esta imagem ainda não está guardada na nuvem. Tenta daqui a pouco, com rede."
 }

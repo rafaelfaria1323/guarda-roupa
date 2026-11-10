@@ -16,6 +16,7 @@ import '../domain/availability.dart';
 import '../domain/garment.dart';
 import '../domain/wardrobe_repository.dart';
 import 'garment_cutout.dart';
+import 'lens_search_button.dart';
 import 'wardrobe_screen.dart' show garmentStatus;
 
 /// A ficha da peça em modo de ver (visual fio v2): a peça, uma frase sobre
@@ -227,6 +228,10 @@ class _Body extends ConsumerWidget {
               icon: const Icon(Icons.done_all),
               label: Text(l10n.garmentWearToday),
             ),
+          if (garment.photos.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Center(child: LensSearchButton(photo: garment.photos.first)),
+          ],
         ],
       ),
     );

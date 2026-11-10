@@ -24,6 +24,7 @@ import '../../wardrobe/domain/photo_picker.dart';
 import '../../wardrobe/domain/reference_color.dart';
 import '../../wardrobe/presentation/colors_editor.dart';
 import '../../wardrobe/presentation/garment_photo_view.dart';
+import '../../wardrobe/presentation/lens_search_button.dart';
 import '../application/inspiration_providers.dart';
 import '../domain/inspiration.dart';
 import '../domain/inspiration_repository.dart';
@@ -462,6 +463,7 @@ class _InspirationEditorScreenState
                 ),
               ],
             ),
+          if (saved?.image case final image?) LensSearchButton(photo: image),
           if (preview != null)
             if (ref.watch(similarGarmentsFinderProvider) case final finder?)
               _similarSection(finder, saved?.image?.id ?? _pendingImage),
