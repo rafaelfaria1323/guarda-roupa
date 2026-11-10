@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import '../../../core/domain/result.dart';
+import '../../wardrobe/domain/category_from_text.dart';
 import '../../wardrobe/domain/garment.dart';
+import '../../wardrobe/domain/garment_category.dart';
 
 /// De onde veio um campo da pré-visualização.
 enum ImportSource {
@@ -380,6 +382,7 @@ final class ImportedGarment {
     this.brand,
     this.notes,
     this.material,
+    this.category,
     this.images = const [],
     this.failedImages = 0,
   });
@@ -407,6 +410,10 @@ final class ImportedGarment {
       brand: _cut(p.brand ?? p.storeName, GarmentRules.maxBrandLength),
       notes: _cutEnd(notes, GarmentRules.maxNotesLength),
       material: p.material,
+      category:
+          categoryFromText(p.name) ??
+          categoryFromTrail(p.category) ??
+          categoryFromText(Uri.tryParse(p.url)?.path),
       images: images,
       failedImages: failedImages,
     );
@@ -420,6 +427,10 @@ final class ImportedGarment {
   final String? brand;
   final String? notes;
   final String? material;
+
+  /// Pelo nome do produto, pela categoria da loja ou pelo link; uma
+  /// sugestão que o utilizador confirma no formulário.
+  final GarmentCategory? category;
   final List<Uint8List> images;
 
   /// Imagens escolhidas que não se conseguiram copiar.

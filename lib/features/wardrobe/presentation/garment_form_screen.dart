@@ -40,9 +40,12 @@ import 'labels.dart';
 
 /// Criar (`id == null`) ou editar uma peça.
 class GarmentFormScreen extends ConsumerStatefulWidget {
-  const GarmentFormScreen({this.id, super.key});
+  const GarmentFormScreen({this.id, this.startImport = false, super.key});
 
   final GarmentId? id;
+
+  /// Abre logo Importar de um link (vindo das peças do atalho à espera).
+  final bool startImport;
 
   @override
   ConsumerState<GarmentFormScreen> createState() => _GarmentFormScreenState();
@@ -78,6 +81,19 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
   Stream<Garment?>? _garment;
 
   bool get _isNew => widget.id == null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.startImport && widget.id == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (ref.read(productImporterProvider) case final importer?) {
+          unawaited(_import(importer));
+        }
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -272,7 +288,6 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
         builder: (_) => ImportLinkScreen(
           importer: importer,
           maxImages: PhotoRules.maxPerGarment - _pending.length,
-          scorer: ref.read(productPhotoScorerProvider),
         ),
       ),
     );
@@ -282,6 +297,10 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
       if (imported.brand case final v?) _brand.text = v;
       if (imported.notes case final v?) _notes.text = v;
       if (imported.material case final v?) _material.text = v;
+      if (_category == null && imported.category != null) {
+        _category = imported.category;
+        _categoryRevision++;
+      }
       _processing = imported.images.isNotEmpty;
     });
     var failed = imported.failedImages;

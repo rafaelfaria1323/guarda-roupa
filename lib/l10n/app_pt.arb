@@ -1023,7 +1023,7 @@
   "importColor": "Cor na loja",
   "importVariant": "Qual é a tua?",
   "importImages": "Imagens a copiar",
-  "importPickingPhoto": "A procurar a foto só da peça…",
+  "importChoosePhoto": "Toca na foto que mostra só a peça. Só as escolhidas são copiadas.",
   "importConfirmLater": "A categoria e as cores escolhes a seguir, no formulário. Nada é guardado até carregares em Guardar.",
   "importUse": "Usar na peça nova",
   "importManual": "Preencher à mão",
@@ -1327,7 +1327,7 @@
     }
   },
   "importInboxDiscard": "Descartar",
-  "wardrobeInbox": "{count, plural, =1{A pôr no Armário 1 peça do atalho…} other{A pôr no Armário {count} peças do atalho…}}",
+  "wardrobeInbox": "{count, plural, =1{1 peça do atalho à espera: escolhe a foto} other{{count} peças do atalho à espera: escolhe a foto}}",
   "@wardrobeInbox": {
     "placeholders": {
       "count": {
@@ -1362,14 +1362,6 @@
   "shortcutCopied": "Copiado.",
   "shortcutUnavailable": "Não foi possível falar com o fio. Confirma a sessão e tenta outra vez.",
   "importInboxRefresh": "Ver peças enviadas pelo atalho",
-  "wardrobeInboxAdded": "{count, plural, =1{1 peça do atalho no Armário. Confirma a categoria e as cores no cartão.} other{{count} peças do atalho no Armário. Confirma a categoria e as cores nos cartões.}}",
-  "@wardrobeInboxAdded": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "colorDetailTag": "detalhe",
   "@colorDetailTag": {
     "description": "Cor que ocupa pouco da peça (menos de 10 %), como uma estrela ou uma fivela."
