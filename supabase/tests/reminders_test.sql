@@ -67,23 +67,25 @@ select pg_temp.fails('fora da allowlist não guarda aparelho',
   $q$select public.save_push_subscription('https://push.example/c', repeat('p', 87), repeat('a', 22))$q$);
 commit;
 
+-- Datas no futuro: `set_day_summaries` apaga resumos com mais de 2 dias,
+-- e com datas fixas no passado o teste deixava de funcionar sozinho.
 -- Plano: 7 (texto escrito pela app, versão certa) e 8 de novembro.
 insert into public.plan_entries (id, owner_id, day, items, status, version)
 values
-  (:'E1', :'A', '2026-11-07',
+  (:'E1', :'A', '2099-11-07',
     jsonb_build_array(jsonb_build_object('garment_id', :'G1', 'role', 'main_top'),
       jsonb_build_object('garment_id', :'G2', 'role', 'bottom')), 'accepted', 2),
-  (:'E2', :'A', '2026-11-08',
+  (:'E2', :'A', '2099-11-08',
     jsonb_build_array(jsonb_build_object('garment_id', :'G1', 'role', 'main_top')),
     'accepted', 1);
 
 begin;
 select pg_temp.as_user(:'A', 'eu@example.com');
 select public.set_day_summaries(jsonb_build_array(
-  jsonb_build_object('day', '2026-11-07', 'plan_version', 2,
+  jsonb_build_object('day', '2099-11-07', 'plan_version', 2,
     'wear_body', 'Vestiste a t-shirt e as calças?',
     'eve_body', 'Amanhã: t-shirt + calças. Leva também: guarda-chuva.'),
-  jsonb_build_object('day', '2026-11-08', 'plan_version', 1,
+  jsonb_build_object('day', '2099-11-08', 'plan_version', 1,
     'wear_body', 'Velho', 'eve_body', 'Velho')));
 commit;
 -- O plano de dia 8 mudou depois do texto.
@@ -91,23 +93,23 @@ update public.plan_entries set version = 2 where id = :'E2';
 
 -- Antes da hora: nada.
 select pg_temp.check('antes das 20:00 nada sai',
-  (select count(*) = 0 from public.claim_due_reminders(:'tok', '2026-11-06 19:55+00')));
+  (select count(*) = 0 from public.claim_due_reminders(:'tok', '2099-11-06 19:55+00')));
 
 -- Lisboa em novembro = UTC. 20:05: véspera de dia 7, com o texto da app.
 create temp table r1 as
-  select * from public.claim_due_reminders(:'tok', '2026-11-06 20:05+00');
+  select * from public.claim_due_reminders(:'tok', '2099-11-06 20:05+00');
 select pg_temp.check('véspera com o texto da app',
-  (select count(*) = 1 and bool_and(kind = 'eve' and day = '2026-11-07'
+  (select count(*) = 1 and bool_and(kind = 'eve' and day = '2099-11-07'
       and body = 'Amanhã: t-shirt + calças. Leva também: guarda-chuva.'
       and url = '/planeador'
       and subscriptions -> 0 ->> 'endpoint' = 'https://push.example/a1')
    from r1));
 select pg_temp.check('nunca sai duas vezes',
-  (select count(*) = 0 from public.claim_due_reminders(:'tok', '2026-11-06 20:10+00')));
+  (select count(*) = 0 from public.claim_due_reminders(:'tok', '2099-11-06 20:10+00')));
 
 -- 21:35 de dia 6: sem plano e nada registado.
 create temp table r2 as
-  select * from public.claim_due_reminders(:'tok', '2026-11-06 21:35+00');
+  select * from public.claim_due_reminders(:'tok', '2099-11-06 21:35+00');
 select pg_temp.check('sem plano pergunta o que vestiste',
   (select count(*) = 1 and bool_and(kind = 'wear_check'
       and body = 'Ainda não registaste o que vestiste hoje.' and url = '/vesti')
@@ -115,14 +117,14 @@ select pg_temp.check('sem plano pergunta o que vestiste',
 
 -- Véspera de dia 8 (às 20:00 de dia 7): plano mudou, texto genérico.
 create temp table r4 as
-  select * from public.claim_due_reminders(:'tok', '2026-11-07 20:01+00');
+  select * from public.claim_due_reminders(:'tok', '2099-11-07 20:01+00');
 select pg_temp.check('texto desatualizado dá lugar ao genérico',
   (select count(*) = 1 and bool_and(body like 'Já tens roupa planeada%')
-   from r4 where kind = 'eve' and day = '2026-11-08'));
+   from r4 where kind = 'eve' and day = '2099-11-08'));
 
 -- Dia 7, 21:31: com plano e texto; abre o "Vesti hoje" com as peças.
 create temp table r3 as
-  select * from public.claim_due_reminders(:'tok', '2026-11-07 21:31+00');
+  select * from public.claim_due_reminders(:'tok', '2099-11-07 21:31+00');
 select pg_temp.check('"Vestiste isto?" com as peças e a entrada',
   (select count(*) = 1 and bool_and(body = 'Vestiste a t-shirt e as calças?'
       and url = '/vesti?pecas=' || :'G1' || ',' || :'G2' || '&plano=' || :'E1')
@@ -130,18 +132,18 @@ select pg_temp.check('"Vestiste isto?" com as peças e a entrada',
 
 -- Dia 8: já registado, não pergunta; dia 9 sem plano, sem véspera.
 insert into public.wear_events (id, owner_id, worn_on, garment_ids)
-values ('f0000000-0000-0000-0000-000000000001', :'A', '2026-11-08',
+values ('f0000000-0000-0000-0000-000000000001', :'A', '2099-11-08',
   jsonb_build_array(:'G1'));
 select pg_temp.check('já registado: não pergunta; sem plano: sem véspera',
-  (select count(*) = 0 from public.claim_due_reminders(:'tok', '2026-11-08 21:40+00'))
-  and (select count(*) = 0 from public.claim_due_reminders(:'tok', '2026-11-08 20:05+00')));
+  (select count(*) = 0 from public.claim_due_reminders(:'tok', '2099-11-08 21:40+00'))
+  and (select count(*) = 0 from public.claim_due_reminders(:'tok', '2099-11-08 20:05+00')));
 
 -- Passadas 2 horas já não sai (o cron esteve parado).
 select pg_temp.check('fora da janela não sai',
-  (select count(*) = 0 from public.claim_due_reminders(:'tok', '2026-11-09 23:45+00')));
+  (select count(*) = 0 from public.claim_due_reminders(:'tok', '2099-11-09 23:45+00')));
 select pg_temp.check('janela não passa da meia-noite',
-  public.reminder_due('2026-11-09 23:10', '23:00')
-  and not public.reminder_due('2026-11-10 00:30', '23:00'));
+  public.reminder_due('2099-11-09 23:10', '23:00')
+  and not public.reminder_due('2099-11-10 00:30', '23:00'));
 
 -- Aparelho desaparecido.
 select public.drop_push_subscriptions(:'tok', array['https://push.example/a1']);
