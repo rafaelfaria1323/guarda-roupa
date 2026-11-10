@@ -135,6 +135,18 @@ Guardar no formulário volta à ficha; duplicar abre o formulário da cópia; ar
 2. Os segmentos **Inspirações** e **Preferências**, como antes; cada lista vive num cartão com título em maiúsculas pequenas. Os Pins à espera do atalho aparecem por cima das inspirações.
 3. Cartão **Atalhos**: localização da meteorologia (com o nome do sítio), conforto e tempo, cuidados e todas as definições.
 
+## Formulário da peça (v3, aplicado)
+
+Não há desenho do Stitch para este ecrã (Nova peça e Editar). Segue a mesma linguagem (2026-11-10): cartões brancos com contorno, um por assunto.
+
+1. **Estado** (só a editar): disponibilidade em pílulas, aplicada logo.
+2. **Fotografias**: as fotos com "×", "Tirar fotografia" e "Escolher da galeria" lado a lado em blocos (ícone por cima do texto), "Importar de um link" e, com o Gemini, "Preencher pela foto".
+3. **Sobre a peça**: categoria (e as sugeridas pela foto), nome, quantas iguais, marca e notas.
+4. **Cores**: a paleta e as proporções.
+5. **Detalhes**: "Ler a etiqueta" (com o Gemini) e os atributos, que abrem sem linhas por dentro do cartão.
+
+"Guardar" continua no topo, sempre visível.
+
 ## Navegação
 
 Cinco separadores, como no design v3 (2026-11-06):

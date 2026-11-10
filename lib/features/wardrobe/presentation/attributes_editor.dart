@@ -37,6 +37,9 @@ class AttributesEditor extends StatelessWidget {
       // Os campos de texto têm de existir fechada, para validar.
       maintainState: true,
       tilePadding: EdgeInsets.zero,
+      // Dentro de um cartão: sem as linhas de cima e de baixo.
+      shape: const Border(),
+      collapsedShape: const Border(),
       childrenPadding: const EdgeInsets.only(bottom: 8),
       expandedCrossAxisAlignment: CrossAxisAlignment.start,
       children: [

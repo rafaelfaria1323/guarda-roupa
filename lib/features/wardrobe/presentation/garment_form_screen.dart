@@ -636,25 +636,28 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
         else if (count >= PhotoRules.maxPerGarment)
           Text(l10n.photoLimit(PhotoRules.maxPerGarment))
         else
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
+          Row(
             children: [
-              OutlinedButton.icon(
-                key: const Key('photo-camera'),
-                onPressed: () => _addPhoto(repo, garment, PhotoSource.camera),
-                icon: const Icon(Icons.photo_camera_outlined),
-                label: Text(l10n.photoTake),
+              Expanded(
+                child: _PhotoAction(
+                  key: const Key('photo-camera'),
+                  icon: Icons.photo_camera_outlined,
+                  label: l10n.photoTake,
+                  onTap: () => _addPhoto(repo, garment, PhotoSource.camera),
+                ),
               ),
-              OutlinedButton.icon(
-                key: const Key('photo-gallery'),
-                onPressed: () => _addPhoto(repo, garment, PhotoSource.gallery),
-                icon: const Icon(Icons.photo_library_outlined),
-                label: Text(l10n.photoPick),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _PhotoAction(
+                  key: const Key('photo-gallery'),
+                  icon: Icons.photo_library_outlined,
+                  label: l10n.photoPick,
+                  onTap: () => _addPhoto(repo, garment, PhotoSource.gallery),
+                ),
               ),
             ],
           ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 12),
       ],
     );
   }
@@ -765,182 +768,215 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
                 ),
               ),
             if (garment != null) ...[
-              Text(
-                l10n.garmentAvailability,
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              const SizedBox(height: 8),
-              // Aplicada de imediato: é uma transição explícita, não um campo
-              // do formulário.
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
+              _FormSection(
+                key: const Key('garment-section-state'),
                 children: [
-                  for (final value in Availability.values)
-                    ChoiceChip(
-                      avatar: Icon(availabilityIcon(value)),
-                      label: Text(l10n.availabilityLabel(value.id)),
-                      selected: garment.availability == value,
-                      onSelected: (_) =>
-                          _run(() => repo.setAvailability(garment.id, value)),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 24),
-            ],
-            if (garment == null)
-              if (ref.watch(productImporterProvider) case final importer?)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: OutlinedButton.icon(
-                      key: const Key('garment-import'),
-                      onPressed: _saving || _processing
-                          ? null
-                          : () => _import(importer),
-                      icon: const Icon(Icons.link),
-                      label: Text(l10n.importFromLink),
-                    ),
-                  ),
-                ),
-            _photoSection(repo, garment),
-            if (ref.watch(activePhotoReaderProvider) case final reader?
-                when garment?.photos.isNotEmpty ?? _pending.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: OutlinedButton.icon(
-                    key: const Key('garment-fill-from-photo'),
-                    onPressed: _processing || _saving
-                        ? null
-                        : () => _fillFromPhoto(garment, reader),
-                    icon: const Icon(Icons.auto_awesome_outlined),
-                    label: Text(l10n.garmentFillFromPhoto),
-                  ),
-                ),
-              ),
-            KeyedSubtree(
-              key: ValueKey(_categoryRevision),
-              child: DropdownButtonFormField<GarmentCategory>(
-                key: const Key('garment-category'),
-                initialValue: _category,
-                decoration: InputDecoration(
-                  labelText: l10n.garmentCategory,
-                  border: const OutlineInputBorder(),
-                ),
-                items: [
-                  for (final category in GarmentCategory.values)
-                    DropdownMenuItem(
-                      value: category,
-                      child: Text(l10n.categoryLabel(category.id)),
-                    ),
-                ],
-                validator: (value) =>
-                    value == null ? l10n.garmentCategoryRequired : null,
-                onChanged: (value) => setState(() {
-                  _category = value;
-                  _categorySuggestions = null;
-                }),
-              ),
-            ),
-            ..._categoryFromPhoto(repo, garment),
-            const SizedBox(height: 16),
-            TextFormField(
-              key: const Key('garment-name'),
-              controller: _name,
-              decoration: InputDecoration(
-                labelText: l10n.garmentName,
-                border: const OutlineInputBorder(),
-              ),
-              textCapitalization: TextCapitalization.sentences,
-              validator: _maxLength(GarmentRules.maxNameLength),
-            ),
-            if (garment == null) ...[
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(child: Text(l10n.garmentUnits)),
-                  IconButton(
-                    key: const Key('garment-units-less'),
-                    tooltip: l10n.garmentUnitsLess,
-                    onPressed: _units > 1
-                        ? () => setState(() => _units--)
-                        : null,
-                    icon: const Icon(Icons.remove_circle_outline),
-                  ),
                   Text(
-                    '$_units',
-                    key: const Key('garment-units'),
-                    style: Theme.of(context).textTheme.titleMedium,
+                    l10n.garmentAvailability,
+                    style: Theme.of(context).textTheme.titleSmall,
                   ),
-                  IconButton(
-                    key: const Key('garment-units-more'),
-                    tooltip: l10n.garmentUnitsMore,
-                    onPressed: _units < GarmentRules.maxUnits
-                        ? () => setState(() => _units++)
-                        : null,
-                    icon: const Icon(Icons.add_circle_outline),
+                  const SizedBox(height: 8),
+                  // Aplicada de imediato: é uma transição explícita, não um campo
+                  // do formulário.
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final value in Availability.values)
+                        ChoiceChip(
+                          avatar: Icon(availabilityIcon(value)),
+                          label: Text(l10n.availabilityLabel(value.id)),
+                          selected: garment.availability == value,
+                          onSelected: (_) => _run(
+                            () => repo.setAvailability(garment.id, value),
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),
-              if (_units > 1)
-                Text(
-                  l10n.garmentUnitsHint,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+              const SizedBox(height: 12),
             ],
-            const SizedBox(height: 16),
-            TextFormField(
-              key: const Key('garment-brand'),
-              controller: _brand,
-              decoration: InputDecoration(
-                labelText: l10n.garmentBrand,
-                border: const OutlineInputBorder(),
-              ),
-              validator: _maxLength(GarmentRules.maxBrandLength),
+            _FormSection(
+              key: const Key('garment-section-photos'),
+              children: [
+                if (garment == null)
+                  if (ref.watch(productImporterProvider) case final importer?)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: OutlinedButton.icon(
+                          key: const Key('garment-import'),
+                          onPressed: _saving || _processing
+                              ? null
+                              : () => _import(importer),
+                          icon: const Icon(Icons.link),
+                          label: Text(l10n.importFromLink),
+                        ),
+                      ),
+                    ),
+                _photoSection(repo, garment),
+                if (ref.watch(activePhotoReaderProvider) case final reader?
+                    when garment?.photos.isNotEmpty ?? _pending.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: OutlinedButton.icon(
+                        key: const Key('garment-fill-from-photo'),
+                        onPressed: _processing || _saving
+                            ? null
+                            : () => _fillFromPhoto(garment, reader),
+                        icon: const Icon(Icons.auto_awesome_outlined),
+                        label: Text(l10n.garmentFillFromPhoto),
+                      ),
+                    ),
+                  ),
+              ],
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              key: const Key('garment-notes'),
-              controller: _notes,
-              decoration: InputDecoration(
-                labelText: l10n.garmentNotes,
-                border: const OutlineInputBorder(),
-              ),
-              minLines: 2,
-              maxLines: 5,
-              validator: _maxLength(GarmentRules.maxNotesLength),
-            ),
-            const SizedBox(height: 24),
-            ColorsEditor(
-              value: _colors,
-              onChanged: (colors) => setState(() => _colors = colors),
-              onSuggest:
-                  _processing || (garment?.photos.isEmpty ?? _pending.isEmpty)
-                  ? null
-                  : () => _suggestColors(repo, garment),
-            ),
-            const SizedBox(height: 16),
-            if (ref.watch(activePhotoReaderProvider) case final reader?)
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: TextButton.icon(
-                  key: const Key('garment-read-label'),
-                  onPressed: _processing || _saving
-                      ? null
-                      : () => _readLabel(reader),
-                  icon: const Icon(Icons.document_scanner_outlined),
-                  label: Text(l10n.garmentReadLabel),
+            const SizedBox(height: 12),
+            _FormSection(
+              key: const Key('garment-section-basics'),
+              children: [
+                Text(
+                  l10n.garmentAbout,
+                  style: Theme.of(context).textTheme.titleSmall,
                 ),
-              ),
-            AttributesEditor(
-              value: _attributes,
-              onChanged: (value) => setState(() => _attributes = value),
-              material: _material,
-              care: _care,
-              maxLength: _maxLength,
+                const SizedBox(height: 12),
+                KeyedSubtree(
+                  key: ValueKey(_categoryRevision),
+                  child: DropdownButtonFormField<GarmentCategory>(
+                    key: const Key('garment-category'),
+                    initialValue: _category,
+                    decoration: InputDecoration(
+                      labelText: l10n.garmentCategory,
+                      border: const OutlineInputBorder(),
+                    ),
+                    items: [
+                      for (final category in GarmentCategory.values)
+                        DropdownMenuItem(
+                          value: category,
+                          child: Text(l10n.categoryLabel(category.id)),
+                        ),
+                    ],
+                    validator: (value) =>
+                        value == null ? l10n.garmentCategoryRequired : null,
+                    onChanged: (value) => setState(() {
+                      _category = value;
+                      _categorySuggestions = null;
+                    }),
+                  ),
+                ),
+                ..._categoryFromPhoto(repo, garment),
+                const SizedBox(height: 16),
+                TextFormField(
+                  key: const Key('garment-name'),
+                  controller: _name,
+                  decoration: InputDecoration(
+                    labelText: l10n.garmentName,
+                    border: const OutlineInputBorder(),
+                  ),
+                  textCapitalization: TextCapitalization.sentences,
+                  validator: _maxLength(GarmentRules.maxNameLength),
+                ),
+                if (garment == null) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(child: Text(l10n.garmentUnits)),
+                      IconButton(
+                        key: const Key('garment-units-less'),
+                        tooltip: l10n.garmentUnitsLess,
+                        onPressed: _units > 1
+                            ? () => setState(() => _units--)
+                            : null,
+                        icon: const Icon(Icons.remove_circle_outline),
+                      ),
+                      Text(
+                        '$_units',
+                        key: const Key('garment-units'),
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      IconButton(
+                        key: const Key('garment-units-more'),
+                        tooltip: l10n.garmentUnitsMore,
+                        onPressed: _units < GarmentRules.maxUnits
+                            ? () => setState(() => _units++)
+                            : null,
+                        icon: const Icon(Icons.add_circle_outline),
+                      ),
+                    ],
+                  ),
+                  if (_units > 1)
+                    Text(
+                      l10n.garmentUnitsHint,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                ],
+                const SizedBox(height: 16),
+                TextFormField(
+                  key: const Key('garment-brand'),
+                  controller: _brand,
+                  decoration: InputDecoration(
+                    labelText: l10n.garmentBrand,
+                    border: const OutlineInputBorder(),
+                  ),
+                  validator: _maxLength(GarmentRules.maxBrandLength),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  key: const Key('garment-notes'),
+                  controller: _notes,
+                  decoration: InputDecoration(
+                    labelText: l10n.garmentNotes,
+                    border: const OutlineInputBorder(),
+                  ),
+                  minLines: 2,
+                  maxLines: 5,
+                  validator: _maxLength(GarmentRules.maxNotesLength),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _FormSection(
+              key: const Key('garment-section-colors'),
+              children: [
+                ColorsEditor(
+                  value: _colors,
+                  onChanged: (colors) => setState(() => _colors = colors),
+                  onSuggest:
+                      _processing ||
+                          (garment?.photos.isEmpty ?? _pending.isEmpty)
+                      ? null
+                      : () => _suggestColors(repo, garment),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _FormSection(
+              key: const Key('garment-section-details'),
+              children: [
+                if (ref.watch(activePhotoReaderProvider) case final reader?)
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: TextButton.icon(
+                      key: const Key('garment-read-label'),
+                      onPressed: _processing || _saving
+                          ? null
+                          : () => _readLabel(reader),
+                      icon: const Icon(Icons.document_scanner_outlined),
+                      label: Text(l10n.garmentReadLabel),
+                    ),
+                  ),
+                AttributesEditor(
+                  value: _attributes,
+                  onChanged: (value) => setState(() => _attributes = value),
+                  material: _material,
+                  care: _care,
+                  maxLength: _maxLength,
+                ),
+              ],
             ),
             if (garment != null) ...[
               const SizedBox(height: 24),
@@ -952,6 +988,70 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
             ],
             const SizedBox(height: 32),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Um cartão do formulário (contorno, 16 de raio), como no resto da app.
+class _FormSection extends StatelessWidget {
+  const _FormSection({required this.children, super.key});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      ),
+    ),
+  );
+}
+
+/// Tirar ou escolher foto: um bloco com o ícone por cima do texto.
+class _PhotoAction extends StatelessWidget {
+  const _PhotoAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    super.key,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final radius = BorderRadius.circular(16);
+    return Material(
+      // Linho (o fundo da app) dentro do cartão branco.
+      color: scheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: radius,
+        side: BorderSide(color: scheme.outlineVariant),
+      ),
+      child: InkWell(
+        borderRadius: radius,
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
+          child: Column(
+            children: [
+              Icon(icon, color: scheme.primary, size: 28),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+            ],
+          ),
         ),
       ),
     );
