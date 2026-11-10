@@ -8,13 +8,11 @@ import 'package:guarda_roupa/core/domain/result.dart';
 import 'package:guarda_roupa/features/import/application/import_providers.dart';
 import 'package:guarda_roupa/features/import/domain/product_import.dart';
 import 'package:guarda_roupa/features/import/presentation/import_link_screen.dart';
-import 'package:guarda_roupa/features/local_ai/application/local_ai_providers.dart';
 
 import '../../support/app_harness.dart';
 import '../../support/fake_photos.dart';
 import '../../support/test_database.dart';
 import '../wardrobe/presentation/wardrobe_flow_test.dart' show openWardrobe;
-import 'product_photo_test.dart' show ScriptedScorer;
 
 const url = 'https://www.zara.com/pt/pt/camisa-p1.html';
 
@@ -171,6 +169,8 @@ void main() {
           )
           .first,
     );
+    await tester.ensureVisible(find.byKey(const Key('import-use')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('import-use')));
     await settleUntil(tester, find.byKey(const Key('garment-save')));
     await settle(tester);
@@ -195,77 +195,6 @@ void main() {
     );
     final ops = (await tester.runAsync(() => pendingOperations(app.db)))!;
     expect(ops.map((o) => o['kind']), ['create', 'attach_photo']);
-  });
-
-  testWidgets('com a IA local, marca a foto só da peça e não a copia 2×', (
-    tester,
-  ) async {
-    final importer = FakeImporter();
-    final app = await pumpApp(
-      tester,
-      overrides: [
-        productImporterProvider.overrideWithValue(importer),
-        // A primeira é o manequim, a segunda só a peça.
-        productPhotoScorerProvider.overrideWithValue(
-          ScriptedScorer([-0.03, 0.05]),
-        ),
-      ],
-    );
-    await openWardrobe(tester);
-    await openImport(tester, url);
-    expect(importer.images, [
-      'https://static.zara.net/a.jpg',
-      'https://static.zara.net/b.jpg',
-    ]);
-    expect(find.byKey(const Key('import-picking-photo')), findsNothing);
-    Finder checked(int i) => find.descendant(
-      of: find.byKey(Key('import-image-$i')),
-      matching: find.byIcon(Icons.check_circle),
-    );
-    expect(checked(0), findsNothing);
-    expect(checked(1), findsOneWidget);
-
-    await tester.scrollUntilVisible(
-      find.byKey(const Key('import-use')),
-      200,
-      scrollable: find
-          .descendant(
-            of: find.byType(ImportLinkScreen),
-            matching: find.byType(Scrollable),
-          )
-          .first,
-    );
-    await tester.tap(find.byKey(const Key('import-use')));
-    await settleUntil(tester, find.byKey(const Key('garment-save')));
-    await settle(tester);
-    expect(importer.images, hasLength(2), reason: 'reaproveita a cópia');
-    await chooseCategoryAndSave(tester);
-    final ops = (await tester.runAsync(() => pendingOperations(app.db)))!;
-    expect(ops.map((o) => o['kind']), ['create', 'attach_photo']);
-  });
-
-  testWidgets('atalho direto: com a IA local, a capa é a foto só da peça', (
-    tester,
-  ) async {
-    final importer = FakeImporter()
-      ..inboxItems.add(
-        InboxItem(id: 'i1', preview: sample, createdAt: DateTime(2026)),
-      );
-    await pumpApp(
-      tester,
-      overrides: [
-        productImporterProvider.overrideWithValue(importer),
-        productPhotoScorerProvider.overrideWithValue(
-          ScriptedScorer([-0.03, 0.05]),
-        ),
-      ],
-    );
-    await openWardrobe(tester);
-    await settleUntil(tester, find.textContaining('1 peça do atalho'));
-    expect(importer.images, [
-      'https://static.zara.net/a.jpg',
-      'https://static.zara.net/b.jpg',
-    ]);
   });
 
   testWidgets('página sem dados: diz porquê e deixa preencher à mão', (
@@ -382,27 +311,12 @@ void main() {
     expect(find.text('Camisa de linho'), findsOneWidget);
   });
 
-  testWidgets('atalho direto: a peça entra sozinha no Armário', (tester) async {
+  testWidgets('atalho direto: fica à espera e o utilizador escolhe a foto', (
+    tester,
+  ) async {
     final importer = FakeImporter()
       ..inboxItems.add(
-        InboxItem(
-          id: 'i1',
-          preview: ProductPreview(
-            storeName: 'Zara',
-            url: 'https://www.zara.com/pt/pt/casaco-p1.html',
-            viaShortcut: true,
-            name: 'CASACO EM PELE',
-            brand: 'ZARA',
-            description: 'Casaco em pele.',
-            material: '100% pele',
-            images: const ['https://static.zara.net/a.jpg'],
-            variants: const [
-              ImportVariant(color: 'Preto', size: 'M'),
-              ImportVariant(color: 'Preto', size: 'L'),
-            ],
-          ),
-          createdAt: DateTime(2026),
-        ),
+        InboxItem(id: 'i1', preview: sample, createdAt: DateTime(2026)),
       );
     final app = await pumpApp(
       tester,
@@ -411,34 +325,70 @@ void main() {
     await openWardrobe(tester);
     await settleUntil(
       tester,
-      find.text(
-        '1 peça do atalho no Armário. Confirma a categoria e as cores no cartão.',
-      ),
+      find.text('1 peça do atalho à espera: escolhe a foto'),
     );
+    expect(importer.images, isEmpty, reason: 'nada copiado sem escolha');
+    expect(importer.discarded, isEmpty);
 
-    expect(importer.images, ['https://static.zara.net/a.jpg']);
-    expect(importer.discarded, ['i1']);
-    expect(importer.previews, isEmpty);
-    final payload = await created(tester, app.db);
-    expect(payload['name'], 'CASACO EM PELE');
-    expect(payload['brand'], 'ZARA');
-    expect(payload['category'], 'coat');
-    expect(
-      payload['notes'],
-      'Casaco em pele.\n\nCor na loja: Preto\nhttps://www.zara.com/pt/pt/casaco-p1.html',
+    // Abre logo Importar de um link, com a peça do atalho no topo.
+    await tester.tap(find.byKey(const Key('wardrobe-inbox')));
+    await settleUntil(tester, find.byKey(const Key('import-inbox-i1')));
+    await tester.tap(find.byKey(const Key('import-inbox-i1')));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('import-image-1')),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byType(ImportLinkScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first,
     );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('import-choose-photo')), findsOneWidget);
+    Finder checked(int i) => find.descendant(
+      of: find.byKey(Key('import-image-$i')),
+      matching: find.byIcon(Icons.check_circle),
+    );
+    expect(checked(0), findsNothing, reason: 'várias fotos: nenhuma marcada');
+    await tester.ensureVisible(find.byKey(const Key('import-image-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('import-image-1')));
+    await tester.pumpAndSettle();
+    expect(checked(1), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('import-use')),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byType(ImportLinkScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.ensureVisible(find.byKey(const Key('import-use')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('import-use')));
+    await settleUntil(tester, find.byKey(const Key('garment-save')));
+    await settle(tester);
+    expect(importer.images, ['https://static.zara.net/b.jpg']);
+    expect(importer.discarded, ['i1']);
+
+    // A categoria vem sugerida pelo nome ("Camisa de linho").
+    await tester.tap(find.byKey(const Key('garment-save')));
+    await settleUntil(
+      tester,
+      find.byKey(const Key('garment-save')),
+      gone: true,
+    );
+    final payload = await created(tester, app.db);
+    expect(payload['name'], 'Camisa de linho');
+    expect(payload['category'], 'shirt');
     final ops = (await tester.runAsync(() => pendingOperations(app.db)))!;
     expect(ops.map((o) => o['kind']), ['create', 'attach_photo']);
     expect(find.byKey(const Key('wardrobe-inbox')), findsNothing);
-
-    // Ao voltar à app vinda do Safari, entram as que chegaram entretanto.
-    importer.inboxItems.add(
-      InboxItem(id: 'i2', preview: sample, createdAt: DateTime(2026)),
-    );
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
-    await settleUntil(tester, find.textContaining('1 peça do atalho'));
-    expect(importer.discarded, ['i1', 'i2']);
   });
 
   testWidgets('atalho direto: descartar tira a peça da caixa', (tester) async {

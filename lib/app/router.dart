@@ -109,7 +109,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Formulários fora do shell: ocupam o ecrã inteiro, com botão de voltar.
       GoRoute(
         path: AppRoutes.newGarment,
-        builder: (context, state) => const GarmentFormScreen(),
+        builder: (context, state) => GarmentFormScreen(
+          startImport: state.uri.queryParameters['importar'] == '1',
+        ),
       ),
       GoRoute(
         path: AppRoutes.batchGarments,

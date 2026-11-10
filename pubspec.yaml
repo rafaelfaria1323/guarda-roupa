@@ -40,7 +40,6 @@ flutter:
   generate: true
   assets:
     - assets/models/fashionclip_categories.json
-    - assets/models/fashionclip_photo_kind.json
   # Instâncias estáticas (tool/fonts/instance_fonts.py), licença OFL.
   fonts:
     - family: Manrope
