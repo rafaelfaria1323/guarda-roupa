@@ -81,21 +81,34 @@ void main() {
     expect(filled.warmth, Warmth.light);
   });
 
-  test('etiqueta', () async {
-    final result = await reader(
-      (req) => json(200, {
+  test('etiqueta: várias fotos num só pedido', () async {
+    Object? sent;
+    final result = await reader((req) {
+      sent = jsonDecode(req.body);
+      return json(200, {
+        'found': 'care_label',
         'wash': 'machine_40',
         'tumble_dry': false,
         'material': '100% algodão',
         'care': null,
-      }),
-    ).readLabel(jpeg);
+      });
+    }).readLabel([jpeg, jpeg]);
+    expect((sent! as Map)['images'], hasLength(2));
+    expect((sent! as Map).containsKey('image'), isFalse);
     final label = (result as Ok<LabelReading, PhotoReadFailure>).value;
+    expect(label.found, LabelFound.careLabel);
     expect(label.wash, WashCare.machine40);
     expect(label.tumbleDry, isFalse);
     expect(label.material, '100% algodão');
     expect(label.care, isNull);
     expect(label.isEmpty, isFalse);
+
+    final patch = await reader(
+      (_) => json(200, {'found': 'brand_or_size_label'}),
+    ).readLabel([jpeg]);
+    final other = (patch as Ok<LabelReading, PhotoReadFailure>).value;
+    expect(other.found, LabelFound.otherLabel);
+    expect(other.isEmpty, isTrue);
   });
 
   test('erros do servidor', () async {
@@ -129,7 +142,7 @@ void main() {
     final noSession = await reader((_) {
       calls++;
       return json(200, {});
-    }, token: null).readLabel(jpeg);
+    }, token: null).readLabel([jpeg]);
     expect((noSession as Err).failure, PhotoReadFailure.notAllowed);
     expect(calls, 0);
   });

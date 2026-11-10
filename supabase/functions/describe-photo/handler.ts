@@ -5,6 +5,7 @@ import {
   CATEGORIES,
   COLORS,
   FORMALITY,
+  FOUND,
   GARMENT_PROMPT,
   GARMENT_SCHEMA,
   LABEL_PROMPT,
@@ -23,15 +24,19 @@ export interface Deps {
   /** Há chave do Gemini nos secrets. */
   configured: boolean;
   claimQuota(authorization: string, apiKey: string | null): Promise<Quota>;
+  /** As etiquetas podem usar um modelo mais forte (ver index.ts). */
   generate(
+    kind: Kind,
     prompt: string,
     schema: unknown,
-    image: { mimeType: string; data: string },
+    images: { mimeType: string; data: string }[],
   ): Promise<Generated>;
 }
 
-/** ~1,5 MB de JPEG em base64. */
+/** ~1,5 MB de JPEG em base64, por foto. */
 const MAX_IMAGE = 2_100_000;
+/** Etiquetas: até 3 fotos (frente, verso, outra página da etiqueta dobrada). */
+const MAX_LABEL_IMAGES = 3;
 const MIME = ['image/jpeg', 'image/png', 'image/webp'];
 
 const CORS = {
@@ -48,7 +53,9 @@ function json(status: number, body: unknown): Response {
 }
 
 export async function handle(req: Request, deps: Deps): Promise<Response> {
-  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: CORS });
+  }
   if (req.method !== 'POST') return json(405, { error: 'method' });
   if (!deps.configured) return json(503, { error: 'not_configured' });
 
@@ -56,19 +63,26 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
   if (authorization == null || !authorization.startsWith('Bearer ')) {
     return json(401, { error: 'unauthorized' });
   }
-  let body: { kind?: unknown; image?: unknown; mime?: unknown };
+  let body: {
+    kind?: unknown;
+    image?: unknown;
+    images?: unknown;
+    mime?: unknown;
+  };
   try {
     body = await req.json();
   } catch {
     return json(400, { error: 'bad_request' });
   }
   const kind = body.kind;
-  const image = body.image;
+  // `image` (uma foto) ou `images` (só etiquetas, até 3).
+  const images: unknown[] = Array.isArray(body.images) ? body.images : [body.image];
   const mime = body.mime ?? 'image/jpeg';
   if (
     (kind !== 'garment' && kind !== 'label') ||
-    typeof image !== 'string' || image.length < 100 || image.length > MAX_IMAGE ||
-    !/^[A-Za-z0-9+/]+=*$/.test(image) ||
+    images.length < 1 ||
+    images.length > (kind === 'label' ? MAX_LABEL_IMAGES : 1) ||
+    !images.every(validImage) ||
     typeof mime !== 'string' || !MIME.includes(mime)
   ) {
     return json(400, { error: 'bad_request' });
@@ -82,9 +96,10 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
   let generated: Generated;
   try {
     generated = await deps.generate(
+      kind,
       kind === 'garment' ? GARMENT_PROMPT : LABEL_PROMPT,
       kind === 'garment' ? GARMENT_SCHEMA : LABEL_SCHEMA,
-      { mimeType: mime, data: image },
+      (images as string[]).map((data) => ({ mimeType: mime, data })),
     );
   } catch {
     return json(502, { error: 'failed' });
@@ -104,6 +119,11 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
   return json(200, kind === 'garment' ? garmentOf(raw) : labelOf(raw));
 }
 
+function validImage(v: unknown): boolean {
+  return typeof v === 'string' && v.length >= 100 && v.length <= MAX_IMAGE &&
+    /^[A-Za-z0-9+/]+=*$/.test(v);
+}
+
 const pick = <T extends string>(values: readonly T[], v: unknown): T | null =>
   typeof v === 'string' && (values as readonly string[]).includes(v) ? v as T : null;
 
@@ -121,7 +141,10 @@ export function garmentOf(raw: unknown) {
   for (const c of Array.isArray(r.colors) ? r.colors : []) {
     const color = pick(COLORS, (c as Record<string, unknown>)?.color);
     const share = Number((c as Record<string, unknown>)?.share);
-    if (color == null || !Number.isFinite(share) || colors.some((x) => x.color === color)) {
+    if (
+      color == null || !Number.isFinite(share) ||
+      colors.some((x) => x.color === color)
+    ) {
       continue;
     }
     const step = Math.min(100 - total, Math.max(5, Math.round(share / 5) * 5));
@@ -140,9 +163,15 @@ export function garmentOf(raw: unknown) {
   };
 }
 
+/** `found` diz se era a etiqueta de cuidados; se não era, o resto fica vazio. */
 export function labelOf(raw: unknown) {
   const r = (raw ?? {}) as Record<string, unknown>;
+  const found = pick(FOUND, r.found);
+  if (found != null && found !== 'care_label') {
+    return { found, wash: null, tumble_dry: null, material: null, care: null };
+  }
   return {
+    found,
     wash: pick(WASH, r.wash),
     tumble_dry: typeof r.tumble_dry === 'boolean' ? r.tumble_dry : null,
     material: text(r.material, 120),

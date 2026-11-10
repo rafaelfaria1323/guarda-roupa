@@ -27,6 +27,7 @@ import '../../local_ai/application/local_ai_providers.dart';
 import '../../local_ai/domain/category_suggester.dart';
 import '../../photo_ai/application/photo_ai_providers.dart';
 import '../../photo_ai/domain/photo_reader.dart';
+import '../../photo_ai/presentation/label_scan_screen.dart';
 import '../../photo_ai/presentation/photo_read_messages.dart';
 import '../domain/foreground_mask.dart';
 import '../../import/domain/product_import.dart';
@@ -483,80 +484,45 @@ class _GarmentFormScreenState extends ConsumerState<GarmentFormScreen> {
     }
   }
 
-  /// Foto da etiqueta pela câmara, lida pelo Gemini e não guardada.
+  /// Ecrã "Ler etiqueta" (câmara ao vivo e passos); as fotos são lidas pelo
+  /// Gemini e não ficam guardadas.
   Future<void> _readLabel(PhotoReader reader) async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    final process = ref.read(photoProcessorProvider);
-    setState(() => _processing = true);
-    Result<LabelReading, PhotoReadFailure>? result;
-    try {
-      final Uint8List? input;
-      try {
-        input = await ref.read(photoPickerProvider).pick(PhotoSource.camera);
-      } on Object {
-        messenger.showSnackBar(SnackBar(content: Text(l10n.photoPickFailed)));
-        return;
-      }
-      if (input == null || !mounted) return;
-      switch (await process(input)) {
-        case Err(failure: final problem):
-          messenger.showSnackBar(
-            SnackBar(
-              content: Text(switch (problem) {
-                PhotoProblem.heic => l10n.photoHeic,
-                PhotoProblem.unsupportedFormat => l10n.photoUnsupported,
-                PhotoProblem.tooLarge => l10n.photoTooLarge,
-              }),
-            ),
-          );
-          return;
-        case Ok(value: final photo):
-          result = await reader.readLabel(photo.main);
-      }
-    } on Object {
-      result = const Err(PhotoReadFailure.failed);
-    } finally {
-      if (mounted) setState(() => _processing = false);
-    }
-    if (!mounted) return;
+    // Um aviso aberto taparia o botão da câmara no ecrã seguinte.
     messenger.hideCurrentSnackBar();
-    switch (result) {
-      case Err(:final failure):
-        messenger.showSnackBar(
-          SnackBar(content: Text(photoReadMessage(l10n, failure))),
-        );
-      case Ok(value: final label) when label.isEmpty:
-        messenger.showSnackBar(SnackBar(content: Text(l10n.garmentLabelEmpty)));
-      case Ok(value: final label):
-        final attributes = _attributes;
-        final material = _material.text;
-        final care = _care.text;
-        setState(() {
-          _attributes = attributes.copyWith(
-            wash: () => label.wash ?? attributes.wash,
-            tumbleDry: () => label.tumbleDry ?? attributes.tumbleDry,
-          );
-          if (label.material != null) _material.text = label.material!;
-          if (label.care != null) _care.text = label.care!;
-        });
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(l10n.garmentLabelRead),
-            action: SnackBarAction(
-              label: l10n.wearUndo,
-              onPressed: () {
-                if (!mounted) return;
-                setState(() {
-                  _attributes = attributes;
-                  _material.text = material;
-                  _care.text = care;
-                });
-              },
-            ),
-          ),
-        );
-    }
+    final label = await Navigator.of(context).push<LabelReading>(
+      MaterialPageRoute(builder: (_) => LabelScanScreen(reader: reader)),
+    );
+    if (label == null || !mounted) return;
+    messenger.hideCurrentSnackBar();
+    final attributes = _attributes;
+    final material = _material.text;
+    final care = _care.text;
+    setState(() {
+      _attributes = attributes.copyWith(
+        wash: () => label.wash ?? attributes.wash,
+        tumbleDry: () => label.tumbleDry ?? attributes.tumbleDry,
+      );
+      if (label.material != null) _material.text = label.material!;
+      if (label.care != null) _care.text = label.care!;
+    });
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(l10n.garmentLabelRead),
+        action: SnackBarAction(
+          label: l10n.wearUndo,
+          onPressed: () {
+            if (!mounted) return;
+            setState(() {
+              _attributes = attributes;
+              _material.text = material;
+              _care.text = care;
+            });
+          },
+        ),
+      ),
+    );
   }
 
   /// Botão "Sugerir categoria pela foto" (com o modelo neste dispositivo e

@@ -15,6 +15,9 @@ final class FakePhotoReader implements PhotoReader {
   final garmentPhotos = <Uint8List>[];
   final labelPhotos = <Uint8List>[];
 
+  /// Fotos em cada leitura de etiqueta.
+  final labelReads = <int>[];
+
   @override
   Future<Result<GarmentReading, PhotoReadFailure>> readGarment(
     Uint8List jpeg,
@@ -25,9 +28,10 @@ final class FakePhotoReader implements PhotoReader {
 
   @override
   Future<Result<LabelReading, PhotoReadFailure>> readLabel(
-    Uint8List jpeg,
+    List<Uint8List> jpegs,
   ) async {
-    labelPhotos.add(jpeg);
+    labelReads.add(jpegs.length);
+    labelPhotos.addAll(jpegs);
     return label;
   }
 }

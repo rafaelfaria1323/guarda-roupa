@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guarda_roupa/core/domain/result.dart';
 import 'package:guarda_roupa/features/local_ai/application/local_ai_providers.dart';
+import 'package:guarda_roupa/features/photo_ai/application/label_camera.dart';
 import 'package:guarda_roupa/features/photo_ai/application/photo_ai_providers.dart';
 import 'package:guarda_roupa/features/photo_ai/domain/photo_reader.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/garment_attributes.dart';
@@ -15,6 +16,7 @@ import 'package:guarda_roupa/features/wardrobe/domain/reference_color.dart';
 import 'package:powersync/powersync.dart';
 
 import '../../support/app_harness.dart';
+import '../../support/fake_label_camera.dart';
 import '../../support/fake_models.dart';
 import '../../support/fake_photo_reader.dart';
 import '../../support/fake_photos.dart';
@@ -113,9 +115,13 @@ void main() {
         ),
       ),
     );
+    final camera = FakeLabelCamera();
     final app = await start(
       tester,
-      overrides: [activePhotoReaderProvider.overrideWithValue(reader)],
+      overrides: [
+        activePhotoReaderProvider.overrideWithValue(reader),
+        labelCameraProvider.overrideWithValue(() => camera),
+      ],
     );
     await tester.tap(find.text('Adicionar peça'));
     await settle(tester);
@@ -145,11 +151,21 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     await settle(tester);
-    app.picker.next.add(testPng(r: 90));
     await tester.tap(label);
+    // O ecrã "Ler etiqueta": passos, câmara ao vivo e até 3 fotos.
+    await settleUntil(tester, find.byKey(const Key('label-scan-preview')));
+    expect(find.textContaining('Não é o rótulo de couro'), findsOneWidget);
+    final capture = find.byKey(const Key('label-scan-capture'));
+    await tester.tap(capture);
+    await settleUntil(tester, find.byKey(const Key('label-scan-photo-0')));
+    await tester.tap(capture);
+    await settleUntil(tester, find.byKey(const Key('label-scan-photo-1')));
+    expect(find.text('Ler 2 fotos'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('label-scan-read')));
     await settleUntil(tester, find.text('100% algodão'));
-    expect(app.picker.sources.last, PhotoSource.camera);
-    expect(reader.labelPhotos, hasLength(1));
+    expect(reader.labelReads, [2]);
+    expect(camera.captures, 2);
+    expect(camera.closed, isTrue);
 
     await tester.tap(find.byKey(const Key('garment-save')));
     await settleUntil(
@@ -221,5 +237,63 @@ void main() {
       ),
     );
     expect(row!['value'], '1');
+  });
+
+  testWidgets('ler etiqueta: rótulo errado, sem câmara e galeria', (
+    tester,
+  ) async {
+    final reader = FakePhotoReader(
+      label: const Ok(LabelReading(found: LabelFound.otherLabel)),
+    );
+    final app = await start(
+      tester,
+      overrides: [
+        activePhotoReaderProvider.overrideWithValue(reader),
+        labelCameraProvider.overrideWithValue(
+          () => FakeLabelCamera(available: false),
+        ),
+      ],
+    );
+    await tester.tap(find.text('Adicionar peça'));
+    await settle(tester);
+    final label = find.byKey(const Key('garment-read-label'));
+    await tester.scrollUntilVisible(
+      label,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await settle(tester);
+    await tester.tap(label);
+    // Sem câmara ao vivo: o botão redondo usa a câmara do sistema.
+    await settleUntil(tester, find.byKey(const Key('label-scan-no-camera')));
+    app.picker.next.add(testPng(r: 90));
+    await tester.tap(find.byKey(const Key('label-scan-capture')));
+    await settleUntil(tester, find.byKey(const Key('label-scan-photo-0')));
+    expect(app.picker.sources.last, PhotoSource.camera);
+
+    // O rótulo de couro não é a etiqueta: explica e limpa as fotos.
+    await tester.tap(find.byKey(const Key('label-scan-read')));
+    await settleUntil(tester, find.byKey(const Key('label-scan-message')));
+    expect(find.textContaining('rótulo da marca'), findsOneWidget);
+    expect(find.byKey(const Key('label-scan-photo-0')), findsNothing);
+
+    // Da galeria, e depois uma etiqueta que se lê.
+    reader.label = const Ok(
+      LabelReading(found: LabelFound.careLabel, wash: WashCare.hand),
+    );
+    app.picker.nextMany = [testPng(r: 10), testPng(r: 20)];
+    await tester.tap(find.byKey(const Key('label-scan-gallery')));
+    await settleUntil(tester, find.byKey(const Key('label-scan-photo-1')));
+    await tester.tap(find.byKey(const Key('label-scan-read')));
+    await settleUntil(
+      tester,
+      find.byKey(const Key('label-scan-read')),
+      gone: true,
+    );
+    expect(reader.labelReads, [1, 2]);
+    expect(
+      find.text('Etiqueta lida. Confirma antes de guardar.'),
+      findsOneWidget,
+    );
   });
 }
