@@ -20,6 +20,7 @@ import '../../support/fake_label_camera.dart';
 import '../../support/fake_models.dart';
 import '../../support/fake_photo_reader.dart';
 import '../../support/fake_photos.dart';
+import '../../support/label_probes.dart';
 import '../wardrobe/presentation/batch_add_flow_test.dart' show pickBatch;
 import '../wardrobe/presentation/photos_flow_test.dart' show start;
 
@@ -297,5 +298,65 @@ void main() {
       find.text('Etiqueta lida. Confirma antes de guardar.'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('ler etiqueta: nítida e parada, tira a foto e lê sozinha', (
+    tester,
+  ) async {
+    final reader = FakePhotoReader(
+      label: const Ok(LabelReading(found: LabelFound.notLabel)),
+    );
+    var scene = flatProbe();
+    final camera = FakeLabelCamera(probes: () => scene);
+    await start(
+      tester,
+      overrides: [
+        activePhotoReaderProvider.overrideWithValue(reader),
+        labelCameraProvider.overrideWithValue(() => camera),
+      ],
+    );
+    await tester.tap(find.text('Adicionar peça'));
+    await settle(tester);
+    final label = find.byKey(const Key('garment-read-label'));
+    await tester.scrollUntilVisible(
+      label,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await settle(tester);
+    await tester.tap(label);
+    await settleUntil(tester, find.byKey(const Key('label-scan-preview')));
+
+    // Nada nítido à frente: espera.
+    await settleUntil(tester, find.byKey(const Key('label-scan-auto')));
+    expect(
+      find.text('Aproxima a etiqueta: a foto tira-se sozinha'),
+      findsOneWidget,
+    );
+    expect(camera.captures, 0);
+
+    // Nítida e parada: tira e lê. Não era uma etiqueta: avisa e espera
+    // que a câmara se mexa antes de tentar outra vez.
+    scene = sharpProbe();
+    await settleUntil(tester, find.byKey(const Key('label-scan-message')));
+    expect(find.textContaining('Não se viu nenhuma etiqueta'), findsOneWidget);
+    expect(reader.labelReads, [1]);
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 350));
+    }
+    expect(camera.captures, 1);
+
+    // Mexeu-se para a etiqueta certa: lê e volta ao formulário.
+    reader.label = const Ok(
+      LabelReading(wash: WashCare.machine30, material: '100% algodão'),
+    );
+    scene = sharpProbe(shift: 2);
+    await settleUntil(
+      tester,
+      find.text('Etiqueta lida. Confirma antes de guardar.'),
+    );
+    expect(reader.labelReads, [1, 1]);
+    expect(camera.captures, 2);
+    expect(camera.closed, isTrue);
   });
 }

@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/plugin_label_camera.dart';
+import '../domain/label_auto_shutter.dart';
 
 /// A câmara ao vivo do ecrã "Ler etiqueta". Os testes trocam-na por uma
 /// a fingir.
@@ -17,6 +18,10 @@ abstract interface class LabelCamera {
 
   /// Uma foto do que a câmara está a ver.
   Future<Uint8List> capture();
+
+  /// Uma imagem pequena do que a câmara vê agora, para o disparo
+  /// automático. `null` se não der (fica só o botão).
+  LabelProbe? probe();
 
   Future<void> close();
 }

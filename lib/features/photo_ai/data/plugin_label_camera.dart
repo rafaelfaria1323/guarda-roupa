@@ -3,6 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../application/label_camera.dart';
+import '../domain/label_auto_shutter.dart';
+import 'video_probe_io.dart'
+    if (dart.library.js_interop) 'video_probe_web.dart';
 
 /// A câmara pelo plugin `camera` (no navegador, getUserMedia).
 final class PluginLabelCamera implements LabelCamera {
@@ -60,6 +63,9 @@ final class PluginLabelCamera implements LabelCamera {
     final file = await controller.takePicture();
     return file.readAsBytes();
   }
+
+  @override
+  LabelProbe? probe() => _controller == null ? null : probeCameraVideo();
 
   @override
   Future<void> close() async {

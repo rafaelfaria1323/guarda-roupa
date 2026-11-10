@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import '../../wardrobe/application/photo_providers.dart';
 import '../../wardrobe/data/photo_processor.dart';
 import '../../wardrobe/domain/photo_picker.dart';
 import '../application/label_camera.dart';
+import '../domain/label_auto_shutter.dart';
 import '../domain/photo_reader.dart';
 import 'photo_read_messages.dart';
 
@@ -35,23 +37,78 @@ class _LabelScanScreenState extends ConsumerState<LabelScanScreen> {
   bool _reading = false;
   String? _message;
 
+  /// Disparo automático: a foto tira-se e lê-se sozinha quando a imagem
+  /// está nítida e parada. Só existe onde a câmara dá a sonda.
+  static const _autoMaxReads = 3;
+  final _shutter = LabelAutoShutter();
+  Timer? _autoTimer;
+  bool _autoAvailable = false;
+  bool _autoOn = true;
+  bool _autoBusy = false;
+  int _autoReads = 0;
+  AutoShutterState _autoState = AutoShutterState.searching;
+
+  bool get _autoActive =>
+      _autoAvailable && _autoOn && _autoReads < _autoMaxReads;
+
   @override
   void initState() {
     super.initState();
     setStatusBarOverride(Colors.black);
     _camera.open().then((ok) {
-      if (mounted) setState(() => _cameraReady = ok);
+      if (!mounted) return;
+      setState(() => _cameraReady = ok);
+      if (ok) {
+        _autoTimer = Timer.periodic(
+          const Duration(milliseconds: 350),
+          (_) => _autoTick(),
+        );
+      }
     });
   }
 
   @override
   void dispose() {
     setStatusBarOverride(null);
+    _autoTimer?.cancel();
     _camera.close();
     super.dispose();
   }
 
   bool get _full => _photos.length >= maxLabelPhotos;
+
+  Future<void> _autoTick() async {
+    if (!mounted || _autoBusy || _busy || _reading) return;
+    if (!_autoOn || _autoReads >= _autoMaxReads || _photos.isNotEmpty) return;
+    final probe = _camera.probe();
+    if (probe == null) return;
+    final state = _shutter.add(probe);
+    if (!_autoAvailable || state != _autoState) {
+      setState(() {
+        _autoAvailable = true;
+        _autoState = state;
+      });
+    }
+    if (state != AutoShutterState.fire) return;
+    _autoBusy = true;
+    try {
+      _autoReads++;
+      await _capture();
+      if (!mounted || _photos.isEmpty) return;
+      await _read();
+      if (!mounted) return;
+      // Não serviu: só tenta outra vez depois de a câmara se mexer.
+      _shutter.rearmAfterMove();
+      setState(() {
+        _autoState = AutoShutterState.searching;
+        if (_autoReads >= _autoMaxReads && _photos.isEmpty) {
+          _message = AppLocalizations.of(context).labelScanAutoGaveUp;
+        }
+      });
+    } finally {
+      _autoBusy = false;
+    }
+  }
 
   Future<void> _capture() async {
     final l10n = AppLocalizations.of(context);
@@ -189,6 +246,23 @@ class _LabelScanScreenState extends ConsumerState<LabelScanScreen> {
               (theme.appBarTheme.titleTextStyle ?? theme.textTheme.titleLarge)
                   ?.copyWith(color: onDark),
           title: Text(l10n.labelScanTitle),
+          actions: [
+            if (_autoAvailable)
+              IconButton(
+                key: const Key('label-scan-auto'),
+                tooltip: _autoOn ? l10n.labelScanAutoOn : l10n.labelScanAutoOff,
+                isSelected: _autoOn,
+                color: onDark,
+                icon: const Icon(Icons.motion_photos_off_outlined),
+                selectedIcon: const Icon(Icons.motion_photos_auto_outlined),
+                onPressed: () => setState(() {
+                  _autoOn = !_autoOn;
+                  _autoReads = 0;
+                  _shutter.reset();
+                  _autoState = AutoShutterState.searching;
+                }),
+              ),
+          ],
         ),
         body: SafeArea(
           top: false,
@@ -226,7 +300,13 @@ class _LabelScanScreenState extends ConsumerState<LabelScanScreen> {
                             ),
                           },
                           if (_cameraReady == true)
-                            _GuideFrame(label: l10n.labelScanFrame),
+                            _GuideFrame(
+                              label: !_autoActive || _photos.isNotEmpty
+                                  ? l10n.labelScanFrame
+                                  : _autoState == AutoShutterState.searching
+                                  ? l10n.labelScanAutoSearching
+                                  : l10n.labelScanAutoHolding,
+                            ),
                           if (_reading)
                             ColoredBox(
                               color: Colors.black54,

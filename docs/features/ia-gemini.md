@@ -31,6 +31,17 @@ Pedido do utilizador: não se percebia como usar, e as etiquetas das Levi's 501 
 - **Sem câmara ao vivo** (navegador sem permissão, sem câmara): o ecrã avisa e o botão redondo abre a câmara do sistema; a galeria funciona sempre.
 - Câmara pelo pacote `camera` (no navegador, `getUserMedia`, câmara de trás, a maior resolução que der). Código: `lib/features/photo_ai/presentation/label_scan_screen.dart` e `lib/features/photo_ai/application/label_camera.dart` (troca-se nos testes).
 
+### Disparo automático (2026-11-10)
+
+Pedido do utilizador: ler sem ter de tirar a foto. Ler vídeo contínuo com o Gemini gastava muitas leituras, por isso a app só decide **quando** tirar a foto:
+
+- Com a câmara aberta, de 350 em 350 ms a app olha para o meio da imagem (240 pontos de largura, a cinzento, só no dispositivo) e mede a nitidez, o detalhe fino (letras) e o movimento (`LabelAutoShutter`, `lib/features/photo_ai/domain/label_auto_shutter.dart`).
+- Nítida, com detalhe e parada cerca de 1 segundo: tira a foto e lê logo. A moldura diz "Aproxima a etiqueta: a foto tira-se sozinha" e depois "Segura firme…".
+- Não reconhece etiquetas: qualquer coisa nítida com letras dispara. Por isso há travões: depois de uma leitura que não serviu só volta a disparar quando a câmara se mexer, e no máximo 3 leituras automáticas por abertura (depois pede o botão redondo).
+- O botão em cima, à direita, desliga e liga o automático. Com uma foto já tirada à mão (várias páginas), o automático fica quieto.
+- Só existe onde dá para ler o vídeo da câmara (navegador); sem isso fica tudo como antes.
+- Limites escolhidos com imagens sintéticas e a foto de um quarto desfocado; verificados num Chromium com vídeo falso (parede lisa: não dispara; etiqueta: dispara uma vez). Falta afinar com etiquetas reais no iPhone.
+
 ## Pedir ao stylist (2026-11-06)
 
 Em **Hoje**, por baixo do cartão das sugestões, aparece o cartão **Ideia do stylist** com o botão **Pedir ao stylist** quando o Gemini está ligado (desenho em [Cartão do Stylist](../design-e-fluxos.md#cartão-do-stylist-v3-aplicado)).
