@@ -1993,7 +1993,7 @@
   "labelScanTitle": "Ler etiqueta",
   "labelScanStep1": "Procura a etiqueta de cuidados: a de tecido, cosida por dentro (nas calças, numa costura de lado ou na cintura). Não é o rótulo de couro nem a do tamanho.",
   "labelScanStep2": "Desdobra-a e estica-a, com boa luz.",
-  "labelScanStep3": "Aproxima até as letras ficarem nítidas. Se tiver mais páginas ou texto atrás, tira uma foto de cada (até 3).",
+  "labelScanStep3": "Aproxima até as letras ficarem nítidas e segura firme: a foto tira-se e lê-se sozinha. Com mais páginas ou texto atrás, usa o botão redondo e tira uma foto de cada (até 3).",
   "labelScanFrame": "Põe a etiqueta aqui",
   "labelScanNoCamera": "Não deu para abrir a câmara aqui. Usa o botão redondo para tirar a foto, ou escolhe uma da galeria.",
   "labelScanCapture": "Tirar foto",
@@ -2013,5 +2013,10 @@
   "labelScanNotLabel": "Não se viu nenhuma etiqueta. Aproxima a câmara da etiqueta de cuidados.",
   "labelScanUnreadable": "Viu-se a etiqueta, mas não deu para ler. Desdobra-a, chega mais perto e com mais luz, ou tira mais uma foto.",
   "garmentAbout": "Sobre a peça",
-  "settingsPreferences": "Preferências"
+  "settingsPreferences": "Preferências",
+  "labelScanAutoSearching": "Aproxima a etiqueta: a foto tira-se sozinha",
+  "labelScanAutoHolding": "Segura firme…",
+  "labelScanAutoOn": "Disparo automático ligado",
+  "labelScanAutoOff": "Disparo automático desligado",
+  "labelScanAutoGaveUp": "Não consegui sozinho. Tira a foto com o botão redondo."
 }
