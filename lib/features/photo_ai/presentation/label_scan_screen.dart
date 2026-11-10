@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/domain/result.dart';
+import '../../../core/platform/status_bar.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../wardrobe/application/photo_providers.dart';
 import '../../wardrobe/data/photo_processor.dart';
@@ -37,6 +38,7 @@ class _LabelScanScreenState extends ConsumerState<LabelScanScreen> {
   @override
   void initState() {
     super.initState();
+    setStatusBarOverride(Colors.black);
     _camera.open().then((ok) {
       if (mounted) setState(() => _cameraReady = ok);
     });
@@ -44,6 +46,7 @@ class _LabelScanScreenState extends ConsumerState<LabelScanScreen> {
 
   @override
   void dispose() {
+    setStatusBarOverride(null);
     _camera.close();
     super.dispose();
   }

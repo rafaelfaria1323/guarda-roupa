@@ -166,6 +166,10 @@ Os editores ficam em cartões, como o formulário da peça (2026-11-10):
 
 O Resumo do armário e Várias peças de uma vez já usavam cartões e o mesmo verde; ficam como estão.
 
+## Barra de estado do telemóvel
+
+Na PWA, a barra de estado (horas, bateria) fica na cor do fundo da app (2026-11-10): segue o tema escolhido nas Definições, mesmo quando é diferente do do sistema, e fica preta no ecrã "Ler etiqueta". A app atualiza o `theme-color` e o fundo da página (`lib/core/platform/status_bar.dart`).
+
 ## Navegação
 
 Cinco separadores, como no design v3 (2026-11-06):
