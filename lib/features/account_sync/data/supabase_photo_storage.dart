@@ -34,4 +34,8 @@ final class SupabasePhotoStorage implements PhotoStorage {
 
   @override
   Future<void> remove(List<String> paths) => _files.remove(paths);
+
+  @override
+  Future<Uri> temporaryLink(String path) async =>
+      Uri.parse(await _files.createSignedUrl(path, 600));
 }

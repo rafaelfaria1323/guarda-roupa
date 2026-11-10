@@ -46,6 +46,10 @@ Padrão, textura e composição não são o mesmo atributo. “Malha” visível
 
 Não exigir um número conhecido de peças nem impor um limite de 100. Uma peça sem dados suficientes pode existir no catálogo; o motor explica eventuais limitações para a usar.
 
+## Procurar a peça no Google Lens (2026-11-10)
+
+Na ficha de uma peça com foto, por baixo de "Vou vestir hoje", o botão **Procurar no Google Lens** abre o Lens com a foto da peça, para ver onde se vende ou encontrar parecidas. Detalhes e privacidade em [inspirações](inspiracoes-e-estilo.md#procurar-no-google-lens-2026-11-10).
+
 ## Peças iguais
 
 Várias unidades da mesma peça (ex.: três t-shirts brancas iguais) continuam a ser **peças distintas**: cada uma tem id, disponibilidade, utilizações, lavagens e rotação próprias ([produto](../produto.md)). O que muda é só a forma de as criar e mostrar:

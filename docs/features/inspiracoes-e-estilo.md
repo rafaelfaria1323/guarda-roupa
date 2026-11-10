@@ -82,6 +82,17 @@ Não afirmar que a API permite consultar qualquer link arbitrário. Não contorn
 
 Uma alternativa inicial é carregar manualmente uma imagem cuja utilização seja permitida e manter a origem.
 
+## Procurar no Google Lens (2026-11-10)
+
+Pedido do utilizador: perceber de que marca ou loja é uma peça só pelo aspeto, como no Google ou no Pinterest. O Gemini não o faz de forma fiável (sem logótipo, inventa), e a pesquisa por imagem que a Google dá às apps (Cloud Vision, Web Detection) procura a mesma foto em páginas, não a peça em lojas. Decisão do utilizador: um botão que abre o **Google Lens**, com a foto toda; a peça escolhe-se lá, com o dedo.
+
+- **Onde:** na imagem guardada de uma inspiração e na ficha de cada peça com foto (`LensSearchButton`, `lib/features/wardrobe/presentation/lens_search_button.dart`). Só aparece com sessão e cloud.
+- **Como:** as fotos são privadas, por isso a app cria um link temporário (10 minutos, `createSignedUrl`) e abre `https://lens.google.com/uploadbyurl?url=…` no navegador. Não precisa da app da Google. Não dá para embutir o Lens dentro do fio (a Google não deixa).
+- **Privacidade:** antes de abrir, um aviso diz que a imagem vai ser enviada à Google. Só acontece quando o utilizador carrega em "Abrir o Google Lens"; nada é enviado sozinho.
+- **Falha:** se a foto ainda não chegou à nuvem, o aviso diz para tentar daqui a pouco.
+- Sem custo nem chave. O endereço do Lens foi verificado a 2026-11-10 (responde e segue para os resultados); não é uma API documentada pela Google e pode mudar. Falta confirmar no iPhone.
+- Ficou por fazer, se fizer falta: recortar a peça dentro do fio antes de abrir o Lens, ou a pesquisa dentro da app (Cloud Vision, com conta Google Cloud e faturação).
+
 ## Tecnologia
 
 `Inspiration`, `StylePreference`, etiquetas tipadas e assets privados; repositórios e sync comuns.

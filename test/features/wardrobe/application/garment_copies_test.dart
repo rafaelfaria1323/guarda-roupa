@@ -31,6 +31,9 @@ final class _Storage implements PhotoStorage {
   @override
   Future<void> upload(String path, Uint8List bytes) async =>
       files[path] = bytes;
+
+  @override
+  Future<Uri> temporaryLink(String path) => throw UnimplementedError();
 }
 
 ProcessedPhoto photo(int seed) {
