@@ -193,6 +193,18 @@ class _InspirationEditorScreenState
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Wrap(spacing: 8, runSpacing: 4, children: children),
     );
+    Widget section(List<Widget> children) => Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: children,
+          ),
+        ),
+      ),
+    );
 
     return ListView(
       padding: const EdgeInsets.only(bottom: 32),
@@ -204,150 +216,156 @@ class _InspirationEditorScreenState
             style: theme.textTheme.bodySmall,
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-          child: TextField(
-            key: const Key('inspiration-title'),
-            controller: _title,
-            maxLength: InspirationRules.maxTitle,
-            decoration: InputDecoration(labelText: l10n.inspirationTitle),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: TextField(
-            key: const Key('inspiration-link'),
-            controller: _link,
-            keyboardType: TextInputType.url,
-            autocorrect: false,
-            decoration: InputDecoration(
-              labelText: l10n.inspirationLink,
-              helperText: l10n.inspirationLinkHint,
-              helperMaxLines: 2,
-              suffixIcon: _link.text.trim().isEmpty
-                  ? null
-                  : IconButton(
-                      key: const Key('inspiration-copy-link'),
-                      tooltip: l10n.inspirationCopyLink,
-                      icon: const Icon(Icons.copy),
-                      onPressed: _copyLink,
-                    ),
-            ),
-            onChanged: (_) => setState(() {}),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-          child: TextField(
-            key: const Key('inspiration-notes'),
-            controller: _notes,
-            maxLength: InspirationRules.maxNotes,
-            minLines: 1,
-            maxLines: 4,
-            decoration: InputDecoration(labelText: l10n.inspirationNotes),
-          ),
-        ),
-        const Divider(),
-        _imageSection(repo),
-        const Divider(),
-        ListTile(
-          title: Text(l10n.inspirationTags, style: theme.textTheme.titleMedium),
-          subtitle: Text(l10n.inspirationTagsHint),
-        ),
-        if (_saved case final saved? when saved.hasTags || saved.image != null)
+        section([
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: FilledButton.tonalIcon(
-                key: const Key('inspiration-look'),
-                onPressed: _saving
-                    ? null
-                    : () => context.push(AppRoutes.inspirationLook(saved.id)),
-                icon: const Icon(Icons.auto_awesome_outlined),
-                label: Text(l10n.lookOpen),
-              ),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: TextField(
+              key: const Key('inspiration-title'),
+              controller: _title,
+              maxLength: InspirationRules.maxTitle,
+              decoration: InputDecoration(labelText: l10n.inspirationTitle),
             ),
           ),
-        if (_saved case final saved?
-            when PreferenceDraft.fromInspiration(saved).isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: OutlinedButton.icon(
-                key: const Key('inspiration-make-preferences'),
-                onPressed: _saving ? null : () => _makePreferences(saved),
-                icon: const Icon(Icons.thumbs_up_down_outlined),
-                label: Text(l10n.inspirationMakePreferences),
+            child: TextField(
+              key: const Key('inspiration-link'),
+              controller: _link,
+              keyboardType: TextInputType.url,
+              autocorrect: false,
+              decoration: InputDecoration(
+                labelText: l10n.inspirationLink,
+                helperText: l10n.inspirationLinkHint,
+                helperMaxLines: 2,
+                suffixIcon: _link.text.trim().isEmpty
+                    ? null
+                    : IconButton(
+                        key: const Key('inspiration-copy-link'),
+                        tooltip: l10n.inspirationCopyLink,
+                        icon: const Icon(Icons.copy),
+                        onPressed: _copyLink,
+                      ),
               ),
+              onChanged: (_) => setState(() {}),
             ),
           ),
-        heading(l10n.inspirationPalette),
-        chips([
-          for (final color in ReferenceColor.values)
-            ColorDot(
-              key: Key('inspiration-color-${color.id}'),
-              rgb: color.rgb,
-              label: l10n.colorLabel(color.id),
-              selected: _palette.contains(color.rgb),
-              onTap: () => setState(() {
-                if (!_palette.remove(color.rgb) &&
-                    _palette.length < InspirationRules.maxColors) {
-                  _palette.add(color.rgb);
-                }
-              }),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: TextField(
+              key: const Key('inspiration-notes'),
+              controller: _notes,
+              maxLength: InspirationRules.maxNotes,
+              minLines: 1,
+              maxLines: 4,
+              decoration: InputDecoration(labelText: l10n.inspirationNotes),
             ),
+          ),
         ]),
-        heading(l10n.inspirationFormality),
-        chips([
-          for (final f in [null, ...Formality.values])
-            ChoiceChip(
-              key: Key('inspiration-formality-${f?.id ?? 'none'}'),
-              label: Text(l10n.formalityLabel(f?.id ?? 'none')),
-              selected: _formality == f,
-              onSelected: (_) => setState(() => _formality = f),
+        section([_imageSection(repo)]),
+        section([
+          ListTile(
+            title: Text(
+              l10n.inspirationTags,
+              style: theme.textTheme.titleMedium,
             ),
-        ]),
-        heading(l10n.inspirationOccasions),
-        chips([
-          for (final o in Occasion.values)
-            _toggle(
-              'inspiration-occasion-${o.id}',
-              l10n.occasionLabel(o.id),
-              _occasions,
-              o,
+            subtitle: Text(l10n.inspirationTagsHint),
+          ),
+          if (_saved case final saved?
+              when saved.hasTags || saved.image != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: FilledButton.tonalIcon(
+                  key: const Key('inspiration-look'),
+                  onPressed: _saving
+                      ? null
+                      : () => context.push(AppRoutes.inspirationLook(saved.id)),
+                  icon: const Icon(Icons.auto_awesome_outlined),
+                  label: Text(l10n.lookOpen),
+                ),
+              ),
             ),
-        ]),
-        heading(l10n.inspirationPatterns),
-        chips([
-          for (final p in GarmentPattern.values)
-            _toggle(
-              'inspiration-pattern-${p.id}',
-              l10n.patternLabel(p.id),
-              _patterns,
-              p,
+          if (_saved case final saved?
+              when PreferenceDraft.fromInspiration(saved).isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: OutlinedButton.icon(
+                  key: const Key('inspiration-make-preferences'),
+                  onPressed: _saving ? null : () => _makePreferences(saved),
+                  icon: const Icon(Icons.thumbs_up_down_outlined),
+                  label: Text(l10n.inspirationMakePreferences),
+                ),
+              ),
             ),
-        ]),
-        heading(l10n.inspirationTextures),
-        chips([
-          for (final t in SurfaceTexture.values)
-            _toggle(
-              'inspiration-texture-${t.id}',
-              l10n.textureLabel(t.id),
-              _textures,
-              t,
-            ),
-        ]),
-        heading(l10n.inspirationProportions),
-        chips([
-          for (final p in Proportion.values)
-            _toggle(
-              'inspiration-proportion-${p.id}',
-              l10n.proportionLabel(p.id),
-              _proportions,
-              p,
-            ),
+          heading(l10n.inspirationPalette),
+          chips([
+            for (final color in ReferenceColor.values)
+              ColorDot(
+                key: Key('inspiration-color-${color.id}'),
+                rgb: color.rgb,
+                label: l10n.colorLabel(color.id),
+                selected: _palette.contains(color.rgb),
+                onTap: () => setState(() {
+                  if (!_palette.remove(color.rgb) &&
+                      _palette.length < InspirationRules.maxColors) {
+                    _palette.add(color.rgb);
+                  }
+                }),
+              ),
+          ]),
+          heading(l10n.inspirationFormality),
+          chips([
+            for (final f in [null, ...Formality.values])
+              ChoiceChip(
+                key: Key('inspiration-formality-${f?.id ?? 'none'}'),
+                label: Text(l10n.formalityLabel(f?.id ?? 'none')),
+                selected: _formality == f,
+                onSelected: (_) => setState(() => _formality = f),
+              ),
+          ]),
+          heading(l10n.inspirationOccasions),
+          chips([
+            for (final o in Occasion.values)
+              _toggle(
+                'inspiration-occasion-${o.id}',
+                l10n.occasionLabel(o.id),
+                _occasions,
+                o,
+              ),
+          ]),
+          heading(l10n.inspirationPatterns),
+          chips([
+            for (final p in GarmentPattern.values)
+              _toggle(
+                'inspiration-pattern-${p.id}',
+                l10n.patternLabel(p.id),
+                _patterns,
+                p,
+              ),
+          ]),
+          heading(l10n.inspirationTextures),
+          chips([
+            for (final t in SurfaceTexture.values)
+              _toggle(
+                'inspiration-texture-${t.id}',
+                l10n.textureLabel(t.id),
+                _textures,
+                t,
+              ),
+          ]),
+          heading(l10n.inspirationProportions),
+          chips([
+            for (final p in Proportion.values)
+              _toggle(
+                'inspiration-proportion-${p.id}',
+                l10n.proportionLabel(p.id),
+                _proportions,
+                p,
+              ),
+          ]),
         ]),
       ],
     );

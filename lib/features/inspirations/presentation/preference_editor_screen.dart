@@ -110,6 +110,18 @@ class _PreferenceEditorScreenState
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Wrap(spacing: 8, runSpacing: 4, children: children),
     );
+    Widget section(List<Widget> children) => Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: children,
+          ),
+        ),
+      ),
+    );
 
     final values = [
       ...preferenceValues(_subject),
@@ -123,67 +135,74 @@ class _PreferenceEditorScreenState
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
           child: Text(l10n.preferenceHint, style: theme.textTheme.bodySmall),
         ),
-        heading(l10n.preferenceStance),
-        chips([
-          for (final s in PreferenceStance.values)
-            ChoiceChip(
-              key: Key('preference-stance-${s.id}'),
-              label: Text(l10n.preferenceStanceLabel(s.id)),
-              selected: _stance == s,
-              onSelected: (_) => setState(() => _stance = s),
-            ),
-        ]),
-        heading(l10n.preferenceSubject),
-        chips([
-          for (final s in PreferenceSubject.values)
-            ChoiceChip(
-              key: Key('preference-subject-${s.id}'),
-              label: Text(l10n.preferenceSubjectLabel(s.id)),
-              selected: _subject == s,
-              onSelected: _editing
-                  ? null
-                  : (_) => setState(() {
-                      if (_subject != s) _value = null;
-                      _subject = s;
-                    }),
-            ),
-        ]),
-        heading(l10n.preferenceValue),
-        chips([
-          for (final v in values)
-            if (_subject == PreferenceSubject.color)
-              ColorDot(
-                key: Key('preference-value-$v'),
-                rgb: int.parse(v),
-                label: preferenceValueLabel(l10n, _subject, v),
-                selected: _value == v,
-                onTap: () => setState(() => _value = v),
-              )
-            else
+        section([
+          heading(l10n.preferenceStance),
+          chips([
+            for (final s in PreferenceStance.values)
               ChoiceChip(
-                key: Key('preference-value-$v'),
-                label: Text(preferenceValueLabel(l10n, _subject, v)),
-                selected: _value == v,
-                onSelected: (_) => setState(() => _value = v),
+                key: Key('preference-stance-${s.id}'),
+                label: Text(l10n.preferenceStanceLabel(s.id)),
+                selected: _stance == s,
+                onSelected: (_) => setState(() => _stance = s),
               ),
+          ]),
+          heading(l10n.preferenceSubject),
+          chips([
+            for (final s in PreferenceSubject.values)
+              ChoiceChip(
+                key: Key('preference-subject-${s.id}'),
+                label: Text(l10n.preferenceSubjectLabel(s.id)),
+                selected: _subject == s,
+                onSelected: _editing
+                    ? null
+                    : (_) => setState(() {
+                        if (_subject != s) _value = null;
+                        _subject = s;
+                      }),
+              ),
+          ]),
         ]),
-        heading(l10n.preferenceOccasions),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-          child: Text(
-            l10n.preferenceOccasionsHint,
-            style: theme.textTheme.bodySmall,
-          ),
-        ),
-        chips([
-          for (final o in Occasion.values)
-            FilterChip(
-              key: Key('preference-occasion-${o.id}'),
-              label: Text(l10n.occasionLabel(o.id)),
-              selected: _occasions.contains(o),
-              onSelected: (on) =>
-                  setState(() => on ? _occasions.add(o) : _occasions.remove(o)),
+        section([
+          heading(l10n.preferenceValue),
+          chips([
+            for (final v in values)
+              if (_subject == PreferenceSubject.color)
+                ColorDot(
+                  key: Key('preference-value-$v'),
+                  rgb: int.parse(v),
+                  label: preferenceValueLabel(l10n, _subject, v),
+                  selected: _value == v,
+                  onTap: () => setState(() => _value = v),
+                )
+              else
+                ChoiceChip(
+                  key: Key('preference-value-$v'),
+                  label: Text(preferenceValueLabel(l10n, _subject, v)),
+                  selected: _value == v,
+                  onSelected: (_) => setState(() => _value = v),
+                ),
+          ]),
+        ]),
+        section([
+          heading(l10n.preferenceOccasions),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Text(
+              l10n.preferenceOccasionsHint,
+              style: theme.textTheme.bodySmall,
             ),
+          ),
+          chips([
+            for (final o in Occasion.values)
+              FilterChip(
+                key: Key('preference-occasion-${o.id}'),
+                label: Text(l10n.occasionLabel(o.id)),
+                selected: _occasions.contains(o),
+                onSelected: (on) => setState(
+                  () => on ? _occasions.add(o) : _occasions.remove(o),
+                ),
+              ),
+          ]),
         ]),
       ],
     );

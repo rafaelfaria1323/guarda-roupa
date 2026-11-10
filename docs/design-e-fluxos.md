@@ -157,6 +157,15 @@ Também sem desenho do Stitch; mesma linguagem (2026-11-10).
 - **Conforto e tempo**: os três limites num cartão; "Repor valores de origem" por baixo.
 - A localização e a IA local já seguiam este estilo.
 
+## Inspiração e preferência (v3, aplicado)
+
+Os editores ficam em cartões, como o formulário da peça (2026-11-10):
+
+- **Nova inspiração**: o aviso por cima; um cartão com título, link e notas; outro com a imagem; outro com as etiquetas (paleta, formalidade, ocasiões, padrões, texturas, proporções) e os botões "Montar com o que tenho" e "Criar preferências".
+- **Nova preferência**: um cartão com a posição e o assunto, outro com o valor e outro com o contexto.
+
+O Resumo do armário e Várias peças de uma vez já usavam cartões e o mesmo verde; ficam como estão.
+
 ## Navegação
 
 Cinco separadores, como no design v3 (2026-11-06):
