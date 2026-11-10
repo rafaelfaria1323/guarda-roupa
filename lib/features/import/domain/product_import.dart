@@ -310,8 +310,9 @@ final class InboxItem {
 }
 
 /// Uma inspiração mandada pelo atalho a partir de um Pin (ou publicação do
-/// Instagram) aberto no Safari: só o link, o título e a descrição da
-/// página. Sem imagem: o fio não a pede ao site.
+/// Instagram) aberto no Safari: o link, o título e a descrição da página
+/// e, se o atalho a leu na página, a imagem do Pin. O fio não a pede ao
+/// site.
 final class InspirationInboxItem {
   const InspirationInboxItem({
     required this.id,
@@ -320,9 +321,13 @@ final class InspirationInboxItem {
     required this.createdAt,
     this.title,
     this.description,
+    this.image,
   });
 
   final String id;
+
+  /// A imagem do Pin (JPEG), lida pelo Safari do utilizador.
+  final Uint8List? image;
 
   /// "Pinterest" ou "Instagram".
   final String site;
@@ -343,12 +348,23 @@ final class InspirationInboxItem {
     final site = preview['site'];
     final found = preview['inspiration'];
     String? text(Object? v) => v is String && v.trim().isNotEmpty ? v : null;
+    Uint8List? image;
+    if (found is Map) {
+      if (found['image'] case final String data) {
+        try {
+          image = base64Decode(data);
+        } on FormatException {
+          image = null;
+        }
+      }
+    }
     return InspirationInboxItem(
       id: id,
       site: site is String ? site : '',
       url: url,
       title: found is Map ? text(found['title']) : null,
       description: found is Map ? text(found['description']) : null,
+      image: image,
       createdAt: created,
     );
   }

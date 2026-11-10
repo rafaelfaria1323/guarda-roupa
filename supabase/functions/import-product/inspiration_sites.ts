@@ -6,7 +6,9 @@
  * O fio nunca pede páginas nem imagens a estes sites: o robots.txt do
  * Pinterest recusa qualquer leitor automático (`User-agent: *` →
  * `Disallow: /`). Só se usa o que o utilizador abriu no próprio Safari e o
- * atalho mandou: o link, o título e a descrição.
+ * atalho mandou: o link, o título, a descrição e, desde 2026-11-10, a
+ * imagem do Pin, lida pelo Safari do utilizador dentro da própria página
+ * (o Pinterest deixa as páginas dele lerem `i.pinimg.com`).
  */
 import type { SharedPage } from './shared_page.ts';
 
@@ -78,4 +80,29 @@ function cut(s: string | undefined, max: number): string | undefined {
   const t = s.replace(/\s+/g, ' ').trim();
   if (t === '') return undefined;
   return t.length <= max ? t : `${t.slice(0, max - 1).trimEnd()}…`;
+}
+
+/** Tamanho máximo da imagem do Pin, em base64 (cerca de 675 kB). */
+export const SHARED_IMAGE_MAX = 900_000;
+
+/**
+ * A imagem que o atalho mandou (JPEG em base64, sem o prefixo `data:`), ou
+ * `undefined` se não vier, for grande demais ou não for um JPEG.
+ */
+export function readSharedImage(raw: unknown): string | undefined {
+  if (typeof raw !== 'string' || raw.length < 100 || raw.length > SHARED_IMAGE_MAX) {
+    return undefined;
+  }
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(raw) || raw.length % 4 !== 0) return undefined;
+  let head: string;
+  try {
+    head = atob(raw.slice(0, 8));
+  } catch {
+    return undefined;
+  }
+  // JPEG: FF D8 FF.
+  if (head.charCodeAt(0) !== 0xff || head.charCodeAt(1) !== 0xd8 || head.charCodeAt(2) !== 0xff) {
+    return undefined;
+  }
+  return raw;
 }

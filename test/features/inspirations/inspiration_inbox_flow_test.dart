@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guarda_roupa/features/import/application/import_providers.dart';
@@ -13,14 +16,16 @@ import 'inspiration_flow_test.dart'
 import 'inspiration_image_flow_test.dart' show styleKinds;
 import 'inspiration_repository_test.dart' show dataOf, styleOperations;
 
-InspirationInboxItem pin(String id, {String? title}) => InspirationInboxItem(
-  id: id,
-  site: 'Pinterest',
-  url: 'https://www.pinterest.com/pin/$id/',
-  title: title,
-  description: 'Blazer e calças largas.',
-  createdAt: DateTime.utc(2026, 11, 6),
-);
+InspirationInboxItem pin(String id, {String? title, Uint8List? image}) =>
+    InspirationInboxItem(
+      id: id,
+      site: 'Pinterest',
+      url: 'https://www.pinterest.com/pin/$id/',
+      title: title,
+      description: 'Blazer e calças largas.',
+      image: image,
+      createdAt: DateTime.utc(2026, 11, 6),
+    );
 
 void main() {
   test('linha da caixa: só as inspirações', () {
@@ -41,6 +46,26 @@ void main() {
     expect(item.url, 'https://www.pinterest.com/pin/1/');
     expect(item.title, 'Look');
     expect(item.description, isNull);
+    expect(item.image, isNull);
+    // Com a imagem que o atalho leu na página do Pin.
+    final withImage = InspirationInboxItem.fromJson({
+      ...row,
+      'preview': {
+        ...row['preview']! as Map,
+        'inspiration': {'title': 'Look', 'image': base64Encode(testPng())},
+      },
+    })!;
+    expect(withImage.image, testPng());
+    expect(
+      InspirationInboxItem.fromJson({
+        ...row,
+        'preview': {
+          ...row['preview']! as Map,
+          'inspiration': {'title': 'Look', 'image': 'não é base64!'},
+        },
+      })!.image,
+      isNull,
+    );
     // Uma inspiração não é uma peça, e uma peça não é uma inspiração.
     expect(InboxItem.fromJson(row), isNull);
     expect(
@@ -127,5 +152,40 @@ void main() {
     await settle(tester);
     expect(importer.discarded, ['3']);
     expect(find.byKey(const Key('inspiration-inbox-3')), findsNothing);
+  });
+
+  testWidgets('Pin do atalho com a imagem: fica já no editor', (tester) async {
+    final importer = FakeImporter()
+      ..inspirationItems.add(
+        pin('4', title: 'Look', image: testPng(width: 800, height: 1000)),
+      );
+    final picker = FakePhotoPicker();
+    final (:auth, :db) = await pumpApp(
+      tester,
+      overrides: [
+        productImporterProvider.overrideWithValue(importer),
+        photoPickerProvider.overrideWithValue(picker),
+        photoStorageProvider.overrideWithValue(null),
+      ],
+    );
+    expect(auth, isNotNull);
+    await openStyle(tester);
+    await dismissSnackBar(tester);
+
+    expect(find.byKey(const Key('inspiration-inbox-thumb-4')), findsOne);
+    expect(find.textContaining('Veio com a imagem do Pin'), findsOne);
+    await tester.tap(find.byKey(const Key('inspiration-inbox-image-4')));
+    // Sem perguntas nem galeria: a imagem já lá está.
+    await settleUntil(tester, find.byKey(const Key('inspiration-image')));
+    expect(find.text('Guardar uma cópia da imagem?'), findsNothing);
+    expect(picker.sources, isEmpty);
+
+    await saveInspiration(tester);
+    expect(await styleKinds(tester, db), [
+      'create_inspiration',
+      'set_inspiration_image',
+    ]);
+    await settle(tester);
+    expect(importer.discarded, ['4']);
   });
 }

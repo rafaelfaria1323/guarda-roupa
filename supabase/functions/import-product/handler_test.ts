@@ -484,6 +484,35 @@ Deno.test('atalho num Pin: inspiração na caixa, sem pedir nada ao Pinterest', 
   });
 });
 
+Deno.test('atalho num Pin com a imagem lida no Safari: vai na caixa', async () => {
+  // Um JPEG mínimo (só o cabeçalho conta para a validação).
+  const jpeg = btoa(String.fromCharCode(0xff, 0xd8, 0xff, 0xe0) + 'x'.repeat(200));
+  const { d, log, sent } = inboxDeps();
+  const res = await handle(toInbox({ ...pinShortcut, image: jpeg }), d);
+  assertEquals(res.status, 200);
+  assertEquals(log.fetched, []);
+  assertEquals(sent[0].images, []);
+  const found = (sent[0].preview as { inspiration: Record<string, unknown> }).inspiration;
+  assertEquals(found.image, jpeg);
+
+  // O que não é um JPEG em base64, ou é grande demais, fica de fora.
+  for (
+    const bad of [
+      btoa('GIF89a' + 'x'.repeat(200)),
+      'data:image/jpeg;base64,' + jpeg,
+      jpeg.slice(0, 40),
+      btoa(String.fromCharCode(0xff, 0xd8, 0xff) + 'x'.repeat(700_000)),
+      42,
+    ]
+  ) {
+    const { d, sent } = inboxDeps();
+    const res = await handle(toInbox({ ...pinShortcut, image: bad }), d);
+    assertEquals(res.status, 200);
+    const found = (sent[0].preview as { inspiration: Record<string, unknown> }).inspiration;
+    assertEquals('image' in found, false);
+  }
+});
+
 Deno.test('atalho num Pin sem meta tags: fica o link, com o nome do site', async () => {
   const { d, sent } = inboxDeps();
   const res = await handle(

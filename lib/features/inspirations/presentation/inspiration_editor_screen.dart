@@ -88,9 +88,11 @@ class _InspirationEditorScreenState
       _notes.text = item.description ?? '';
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final repo = ref.read(inspirationRepositoryProvider);
-        if (mounted && repo != null) {
-          unawaited(_pickImage(repo, PhotoSource.gallery));
-        }
+        if (!mounted || repo == null) return;
+        unawaited(switch (item.image) {
+          final image? => _usePinImage(repo, image),
+          null => _pickImage(repo, PhotoSource.gallery),
+        });
       });
     }
   }
@@ -609,6 +611,24 @@ class _InspirationEditorScreenState
     );
     _rightsConfirmed = ok ?? false;
     return _rightsConfirmed;
+  }
+
+  /// A imagem do Pin que veio pelo atalho: fica já por guardar, como uma
+  /// da galeria. Se não der para a tratar, pede-se uma da galeria.
+  Future<void> _usePinImage(InspirationRepository repo, Uint8List pin) async {
+    setState(() => _processing = true);
+    final processed = await ref.read(photoProcessorProvider)(pin);
+    if (!mounted) return;
+    setState(() => _processing = false);
+    switch (processed) {
+      case Ok(value: final image):
+        setState(() {
+          _rightsConfirmed = true;
+          _pendingImage = image;
+        });
+      case Err():
+        await _pickImage(repo, PhotoSource.gallery);
+    }
   }
 
   Future<void> _pickImage(
