@@ -1,5 +1,12 @@
 import { assertEquals } from '@std/assert';
-import { type Deps, handle, type InboxResult, type Quota, type Recorded } from './handler.ts';
+import {
+  type Deps,
+  handle,
+  type InboxResult,
+  type Quota,
+  type Recorded,
+  SHORTCUT_VERSION,
+} from './handler.ts';
 import { LIMITS } from './fetch_limited.ts';
 
 const fixture = (name: string) =>
@@ -379,6 +386,7 @@ const toInbox = (body: unknown, key = 'fio_chave_de_teste_1234567890', query = '
 
 const zaraShortcut = {
   fio: 1,
+  v: SHORTCUT_VERSION,
   url: 'https://www.zara.com/pt/pt/casaco-p05479600.html',
   ...sharedZara,
 };
@@ -413,6 +421,34 @@ Deno.test('atalho direto: as fotos da galeria do mesmo produto vêm para escolhe
   assertEquals(product.images.some((i) => i.includes('01234500800')), false);
   // As fotos da galeria ficam autorizadas para a app as copiar.
   assertEquals(sent[0].images.includes(a1) && sent[0].images.includes(e1), true);
+});
+
+Deno.test('atalho direto: diz quantas fotos vieram e avisa do script antigo', async () => {
+  const { d } = inboxDeps();
+  assertEquals(
+    await (await handle(toInbox(zaraShortcut), d)).text(),
+    'Enviada para o fio: CASACO EM PELE (2 fotos).',
+  );
+  const old = inboxDeps();
+  const { v: _v, ...noVersion } = zaraShortcut;
+  assertEquals(
+    await (await handle(toInbox(noVersion), old.d)).text(),
+    'Enviada para o fio: CASACO EM PELE (2 fotos). ' +
+      'O teu atalho está desatualizado: cola o script novo (guia 09).',
+  );
+});
+
+Deno.test('atalho direto: as outras imagens da página vêm à parte e ficam autorizadas', async () => {
+  const a1 = 'https://static.zara.net/assets/public/b/05479600800-a1.jpg';
+  const other = 'https://static.zara.net/assets/public/d/01234500800-p.jpg';
+  const logo = 'https://static.zara.net/logo.png';
+  const { d, sent } = inboxDeps();
+  await handle(toInbox({ ...zaraShortcut, gallery: [a1, other, logo] }), d);
+  const product = (sent[0].preview as { product: { images: string[]; moreImages: string[] } })
+    .product;
+  assertEquals(product.images.includes(a1), true);
+  assertEquals(product.moreImages, [other]);
+  assertEquals(sent[0].images.includes(other), true);
 });
 
 Deno.test('atalho direto: apikey no cabeçalho vale mais que no link', async () => {
@@ -464,6 +500,7 @@ Deno.test('atalho direto: cada resposta da base tem a sua mensagem', async () =>
 // Pinterest e Instagram: inspirações, nunca pedidas ao site.
 const pinShortcut = {
   fio: 1,
+  v: SHORTCUT_VERSION,
   url: 'https://pt.pinterest.com/pin/24558760455894205/',
   title: 'Pin em Estilo',
   ld: [],
@@ -545,7 +582,14 @@ Deno.test('atalho num Pin com a imagem lida no Safari: vai na caixa', async () =
 Deno.test('atalho num Pin sem meta tags: fica o link, com o nome do site', async () => {
   const { d, sent } = inboxDeps();
   const res = await handle(
-    toInbox({ fio: 1, url: 'https://pin.it/abc', title: 'Pinterest', ld: [], meta: [] }),
+    toInbox({
+      fio: 1,
+      v: SHORTCUT_VERSION,
+      url: 'https://pin.it/abc',
+      title: 'Pinterest',
+      ld: [],
+      meta: [],
+    }),
     d,
   );
   assertEquals(

@@ -2023,5 +2023,13 @@
   "lensSearch": "Procurar no Google Lens",
   "lensSearchBody": "A imagem vai ser enviada à Google para a pesquisa. No Lens, toca na peça que queres encontrar para ver lojas com ela ou com parecidas.",
   "lensSearchOpen": "Abrir o Google Lens",
-  "lensSearchUnavailable": "Esta imagem ainda não está guardada na nuvem. Tenta daqui a pouco, com rede."
+  "lensSearchUnavailable": "Esta imagem ainda não está guardada na nuvem. Tenta daqui a pouco, com rede.",
+  "importMoreImages": "{count, plural, =1{Ver a outra imagem da página} other{Ver as outras {count} imagens da página}}",
+  "@importMoreImages": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

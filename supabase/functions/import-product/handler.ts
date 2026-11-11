@@ -2,7 +2,7 @@ import { isBotChallenge } from './challenge.ts';
 import { fetchImage, fetchPage } from './fetch_limited.ts';
 import { parseProduct, type ProductPreview, type Source } from './parse.ts';
 import { readSharedPage, type SharedPage, sharedPageHtml } from './shared_page.ts';
-import { withGallery } from './gallery.ts';
+import { restOfGallery, withGallery } from './gallery.ts';
 import {
   inspirationSite,
   readImageWhy,
@@ -57,6 +57,14 @@ export interface Deps {
   fetchFn?: (input: URL, init: RequestInit) => Promise<Response>;
   resolve?: Resolver;
 }
+
+/**
+ * A versão do script do atalho (docs/guias/09-atalho-importar-iphone.md).
+ * Sobe sempre que o script muda; o script manda a dele em `v`.
+ */
+export const SHORTCUT_VERSION = 5;
+
+const photos = (n: number) => n === 1 ? '1 foto' : `${n} fotos`;
 
 const CORS = {
   'access-control-allow-origin': '*',
@@ -213,7 +221,8 @@ function offeredImages(product: ProductPreview): string[] {
   return [
     ...product.images,
     ...product.variants.flatMap((v) => v.image == null ? [] : [v.image]),
-  ].filter((u, i, all) => all.indexOf(u) === i).slice(0, 12);
+    ...(product.moreImages ?? []),
+  ].filter((u, i, all) => all.indexOf(u) === i).slice(0, 40);
 }
 
 /**
@@ -284,6 +293,10 @@ async function toInbox(req: Request, key: string, deps: Deps): Promise<Response>
   if (!check.ok) return say('Este link não se pode importar.', 400);
 
   const apiKey = req.headers.get('apikey') ?? new URL(req.url).searchParams.get('apikey');
+  // O script cola-se à mão no atalho: avisa quando há um mais recente.
+  const outdated = typeof fields.v === 'number' && fields.v >= SHORTCUT_VERSION
+    ? ''
+    : ' O teu atalho está desatualizado: cola o script novo (guia 09).';
   const site = inspirationSite(check.url.hostname);
   if (site != null) {
     const found = readInspiration(page, check.url, site);
@@ -310,7 +323,13 @@ async function toInbox(req: Request, key: string, deps: Deps): Promise<Response>
         ? `Inspiração enviada para o fio, com a imagem: ${name}.`
         : `${sent} A imagem do Pin não veio${why == null ? '' : ` (${why})`}.`;
     }
-    return await submit(send, key, apiKey, { url: found.url, preview, images: [] }, sent);
+    return await submit(
+      send,
+      key,
+      apiKey,
+      { url: found.url, preview, images: [] },
+      sent + outdated,
+    );
   }
 
   const product = sharedProduct(page, check.url);
@@ -334,7 +353,9 @@ async function toInbox(req: Request, key: string, deps: Deps): Promise<Response>
     key,
     apiKey,
     { url: check.url.href, preview, images: offeredImages(product) },
-    `Enviada para o fio: ${product.name ?? siteName(check.url.hostname)}.`,
+    `Enviada para o fio: ${product.name ?? siteName(check.url.hostname)} (${
+      photos(product.images.length)
+    }).${outdated}`,
   );
 }
 
@@ -370,5 +391,7 @@ async function submit(
 function sharedProduct(page: SharedPage, url: URL) {
   const product = parseProduct(sharedPageHtml(page), url);
   if (product == null) return null;
-  return { ...product, images: withGallery(product.images, page.gallery, url) };
+  const images = withGallery(product.images, page.gallery, url);
+  const moreImages = restOfGallery(images, page.gallery);
+  return { ...product, images, ...(moreImages.length === 0 ? {} : { moreImages }) };
 }

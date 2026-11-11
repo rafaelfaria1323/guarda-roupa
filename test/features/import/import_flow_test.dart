@@ -391,6 +391,60 @@ void main() {
     expect(find.byKey(const Key('wardrobe-inbox')), findsNothing);
   });
 
+  testWidgets(
+    'atalho direto: "ver as outras imagens" mostra o resto da página',
+    (tester) async {
+      final importer = FakeImporter()
+        ..inboxItems.add(
+          InboxItem(
+            id: 'i1',
+            preview: ProductPreview(
+              storeName: 'Gant',
+              url: 'https://www.gant.pt/p/t-shirt/2003199-110',
+              name: 'T-shirt',
+              images: const ['https://www.gant.pt/a.jpg'],
+              moreImages: const [
+                'https://www.gant.pt/b.jpg',
+                'https://www.gant.pt/c.jpg',
+              ],
+            ),
+            createdAt: DateTime(2026),
+          ),
+        );
+      await pumpApp(
+        tester,
+        overrides: [productImporterProvider.overrideWithValue(importer)],
+      );
+      await openWardrobe(tester);
+      await settleUntil(tester, find.byKey(const Key('wardrobe-inbox')));
+      await tester.tap(find.byKey(const Key('wardrobe-inbox')));
+      await settleUntil(tester, find.byKey(const Key('import-inbox-i1')));
+      await tester.tap(find.byKey(const Key('import-inbox-i1')));
+      await tester.pumpAndSettle();
+      final more = find.byKey(const Key('import-more-images'));
+      await tester.ensureVisible(more);
+      await tester.pumpAndSettle();
+      expect(find.text('Ver as outras 2 imagens da página'), findsOneWidget);
+      expect(find.byKey(const Key('import-image-2')), findsNothing);
+      await tester.tap(more);
+      await tester.pumpAndSettle();
+      expect(more, findsNothing);
+      await tester.ensureVisible(find.byKey(const Key('import-image-2')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('import-image-2')));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const Key('import-use')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('import-use')));
+      await settleUntil(tester, find.byKey(const Key('garment-save')));
+      // Com uma só foto do produto ela vem marcada; a outra junta-se.
+      expect(importer.images, [
+        'https://www.gant.pt/a.jpg',
+        'https://www.gant.pt/c.jpg',
+      ]);
+    },
+  );
+
   testWidgets('atalho direto: descartar tira a peça da caixa', (tester) async {
     final importer = FakeImporter();
     await pumpApp(

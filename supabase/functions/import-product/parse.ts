@@ -28,6 +28,8 @@ export interface ProductPreview {
    */
   category?: string;
   images: string[];
+  /** As outras imagens da página partilhada pelo atalho (`gallery.ts`). */
+  moreImages?: string[];
   variants: Variant[];
   /** De onde veio cada campo preenchido. */
   sources: Record<string, Source>;
