@@ -206,12 +206,16 @@ final class SharedPage {
     this.title,
     this.ld = const [],
     this.meta = const [],
+    this.gallery = const [],
   });
 
   final String url;
   final String? title;
   final List<String> ld;
   final List<(String, String)> meta;
+
+  /// Os endereços das imagens da página; a função fica com as do produto.
+  final List<String> gallery;
 
   /// O texto copiado pelo atalho, ou `null` se não for dele.
   static SharedPage? parse(String text) {
@@ -238,6 +242,10 @@ final class SharedPage {
         for (final m in _list(data['meta']))
           if (m case [final String k, final String v]) (k, v),
       ],
+      gallery: [
+        for (final g in _list(data['gallery']).take(60))
+          if (g is String) g,
+      ],
     );
   }
 
@@ -248,6 +256,7 @@ final class SharedPage {
     'meta': [
       for (final (k, v) in meta) [k, v],
     ],
+    if (gallery.isNotEmpty) 'gallery': gallery,
   };
 }
 

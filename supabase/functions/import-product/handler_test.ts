@@ -401,6 +401,20 @@ Deno.test('atalho direto: fica na caixa, sem pedir a loja nem quota com sessão'
   assertEquals(sent[0].images.length > 0, true);
 });
 
+Deno.test('atalho direto: as fotos da galeria do mesmo produto vêm para escolher', async () => {
+  const a1 = 'https://static.zara.net/assets/public/b/05479600800-a1.jpg?w=1024';
+  const e1 = 'https://static.zara.net/assets/public/c/05479600800-e1.jpg?w=1024';
+  const gallery = [a1, 'https://static.zara.net/assets/public/d/01234500800-p.jpg', e1];
+  const { d, sent } = inboxDeps();
+  const res = await handle(toInbox({ ...zaraShortcut, gallery }), d);
+  assertEquals(res.status, 200);
+  const product = (sent[0].preview as { product: { images: string[] } }).product;
+  assertEquals(product.images.includes(a1) && product.images.includes(e1), true);
+  assertEquals(product.images.some((i) => i.includes('01234500800')), false);
+  // As fotos da galeria ficam autorizadas para a app as copiar.
+  assertEquals(sent[0].images.includes(a1) && sent[0].images.includes(e1), true);
+});
+
 Deno.test('atalho direto: apikey no cabeçalho vale mais que no link', async () => {
   const { d, sent } = inboxDeps();
   const req = toInbox(zaraShortcut);
