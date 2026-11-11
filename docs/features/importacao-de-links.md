@@ -76,11 +76,11 @@ Para as lojas que bloqueiam (Zara, Massimo Dutti), há um atalho do iPhone, "Imp
 - **Imagens:** `record_import` com o resultado `shared` autoriza as imagens oferecidas (que se copiam depois como sempre; as da Zara, em `static.zara.net`, copiam-se sem bloqueio). **Não mexe nas contagens do domínio**, porque o perfil diz se o *link* funciona sozinho. A etiqueta da pré-visualização diz "Zara · pelo atalho".
 - **Galeria (2026-11-11):** muitas lojas só põem uma foto no JSON-LD e no `og:image`; o resto da galeria está nas imagens da página. O script manda também `gallery`, com até 60 endereços `https` das imagens grandes da página (as pequenas, como as bolinhas de cor, ficam de fora). A função (`gallery.ts`) fica só com as do mesmo produto e junta-as às fotos (máximo 12) para a pessoa escolher:
   - mesmo servidor que a foto principal;
-  - com a referência do nome da foto principal (por exemplo `04749700800` na Zara) ou, sem referência, na mesma pasta;
+  - com a referência do link da página no nome (`2003199` na Gant em `/p/t-shirt…/2003199-110`, `04749700` na Zara em `…-p04749700.html`). Sem referência no link, vale o número mais comprido do nome da foto principal ou, sem nenhum, a mesma pasta. A referência começou por vir só da foto principal, mas na Gant o número mais comprido é uma marca de tempo, diferente em cada foto, e só vinham 2 (corrigido a 2026-11-11);
   - sem `chip`, `swatch`, `icon` e `logo` no endereço;
-  - a mesma foto noutro tamanho conta uma vez.
+  - a mesma foto noutro tamanho ou noutro endereço (o mesmo nome de ficheiro) conta uma vez.
 
-  Testado na Uniqlo: das 39 imagens da página ficaram as 9 do produto. A Zara não abre fora do Safari, por isso só se confirma no iPhone.
+  Testado com páginas reais: Uniqlo, das 39 imagens ficaram as 9 do produto; Gant, as 6 da t-shirt. A Zara não abre fora do Safari, por isso só se confirma no iPhone.
 - **Limite conhecido:** como os dados vêm do cliente, uma conta da allowlist podia oferecer a si própria imagens de qualquer site público. É o mesmo limite de `record_import` descrito acima: as regras de rede, a quota e a allowlist (só o proprietário) mantêm-se.
 - **Só iPhone:** no Android ficaria para um browser dentro da app, que não está feito.
 

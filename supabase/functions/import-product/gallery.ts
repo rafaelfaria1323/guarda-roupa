@@ -25,26 +25,36 @@ export function readGallery(raw: unknown): string[] {
 }
 
 /**
- * Junta às fotos do produto as da galeria que são do mesmo produto: as que
- * têm a referência da foto principal no nome (`04749700800` na Zara) ou,
- * sem referência, as da mesma pasta. A mesma foto noutro tamanho conta uma
- * vez só. Bolinhas de cor e ícones (`chip`, `swatch`…) ficam de fora.
+ * Junta às fotos do produto as da galeria que são do mesmo produto, no
+ * mesmo servidor que a foto principal (ou que a página):
+ *
+ * - com a referência do link da página no nome (`2003199` na Gant em
+ *   `/p/t-shirt…/2003199-110`, `04749700` na Zara em `…-p04749700.html`);
+ * - sem referência no link, com a da foto principal (o número mais
+ *   comprido do nome) ou, sem nenhuma, na mesma pasta.
+ *
+ * A mesma foto noutro tamanho ou noutro endereço (o mesmo nome de ficheiro)
+ * conta uma vez só. Bolinhas de cor e ícones (`chip`, `swatch`…) ficam de fora.
  */
-export function withGallery(images: string[], gallery: string[]): string[] {
+export function withGallery(images: string[], gallery: string[], pageUrl?: URL): string[] {
   const main = images[0];
   if (main == null || gallery.length === 0) return images;
   const mainUrl = new URL(main);
-  const file = mainUrl.pathname.split('/').pop() ?? '';
-  const ref = (file.match(/\d{5,}/g) ?? []).sort((a, b) => b.length - a.length)[0];
+  const runs = (s: string) => s.match(/\d{5,}/g) ?? [];
+  const pageRefs = pageUrl == null ? [] : runs(pageUrl.pathname);
+  const file = (u: URL) => u.pathname.split('/').pop() ?? '';
+  const mainRef = runs(file(mainUrl)).sort((a, b) => b.length - a.length)[0];
+  const refs = pageRefs.length > 0 ? pageRefs : mainRef == null ? [] : [mainRef];
   const dir = mainUrl.pathname.slice(0, mainUrl.pathname.lastIndexOf('/') + 1);
+  const hosts = new Set([mainUrl.host, pageUrl?.host]);
   const sameProduct = (u: URL) =>
-    u.host === mainUrl.host &&
-    (ref != null
-      ? u.pathname.includes(ref)
+    hosts.has(u.host) &&
+    (refs.length > 0
+      ? refs.some((r) => u.pathname.includes(r))
       : u.pathname.startsWith(dir) && /\.(jpe?g|png|webp|avif)$/i.test(u.pathname));
 
   const icon = /(chip|swatch|icon|logo|sprite|placeholder)/i;
-  const key = (u: URL) => u.host + u.pathname;
+  const key = (u: URL) => file(u).toLowerCase();
   const out = [...images];
   const seen = new Set(images.map((i) => key(new URL(i))));
   for (const g of gallery) {

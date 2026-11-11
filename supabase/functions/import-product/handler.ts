@@ -370,5 +370,5 @@ async function submit(
 function sharedProduct(page: SharedPage, url: URL) {
   const product = parseProduct(sharedPageHtml(page), url);
   if (product == null) return null;
-  return { ...product, images: withGallery(product.images, page.gallery) };
+  return { ...product, images: withGallery(product.images, page.gallery, url) };
 }
