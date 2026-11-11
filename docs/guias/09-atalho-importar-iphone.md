@@ -34,7 +34,7 @@ A chave só serve para pôr peças na tua caixa. Se o iPhone se perder, toca em 
      .filter(([k]) => /^(og:|twitter:|product:|description$)/i.test(k))
      .map(([k, v]) => [k.slice(0, 100), v.slice(0, 2000)])
      .slice(0, 80);
-   // Num Pin, junta a imagem que a página já mostra (reduzida).
+   // Num Pin, junta a imagem que a página mostra (reduzida).
    const load = src => new Promise((ok, no) => {
      const i = new Image();
      i.crossOrigin = 'anonymous';
@@ -42,24 +42,58 @@ A chave só serve para pôr peças na tua caixa. Se o iPhone se perder, toca em 
      i.onerror = () => no(new Error('não carregou'));
      i.src = src;
    });
+   const pinimg = s => typeof s === 'string' && s.startsWith('https://i.pinimg.com/');
+   const seen = el => {
+     const r = el.getBoundingClientRect();
+     const w = Math.min(r.right, innerWidth) - Math.max(r.left, 0);
+     const h = Math.min(r.bottom, innerHeight) - Math.max(r.top, 0);
+     return r.width >= 120 && w > 0 && h > 0 ? w * h : 0;
+   };
+   const pinCandidates = () => {
+     const out = [];
+     for (const i of document.querySelectorAll('img[elementtiming*="MainPinImage"]')) {
+       out.push(i.currentSrc || i.src);
+     }
+     // A og:image só conta se for deste Pin (ao navegar no feed fica a antiga).
+     const ogUrl = (meta.find(([k]) => k.toLowerCase() === 'og:url') || [])[1] || '';
+     const og = (meta.find(([k]) => k.toLowerCase() === 'og:image') || [])[1];
+     const id = (location.pathname.match(/\/pin\/(?:[^/]*--)?(\d+)/) || [])[1];
+     if (!ogUrl || (id && ogUrl.includes(id))) out.push(og);
+     // Senão, a maior imagem (ou capa de vídeo) do Pinterest no ecrã.
+     const shown = [...document.images].map(i => [i.currentSrc || i.src, seen(i)])
+       .concat([...document.querySelectorAll('video[poster]')].map(v => [v.poster, seen(v)]))
+       .filter(([s, a]) => pinimg(s) && a > 0)
+       .sort((x, y) => y[1] - x[1]);
+     for (const [s] of shown.slice(0, 2)) out.push(s.replace(/\/(236x|474x|564x)\//, '/736x/'));
+     return [...new Set(out.filter(pinimg))];
+   };
    const pinImage = async () => {
      if (!/(^|\.)pinterest\.[a-z.]+$/.test(location.hostname)) return {};
-     const main = document.querySelector('img[elementtiming*="MainPinImage"]');
-     const og = (meta.find(([k]) => k.toLowerCase() === 'og:image') || [])[1];
-     const src = og || (main && main.currentSrc);
-     if (!src || !src.startsWith('https://i.pinimg.com/')) return { why: 'sem imagem na página' };
-     // Pede uma cópia nova: a que o Safari já tem não se deixa ler.
-     const fresh = src + (src.includes('?') ? '&' : '?') + 'fio=1';
-     const i = await load(fresh).catch(async () =>
-       load(URL.createObjectURL(await (await fetch(fresh, { cache: 'no-store' })).blob())));
-     const k = Math.min(1, 1280 / Math.max(i.naturalWidth, i.naturalHeight));
-     const c = document.createElement('canvas');
-     c.width = Math.round(i.naturalWidth * k);
-     c.height = Math.round(i.naturalHeight * k);
-     c.getContext('2d').drawImage(i, 0, 0, c.width, c.height);
-     return { image: c.toDataURL('image/jpeg', 0.8).split(',')[1] };
+     const list = pinCandidates();
+     if (list.length === 0) {
+       const all = [...document.images].filter(i => (i.currentSrc || i.src).includes('pinimg')).length;
+       return { why: `sem imagem: ${document.images.length} img, ${all} pinimg, ${meta.length} meta` };
+     }
+     let why = '';
+     for (const src of list.slice(0, 3)) {
+       try {
+         // Pede uma cópia nova: a que o Safari já tem não se deixa ler.
+         const fresh = src + (src.includes('?') ? '&' : '?') + 'fio=1';
+         const i = await load(fresh).catch(async () =>
+           load(URL.createObjectURL(await (await fetch(fresh, { cache: 'no-store' })).blob())));
+         const k = Math.min(1, 1280 / Math.max(i.naturalWidth, i.naturalHeight));
+         const c = document.createElement('canvas');
+         c.width = Math.round(i.naturalWidth * k);
+         c.height = Math.round(i.naturalHeight * k);
+         c.getContext('2d').drawImage(i, 0, 0, c.width, c.height);
+         return { image: c.toDataURL('image/jpeg', 0.8).split(',')[1] };
+       } catch (e) {
+         why = String((e && (e.name + ' ' + e.message)) || e);
+       }
+     }
+     return { why };
    };
-   pinImage().catch(e => ({ why: String((e && (e.name + ' ' + e.message)) || e) })).then(r =>
+   pinImage().catch(e => ({ why: String(e) })).then(r =>
      completion(JSON.stringify({
        fio: 1, url: location.href, title: document.title, ld, meta,
        image: r.image, imageWhy: r.why && r.why.slice(0, 60),
@@ -99,7 +133,9 @@ O mesmo atalho serve para inspirações:
 
 ### A imagem do Pin (2026-11-10, corrigido a 2026-11-11)
 
-O script do passo 4 traz a imagem dos Pins. **Se colaste o script antes de 2026-11-11**, abre o atalho na app Atalhos, apaga o texto da ação "Executar JavaScript na página web" e cola o script de cima outra vez. O resto do atalho não muda.
+O script do passo 4 traz a imagem dos Pins. **Se colaste o script antes de 2026-11-11 (segunda correção)**, abre o atalho na app Atalhos, apaga o texto da ação "Executar JavaScript na página web" e cola o script de cima outra vez. O resto do atalho não muda.
+
+Na segunda correção, o script deixou de depender só da `og:image` (que fica a antiga quando se anda de Pin em Pin no feed): usa a imagem principal do Pin, a maior imagem do Pinterest no ecrã ou a capa de um vídeo.
 
 A primeira versão (2026-11-10) não chegava a trazer a imagem: o Safari reaproveitava a imagem que já tinha mostrado, e essa não se deixa ler. E, quando vinha, o fio recusava-a porque a caixa "Por importar" só aceitava 64 kB (agora aceita até 1 MB).
 
