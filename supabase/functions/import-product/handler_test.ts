@@ -514,14 +514,14 @@ Deno.test('atalho num Pin com a imagem lida no Safari: vai na caixa', async () =
   ) {
     const { d, sent } = inboxDeps();
     const res = await handle(
-      toInbox({ ...pinShortcut, image: bad, imageWhy: 'SecurityError<b>' }),
+      toInbox({ ...pinShortcut, image: bad, imageWhy: 'sem imagem: 3 img, 0 pinimg<>' }),
       d,
     );
     assertEquals(res.status, 200);
     assertEquals(
       await res.text(),
       'Inspiração enviada para o fio: Minimalist Fashion Inspiration. ' +
-        'A imagem do Pin não veio (SecurityErrorb).',
+        'A imagem do Pin não veio (sem imagem: 3 img, 0 pinimg).',
     );
     const found = (sent[0].preview as { inspiration: Record<string, unknown> }).inspiration;
     assertEquals('image' in found, false);
