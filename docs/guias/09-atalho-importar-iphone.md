@@ -34,6 +34,32 @@ A chave só serve para pôr peças na tua caixa. Se o iPhone se perder, toca em 
      .filter(([k]) => /^(og:|twitter:|product:|description$)/i.test(k))
      .map(([k, v]) => [k.slice(0, 100), v.slice(0, 2000)])
      .slice(0, 80);
+   // A galeria: os endereços das imagens da página (o fio fica com as do produto).
+   const gallery = [];
+   const bigOf = el => {
+     // Ícones e bolinhas de cor ficam de fora: só imagens grandes.
+     const img = el.tagName === 'IMG' ? el : el.parentElement && el.parentElement.querySelector('img');
+     const shown = img ? Math.max(img.getBoundingClientRect().width, img.naturalWidth / 2) : 0;
+     let best = null, bw = 0;
+     for (const part of (el.getAttribute('srcset') || el.getAttribute('data-srcset') || '').split(',')) {
+       const [u, w] = part.trim().split(/\s+/);
+       const n = parseFloat(w) || 1;
+       if (u && (best === null || (bw < 900 ? n > bw : n >= 900 && n < bw))) { best = u; bw = n; }
+     }
+     if (shown < 150 && bw < 300) return null;
+     return best || el.currentSrc || el.getAttribute('data-src') || el.getAttribute('src');
+   };
+   for (const el of document.querySelectorAll('img, picture source')) {
+     try {
+       const src = bigOf(el);
+       if (!src) continue;
+       const u = new URL(src, location.href);
+       if (u.protocol === 'https:' && !/\.(svg|gif)$/i.test(u.pathname) && !gallery.includes(u.href)) {
+         gallery.push(u.href.slice(0, 2048));
+       }
+     } catch (e) {}
+     if (gallery.length >= 60) break;
+   }
    // Num Pin, junta a imagem que a página mostra (reduzida).
    const load = src => new Promise((ok, no) => {
      const i = new Image();
@@ -95,7 +121,7 @@ A chave só serve para pôr peças na tua caixa. Se o iPhone se perder, toca em 
    };
    pinImage().catch(e => ({ why: String(e) })).then(r =>
      completion(JSON.stringify({
-       fio: 1, url: location.href, title: document.title, ld, meta,
+       fio: 1, url: location.href, title: document.title, ld, meta, gallery,
        image: r.image, imageWhy: r.why && r.why.slice(0, 60),
      })));
    ```
@@ -147,6 +173,10 @@ A notificação do atalho diz se a imagem veio:
 - "… A imagem do Pin não veio (motivo).": manda-me o motivo que aparece. Sem motivo, o atalho ainda tem o script antigo.
 
 Se o cartão aparecer sem imagem, "Com imagem" pede-a como antes: guarda-a no iPhone (no Pinterest: ⋯ → **Transferir imagem**) e escolhe-a na galeria.
+
+### Todas as fotos da peça (2026-11-11)
+
+O script do passo 4 passou a mandar também as imagens grandes da página. Assim chegam ao fio as várias fotos da peça, e não só a primeira, para escolheres quais ficam. **Se colaste o script antes de 2026-11-11 (à tarde)**, cola-o outra vez como acima.
 
 ## Se não funcionar
 

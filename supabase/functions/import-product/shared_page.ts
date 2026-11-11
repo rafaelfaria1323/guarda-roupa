@@ -8,10 +8,14 @@
  * Os dados vêm do cliente, por isso são limitados e tratados como texto. A
  * página é remontada como HTML mínimo para passar pelo mesmo parser.
  */
+import { readGallery } from './gallery.ts';
+
 export interface SharedPage {
   title?: string;
   ld: string[];
   meta: [string, string][];
+  /** Os endereços das imagens da página (a galeria), ver `gallery.ts`. */
+  gallery: string[];
 }
 
 export const SHARED_LIMITS = {
@@ -53,6 +57,7 @@ export function readSharedPage(raw: unknown): SharedPage | null {
     title: title?.slice(0, SHARED_LIMITS.title),
     ld: ld as string[],
     meta: pairs,
+    gallery: readGallery(o.gallery),
   };
 }
 

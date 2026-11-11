@@ -200,6 +200,12 @@ void main() {
         ['og:title', 'CASACO'],
       ],
     });
+    final withGallery = SharedPage.parse(
+      '{"fio":1,"url":"https://www.zara.com/pt/pt/c-p1.html",'
+      '"gallery":["https://static.zara.net/a.jpg",7]}',
+    )!;
+    expect(withGallery.gallery, ['https://static.zara.net/a.jpg']);
+    expect(withGallery.toJson()['gallery'], ['https://static.zara.net/a.jpg']);
     expect(SharedPage.parse('https://www.zara.com/pt/pt/c-p1.html'), isNull);
     expect(SharedPage.parse('{"url":"https://a.example"}'), isNull);
     expect(SharedPage.parse('{"fio":1}'), isNull);

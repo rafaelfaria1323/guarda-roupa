@@ -2,6 +2,7 @@ import { isBotChallenge } from './challenge.ts';
 import { fetchImage, fetchPage } from './fetch_limited.ts';
 import { parseProduct, type ProductPreview, type Source } from './parse.ts';
 import { readSharedPage, type SharedPage, sharedPageHtml } from './shared_page.ts';
+import { withGallery } from './gallery.ts';
 import {
   inspirationSite,
   readImageWhy,
@@ -227,7 +228,7 @@ async function fromShared(
   page: SharedPage,
   deps: Deps,
 ): Promise<Response> {
-  const product = parseProduct(sharedPageHtml(page), url);
+  const product = sharedProduct(page, url);
   const images = product == null ? [] : offeredImages(product);
   let recorded: Recorded | null = null;
   try {
@@ -312,7 +313,7 @@ async function toInbox(req: Request, key: string, deps: Deps): Promise<Response>
     return await submit(send, key, apiKey, { url: found.url, preview, images: [] }, sent);
   }
 
-  const product = parseProduct(sharedPageHtml(page), check.url);
+  const product = sharedProduct(page, check.url);
   if (product == null) {
     return say('A página não tem os dados do produto. Abre a página de uma peça.', 422);
   }
@@ -363,4 +364,11 @@ async function submit(
     case 'full':
       return say('Já tens 20 envios por tratar. Abre o fio primeiro.', 409);
   }
+}
+
+/** O produto da página partilhada, com as fotos da galeria do mesmo produto. */
+function sharedProduct(page: SharedPage, url: URL) {
+  const product = parseProduct(sharedPageHtml(page), url);
+  if (product == null) return null;
+  return { ...product, images: withGallery(product.images, page.gallery) };
 }
