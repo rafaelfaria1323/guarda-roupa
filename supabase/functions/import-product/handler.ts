@@ -2,7 +2,12 @@ import { isBotChallenge } from './challenge.ts';
 import { fetchImage, fetchPage } from './fetch_limited.ts';
 import { parseProduct, type ProductPreview, type Source } from './parse.ts';
 import { readSharedPage, type SharedPage, sharedPageHtml } from './shared_page.ts';
-import { inspirationSite, readInspiration, readSharedImage } from './inspiration_sites.ts';
+import {
+  inspirationSite,
+  readImageWhy,
+  readInspiration,
+  readSharedImage,
+} from './inspiration_sites.ts';
 import { siteName } from './stores.ts';
 import { checkPublic, type Resolver } from './url_guard.ts';
 
@@ -295,13 +300,16 @@ async function toInbox(req: Request, key: string, deps: Deps): Promise<Response>
       },
       via: 'shared',
     };
-    return await submit(
-      send,
-      key,
-      apiKey,
-      { url: found.url, preview, images: [] },
-      `Inspiração enviada para o fio: ${found.title ?? site.name}.`,
-    );
+    const name = found.title ?? site.name;
+    let sent = `Inspiração enviada para o fio: ${name}.`;
+    if (site.id === 'pinterest') {
+      // Diz se a imagem veio, para se perceber logo quando o Safari não a leu.
+      const why = readImageWhy(fields.imageWhy);
+      sent = image != null
+        ? `Inspiração enviada para o fio, com a imagem: ${name}.`
+        : `${sent} A imagem do Pin não veio${why == null ? '' : ` (${why})`}.`;
+    }
+    return await submit(send, key, apiKey, { url: found.url, preview, images: [] }, sent);
   }
 
   const product = parseProduct(sharedPageHtml(page), check.url);

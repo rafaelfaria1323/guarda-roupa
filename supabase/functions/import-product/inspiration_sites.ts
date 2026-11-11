@@ -106,3 +106,13 @@ export function readSharedImage(raw: unknown): string | undefined {
   }
   return raw;
 }
+
+/**
+ * Porque é que o script do atalho não leu a imagem do Pin (curto, só
+ * letras, números e pontuação simples), para a notificação o dizer.
+ */
+export function readImageWhy(raw: unknown): string | undefined {
+  if (typeof raw !== 'string') return undefined;
+  const t = raw.replace(/[^\p{L}\p{N} .:_-]/gu, '').trim().slice(0, 60);
+  return t === '' ? undefined : t;
+}
