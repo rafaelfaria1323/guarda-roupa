@@ -466,7 +466,10 @@ Deno.test('atalho num Pin: inspiração na caixa, sem pedir nada ao Pinterest', 
   const { d, log, sent } = inboxDeps();
   const res = await handle(toInbox(pinShortcut), d);
   assertEquals(res.status, 200);
-  assertEquals(await res.text(), 'Inspiração enviada para o fio: Minimalist Fashion Inspiration.');
+  assertEquals(
+    await res.text(),
+    'Inspiração enviada para o fio: Minimalist Fashion Inspiration. A imagem do Pin não veio.',
+  );
   assertEquals(log.fetched, []);
   assertEquals(sent.length, 1);
   assertEquals(sent[0].images, []);
@@ -490,6 +493,10 @@ Deno.test('atalho num Pin com a imagem lida no Safari: vai na caixa', async () =
   const { d, log, sent } = inboxDeps();
   const res = await handle(toInbox({ ...pinShortcut, image: jpeg }), d);
   assertEquals(res.status, 200);
+  assertEquals(
+    await res.text(),
+    'Inspiração enviada para o fio, com a imagem: Minimalist Fashion Inspiration.',
+  );
   assertEquals(log.fetched, []);
   assertEquals(sent[0].images, []);
   const found = (sent[0].preview as { inspiration: Record<string, unknown> }).inspiration;
@@ -506,8 +513,16 @@ Deno.test('atalho num Pin com a imagem lida no Safari: vai na caixa', async () =
     ]
   ) {
     const { d, sent } = inboxDeps();
-    const res = await handle(toInbox({ ...pinShortcut, image: bad }), d);
+    const res = await handle(
+      toInbox({ ...pinShortcut, image: bad, imageWhy: 'SecurityError<b>' }),
+      d,
+    );
     assertEquals(res.status, 200);
+    assertEquals(
+      await res.text(),
+      'Inspiração enviada para o fio: Minimalist Fashion Inspiration. ' +
+        'A imagem do Pin não veio (SecurityErrorb).',
+    );
     const found = (sent[0].preview as { inspiration: Record<string, unknown> }).inspiration;
     assertEquals('image' in found, false);
   }
@@ -519,7 +534,10 @@ Deno.test('atalho num Pin sem meta tags: fica o link, com o nome do site', async
     toInbox({ fio: 1, url: 'https://pin.it/abc', title: 'Pinterest', ld: [], meta: [] }),
     d,
   );
-  assertEquals(await res.text(), 'Inspiração enviada para o fio: Pinterest.');
+  assertEquals(
+    await res.text(),
+    'Inspiração enviada para o fio: Pinterest. A imagem do Pin não veio.',
+  );
   const preview = sent[0].preview as Record<string, unknown>;
   assertEquals(preview.url, 'https://pin.it/abc');
   assertEquals(preview.inspiration, { title: undefined, description: undefined });

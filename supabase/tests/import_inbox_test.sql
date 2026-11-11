@@ -117,3 +117,28 @@ select pg_temp.check('a quota das importações vale para o atalho',
   public.submit_import_inbox((select key from pg_temp.k where who = 'outro'),
     'https://www.zara.com/p1', '{}') = 'rate_limited');
 commit;
+
+-- A imagem do Pin (até 900 000 caracteres) cabe na pré-visualização.
+begin;
+reset role;
+delete from public.import_inbox;
+delete from public.import_requests;
+select pg_temp.as_anon();
+select pg_temp.check('pré-visualização com a imagem do Pin',
+  public.submit_import_inbox((select key from pg_temp.k where who = 'outro'),
+    'https://pt.pinterest.com/pin/1/',
+    jsonb_build_object('inspiration', jsonb_build_object('image', repeat('A', 900000)))) = 'ok');
+commit;
+
+begin;
+select pg_temp.as_anon();
+do $$
+begin
+  perform public.submit_import_inbox((select key from pg_temp.k where who = 'outro'),
+    'https://pt.pinterest.com/pin/2/',
+    jsonb_build_object('inspiration', jsonb_build_object('image', repeat('A', 1100000))));
+  raise exception 'FALHOU: aceitou mais de 1 MB';
+exception when check_violation then
+  raise notice 'ok - mais de 1 MB fica de fora';
+end $$;
+commit;
