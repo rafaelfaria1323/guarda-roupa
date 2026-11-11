@@ -2031,5 +2031,12 @@
         "type": "int"
       }
     }
-  }
+  },
+  "diagnosticsTitle": "Diagnóstico",
+  "diagnosticsSubtitle": "Versão e últimos erros, para copiar",
+  "diagnosticsIntro": "Se algo falhar, copia isto e manda a quem te ajuda. Nada é enviado sozinho, e as chaves são retiradas do texto.",
+  "diagnosticsCopy": "Copiar tudo",
+  "diagnosticsCopied": "Diagnóstico copiado.",
+  "diagnosticsClear": "Limpar erros",
+  "diagnosticsEmpty": "Sem erros registados neste dispositivo."
 }
