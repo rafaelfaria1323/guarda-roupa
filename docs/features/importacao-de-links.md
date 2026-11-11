@@ -81,6 +81,8 @@ Para as lojas que bloqueiam (Zara, Massimo Dutti), há um atalho do iPhone, "Imp
   - a mesma foto noutro tamanho ou noutro endereço (o mesmo nome de ficheiro) conta uma vez.
 
   Testado com páginas reais: Uniqlo, das 39 imagens ficaram as 9 do produto; Gant, as 6 da t-shirt. A Zara não abre fora do Safari, por isso só se confirma no iPhone.
+- **Saída quando o filtro falha (2026-11-11):** as imagens da galeria que o filtro deixou de fora vêm à parte em `product.moreImages` (até 24, sem ícones nem repetidas). Na pré-visualização, "Ver as outras imagens da página" mostra-as para escolher. Ficam autorizadas como as outras; o limite de imagens autorizadas por pedido passou de 12 para 40 (`record_import`, `submit_import_inbox`).
+- **Versão do script (2026-11-11):** o script manda `v` e a função tem `SHORTCUT_VERSION` (`handler.ts`). Com `v` em falta ou mais baixo, a notificação do atalho acaba com o aviso para colar o script novo. **Ao mudar o script no guia 09, subir os dois números.** A notificação de uma peça diz quantas fotos vieram.
 - **Limite conhecido:** como os dados vêm do cliente, uma conta da allowlist podia oferecer a si própria imagens de qualquer site público. É o mesmo limite de `record_import` descrito acima: as regras de rede, a quota e a allowlist (só o proprietário) mantêm-se.
 - **Só iPhone:** no Android ficaria para um browser dentro da app, que não está feito.
 

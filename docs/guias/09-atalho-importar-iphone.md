@@ -121,7 +121,7 @@ A chave só serve para pôr peças na tua caixa. Se o iPhone se perder, toca em 
    };
    pinImage().catch(e => ({ why: String(e) })).then(r =>
      completion(JSON.stringify({
-       fio: 1, url: location.href, title: document.title, ld, meta, gallery,
+       fio: 1, v: 5, url: location.href, title: document.title, ld, meta, gallery,
        image: r.image, imageWhy: r.why && r.why.slice(0, 60),
      })));
    ```
@@ -177,6 +177,12 @@ Se o cartão aparecer sem imagem, "Com imagem" pede-a como antes: guarda-a no iP
 ### Todas as fotos da peça (2026-11-11)
 
 O script do passo 4 passou a mandar também as imagens grandes da página. Assim chegam ao fio as várias fotos da peça, e não só a primeira, para escolheres quais ficam. **Se colaste o script antes de 2026-11-11 (à tarde)**, cola-o outra vez como acima.
+
+### O atalho avisa quando está desatualizado (2026-11-11)
+
+O script leva um número de versão (`v: 5`). Quando houver um script mais recente, a notificação do atalho acaba com "O teu atalho está desatualizado: cola o script novo (guia 09)." Nessa altura, cola outra vez o script do passo 4. Um script sem versão (anterior a esta mudança) também recebe o aviso.
+
+A notificação de uma peça diz ainda quantas fotos vieram: "Enviada para o fio: T-SHIRT (6 fotos)." Se faltar alguma, na importação há **Ver as outras imagens da página**, com o resto das imagens grandes que o Safari mostrava.
 
 ## Se não funcionar
 

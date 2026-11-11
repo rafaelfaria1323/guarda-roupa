@@ -6,7 +6,7 @@
  */
 
 /** Quantos endereços o atalho pode mandar e quantas fotos ficam no fim. */
-export const GALLERY_LIMITS = { urls: 60, urlLength: 2048, images: 12 };
+export const GALLERY_LIMITS = { urls: 60, urlLength: 2048, images: 12, more: 24 };
 
 /** Os endereços `https` da galeria; o que não servir fica de fora. */
 export function readGallery(raw: unknown): string[] {
@@ -62,6 +62,27 @@ export function withGallery(images: string[], gallery: string[], pageUrl?: URL):
     const u = new URL(g);
     if (seen.has(key(u)) || icon.test(u.pathname) || !sameProduct(u)) continue;
     seen.add(key(u));
+    out.push(u.href);
+  }
+  return out;
+}
+
+/**
+ * As outras imagens da página, para "Ver todas as imagens": o que o filtro
+ * de [withGallery] deixou de fora (menos ícones e repetidas). É a saída
+ * para quando o filtro falha numa loja nova.
+ */
+export function restOfGallery(images: string[], gallery: string[]): string[] {
+  const file = (u: string) => (new URL(u).pathname.split('/').pop() ?? '').toLowerCase();
+  const seen = new Set(images.map(file));
+  const out: string[] = [];
+  for (const g of gallery) {
+    if (out.length >= GALLERY_LIMITS.more) break;
+    const u = new URL(g);
+    if (seen.has(file(g)) || /(chip|swatch|icon|logo|sprite|placeholder)/i.test(u.pathname)) {
+      continue;
+    }
+    seen.add(file(g));
     out.push(u.href);
   }
   return out;

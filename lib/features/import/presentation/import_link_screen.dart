@@ -38,6 +38,9 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
   ImportVariant? _variant;
   final _images = <String>{};
 
+  /// Mostrar também as outras imagens da página.
+  var _allImages = false;
+
   /// Peças mandadas pelo atalho; `null` enquanto carrega ou se falhou.
   List<InboxItem>? _inbox;
 
@@ -74,6 +77,7 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
       _preview = p;
       _variant = null;
       _images.clear();
+      _allImages = false;
       // Com várias fotos, escolhe o utilizador: a primeira costuma ser o
       // manequim (decisão de 2026-11-07). Só essa se copia.
       if (p.images.length == 1 && widget.maxImages > 0) {
@@ -137,6 +141,7 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
       _preview = null;
       _variant = null;
       _images.clear();
+      _allImages = false;
     });
     final result = page != null
         ? await widget.importer.previewShared(page)
@@ -180,7 +185,7 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
     final bytes = <Uint8List>[];
     var failed = 0;
     // Pela ordem da página: a primeira fica como capa.
-    for (final url in p.images.where(_images.contains)) {
+    for (final url in [...p.images, ...p.moreImages].where(_images.contains)) {
       switch (await widget.importer.image(url)) {
         case Ok(value: final b):
           bytes.add(b);
@@ -427,7 +432,10 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
           spacing: 8,
           runSpacing: 8,
           children: [
-            for (final (i, url) in p.images.indexed)
+            for (final (i, url) in [
+              ...p.images,
+              if (_allImages) ...p.moreImages,
+            ].indexed)
               _ImageChoice(
                 key: Key('import-image-$i'),
                 url: url,
@@ -442,6 +450,16 @@ class _ImportLinkScreenState extends State<ImportLinkScreen> {
               ),
           ],
         ),
+        if (p.moreImages.isNotEmpty && !_allImages)
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton.icon(
+              key: const Key('import-more-images'),
+              onPressed: () => setState(() => _allImages = true),
+              icon: const Icon(Icons.photo_library_outlined),
+              label: Text(l10n.importMoreImages(p.moreImages.length)),
+            ),
+          ),
       ],
       const SizedBox(height: 16),
       Text(l10n.importConfirmLater, style: theme.textTheme.bodySmall),

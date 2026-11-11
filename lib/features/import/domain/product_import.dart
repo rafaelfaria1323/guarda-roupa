@@ -83,6 +83,7 @@ final class ProductPreview {
     this.material,
     this.category,
     this.images = const [],
+    this.moreImages = const [],
     this.variants = const [],
     this.sources = const {},
     this.confirm = const {},
@@ -105,6 +106,10 @@ final class ProductPreview {
   final String? category;
 
   final List<String> images;
+
+  /// As outras imagens da página que o atalho mandou, para quando o
+  /// filtro das fotos do produto deixa alguma de fora.
+  final List<String> moreImages;
   final List<ImportVariant> variants;
   final Map<String, ImportSource> sources;
 
@@ -131,6 +136,7 @@ final class ProductPreview {
       material: _string(p['material']),
       category: _string(p['category']),
       images: [for (final i in _list(p['images'])) ?_string(i)],
+      moreImages: [for (final i in _list(p['moreImages'])) ?_string(i)],
       variants: [
         for (final v in _list(p['variants']))
           if (v is Map) ImportVariant.fromJson(v.cast<String, Object?>()),
