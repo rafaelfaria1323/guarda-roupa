@@ -21,7 +21,8 @@ import 'suggestion.dart';
 ///   Uma t-shirt chega como top único; uma malha (camisola, sweat, casaco
 ///   de malha) leva uma peça leve por baixo ([overLayers]); casaco só
 ///   quando o conforto o pede (frio com peça leve/média) ou como sugestão
-///   opcional.
+///   opcional. Os melhores tops cruzam-se com as melhores partes de baixo
+///   ([pairSearch]) e as propostas variam de peças ([_varied]).
 /// - **Ordem de cada papel:** conforto, chuva/vento (casaco e calçado),
 ///   rotatividade (elegíveis primeiro, P-06), preferências (gosto − evito),
 ///   menos usadas, usadas há mais tempo, seed. Com uma inspiração
@@ -147,19 +148,28 @@ abstract final class DailyEngine {
     final separatesOk = tops.ranked.isNotEmpty && bottoms.ranked.isNotEmpty;
     if (separatesOk) {
       final n = _min(max, _max(tops.ranked.length, bottoms.ranked.length));
+      _Draft pair(int top, int bottom) => ctx.compose(
+        _max(top, bottom),
+        [
+          (tops.at(top), OutfitRole.mainTop),
+          (bottoms.at(bottom), OutfitRole.bottom),
+        ],
+        footwear: footwear,
+        outer: outer,
+        tops: tops,
+      );
       for (var i = 0; i < n; i++) {
-        add(
-          ctx.compose(
-            i,
-            [
-              (tops.at(i), OutfitRole.mainTop),
-              (bottoms.at(i), OutfitRole.bottom),
-            ],
-            footwear: footwear,
-            outer: outer,
-            tops: tops,
-          ),
-        );
+        add(pair(i, i));
+      }
+      // Além do 1.º com o 1.º, do 2.º com o 2.º…, experimenta os outros
+      // pares das melhores peças: o melhor top pode ficar melhor com as
+      // terceiras calças (preferências do conjunto, formalidade, padrões).
+      final nt = _min(pairSearch, tops.ranked.length);
+      final nb = _min(pairSearch, bottoms.ranked.length);
+      for (var a = 0; a < nt; a++) {
+        for (var b = 0; b < nb; b++) {
+          if (a != b) add(pair(a, b));
+        }
       }
     }
     final onePieceOk = onePieces.ranked.isNotEmpty;
@@ -180,7 +190,7 @@ abstract final class DailyEngine {
     drafts.sort(_Draft.compare);
     final accessories = ctx.accessories();
     final candidates = [
-      for (final d in drafts.take(max))
+      for (final d in _varied(drafts, max))
         accessories.isEmpty
             ? d.candidate
             : d.candidate.withAccessories(accessories),
@@ -349,6 +359,36 @@ abstract final class DailyEngine {
   }
 
   /// Malhas que se vestem por cima de outra peça.
+  /// Quantas das melhores peças de cima e de baixo se cruzam entre si.
+  static const pairSearch = 6;
+
+  /// Os [max] melhores sem repetir peças principais enquanto der: de cada
+  /// vez fica o que repete menos peças das já escolhidas e, entre esses, o
+  /// mais bem ordenado. Sem isto, as propostas seriam o melhor top com
+  /// várias calças. Cada proposta traz pelo menos uma peça principal nova.
+  static List<_Draft> _varied(List<_Draft> sorted, int max) {
+    final picked = <_Draft>[];
+    final used = <GarmentId>{};
+    final rest = [...sorted];
+    while (picked.length < max && rest.isNotEmpty) {
+      var best = 0;
+      var bestOverlap = rest.first.mains.where(used.contains).length;
+      for (var i = 1; i < rest.length && bestOverlap > 0; i++) {
+        final overlap = rest[i].mains.where(used.contains).length;
+        if (overlap < bestOverlap) {
+          best = i;
+          bestOverlap = overlap;
+        }
+      }
+      final d = rest.removeAt(best);
+      // Só peças já propostas, noutra arrumação: não acrescenta nada.
+      if (picked.isNotEmpty && bestOverlap == d.mains.length) break;
+      picked.add(d);
+      used.addAll(d.mains);
+    }
+    return picked..sort(_Draft.compare);
+  }
+
   static const overLayers = {
     GarmentCategory.sweater,
     GarmentCategory.sweatshirt,
@@ -837,6 +877,10 @@ final class _Context {
         notes: notes,
       ),
       entries: [for (final (e, _) in items) e],
+      mains: {
+        for (final (e, _) in mains) e.garment.id,
+        if (layer != null) layer.garment.id,
+      },
       under: under,
       seed: request.seed,
       comboPreference: comboPreference + (savedNote == null ? 0 : 1),
@@ -859,6 +903,7 @@ final class _Draft {
   _Draft(
     this.candidate, {
     required List<_Entry> entries,
+    required this.mains,
     _Entry? under,
     required int seed,
     required int comboPreference,
@@ -882,6 +927,10 @@ final class _Draft {
   }
 
   final OutfitCandidate candidate;
+
+  /// As peças que fazem o conjunto (top, parte de baixo ou peça única, e a
+  /// camada de um conjunto guardado), para variar as propostas.
+  final Set<GarmentId> mains;
 
   /// Peças do conjunto, para não repetir o mesmo conjunto.
   final String key;

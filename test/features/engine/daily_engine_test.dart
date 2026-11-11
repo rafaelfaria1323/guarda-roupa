@@ -856,6 +856,54 @@ void main() {
       }
     });
 
+    test('cruza as melhores peças: escolhe os pares que não chocam', () {
+      // Pela ordem de cada papel, o 1.º top (arranjado) calharia com as
+      // 1.ªs calças (descontraídas), e o 2.º com as 2.ªs: dois choques.
+      final shirt = g(
+        'shirt',
+        GarmentCategory.shirt,
+        formality: Formality.dressy,
+      );
+      final joggers = g(
+        'joggers',
+        GarmentCategory.trousers,
+        formality: Formality.relaxed,
+      );
+      for (var seed = 0; seed < 6; seed++) {
+        final r = run(
+          [shirt, hoodie, joggers, tailored, sneakers],
+          wears: [
+            wore(1, ['hoodie', 'tailored']),
+          ],
+          seed: seed,
+        );
+        expect(r.candidates, hasLength(2), reason: '$seed');
+        for (final c in r.candidates) {
+          expect(c.notes.whereType<FormalityMixNote>(), isEmpty);
+        }
+        expect(
+          {for (final c in r.candidates) ids(c).take(2).join('+')},
+          {'shirt+tailored', 'hoodie+joggers'},
+          reason: '$seed',
+        );
+      }
+    });
+
+    test('as propostas não repetem peças principais enquanto der', () {
+      final r = run([
+        for (var i = 0; i < 4; i++) g('t$i', GarmentCategory.tShirt),
+        for (var i = 0; i < 4; i++) g('b$i', GarmentCategory.trousers),
+        sneakers,
+      ]);
+      final mains = [
+        for (final c in r.candidates)
+          for (final i in c.items)
+            if (i.role != OutfitRole.footwear) i.garment.id.value,
+      ];
+      expect(r.candidates.length, greaterThan(1));
+      expect(mains.toSet().length, mains.length);
+    });
+
     test('formalidade por indicar não conta como mistura', () {
       final r = run([hoodie, jeans, sneakers]);
       expect(r.candidates.single.notes.whereType<FormalityMixNote>(), isEmpty);

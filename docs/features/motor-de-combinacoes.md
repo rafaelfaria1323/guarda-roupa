@@ -13,7 +13,7 @@ Dart puro em `lib/features/engine/domain/` (`DailyEngine.suggest`), sem UI nem p
 - **Preferências:** cor (RGB de referência), padrão, textura e formalidade (2026-11-06), em cada peça, nas ocasiões da preferência (vazio = sempre). Combinações de cor contam no conjunto (ver abaixo).
 - **Lavagem (P-07):** só aviso.
 - **Conjuntos guardados (2026-11-06):** o motor propõe também os conjuntos guardados da ocasião pedida (sem ocasiões = sempre; sem ocasião pedida = todos), se as peças servirem hoje: disponíveis, não arquivadas e da ocasião. Se **só uma** não serve (a lavar, arquivada, apagada ou de outra ocasião), entra no lugar dela a melhor do mesmo papel que não é do conjunto, com a nota “Do teu conjunto Sexta, com Preta em vez de Azul”; com duas ou mais em falta já não é o mesmo conjunto e não entra. O casaco decide-o o tempo, como nos outros; a camada intermédia do conjunto entra se ainda servir (senão vai sem ela); os acessórios decide-os o tempo (ver [Acessórios pelo tempo](#acessórios-pelo-tempo-2026-11-06)). Um conjunto que contém todas as peças de um guardado (sem contar o casaco) leva a nota “Um dos teus conjuntos” e conta como **mais uma preferência**: passa à frente de outro igual em avisos, nunca de um com menos avisos (uma peça a lavar ou dentro da rotatividade continua a pesar). Vale também na semana e nas trocas.
-- **Conjuntos:** o i-ésimo conjunto junta a i-ésima peça de cada papel; repetidos saem. Ordem: completos, menos avisos, mais preferências (das peças e da combinação de cor), formalidade coerente, menos padrões/texturas a competir, peças mais bem ordenadas, seed (FNV-1a, igual em todas as plataformas).
+- **Conjuntos:** o i-ésimo conjunto junta a i-ésima peça de cada papel; repetidos saem. Desde 2026-11-11 cruzam-se também as 6 melhores peças de cima com as 6 melhores de baixo ([pares](#pares-cruzados-2026-11-11)). Ordem: completos, menos avisos, mais preferências (das peças e da combinação de cor), formalidade coerente, menos padrões/texturas a competir, peças mais bem ordenadas, seed (FNV-1a, igual em todas as plataformas).
 - **Resultado:** peças/papéis com notas (ocasião, conforto, chuva/vento, rotatividade, uso recente, preferências, lavagem), camada opcional, papéis em falta e estado: válido, parcial (falta calçado ou casaco), nada encontrado (há peças mas nenhuma serve, com o motivo por papel: indisponível ou outra ocasião) e dados insuficientes (não há peças para nenhum modelo). Sem condições, diz que não aplicou regras de conforto.
 
 ### "Sugestões para hoje" (2026-11-03)
@@ -41,9 +41,18 @@ Cartão em Hoje (antes Planeador), por baixo de "Vesti hoje":
 - **Ordem:** as combinações só pesam com uma preferência "Gosto"/"Evito" de combinação (Perfil › Preferências, nas ocasiões dela): +1 ou −1, somado às preferências das peças, com a nota da preferência no conjunto. Sem preferência, aparecem só como descrição ("Cores: base neutra").
 - **Padrões e texturas:** padrão por indicar ou liso não conta. Cada padrão além do primeiro, e cada textura forte (marcada ou com pelo) além da primeira, soma um ponto de "competição". O conjunto fica atrás de outro igual em tudo o resto, com a nota "Mais de um padrão: podem competir". Nunca é excluído nem conta como aviso.
 - **Formalidade (2026-11-06):** uma peça descontraída e outra arranjada no mesmo conjunto (ex.: sweatshirt com calças de fato) põem-no atrás de outro igual em tudo menos nas preferências, com a nota "Uma peça descontraída com outra arranjada: podem não ligar". Casual cuidado liga com as duas; formalidade por indicar não conta. Nunca é excluído nem conta como aviso. A ocasião pede formalidade só às peças sem ocasiões marcadas (ver “Obrigatório”).
-- **Limite:** os pares continuam a ser a i-ésima peça de cada papel. A harmonia ordena estes conjuntos, mas não procura outros pares.
+- ~~**Limite:** os pares continuam a ser a i-ésima peça de cada papel. A harmonia ordena estes conjuntos, mas não procura outros pares.~~ Resolvido a 2026-11-11 ([pares cruzados](#pares-cruzados-2026-11-11)).
 
 As notas do conjunto aparecem em "Sugestões para hoje". Só o papel em falta fica a laranja escuro, à vista; as outras ficam em "Porquê este".
+
+### Pares cruzados (2026-11-11)
+
+Antes, o motor só juntava o 1.º top com as 1.ªs calças, o 2.º com as 2.ªs, e assim por diante. Se o melhor top ficasse bem com as 3.ªs calças, esse par nunca era visto.
+
+- **Procura:** além desses, cruza os 6 melhores tops com as 6 melhores partes de baixo (`DailyEngine.pairSearch`, até 36 pares). O calçado e o casaco de cada par são os da posição mais alta das duas peças, como antes.
+- **Ordem:** a mesma de sempre (completos, menos avisos, inspiração, preferências das peças e do conjunto, formalidade coerente, menos padrões a competir, peças mais bem ordenadas).
+- **Variedade** (`_varied`): fica primeiro o melhor; depois, de cada vez, o que repete menos peças principais das já escolhidas e, entre esses, o mais bem ordenado. Uma proposta só entra se trouxer pelo menos uma peça principal nova. Sem critério que distinga os pares, o resultado é o de antes.
+- **O que não mudou:** as combinações de cor continuam a só ordenar quando há uma preferência sobre elas (P-21). Uma pontuação de cores por omissão é uma decisão do utilizador, por tomar.
 
 ### Acessórios pelo tempo (2026-11-06)
 
