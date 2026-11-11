@@ -1,9 +1,12 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app/app.dart';
 import 'app/config.dart';
+import 'core/diagnostics/diagnostics_log.dart';
 import 'features/photo_ai/application/photo_ai_providers.dart';
 import 'features/photo_ai/data/supabase_photo_reader.dart';
 import 'features/account_sync/application/providers.dart';
@@ -23,6 +26,17 @@ import 'features/wardrobe/application/photo_providers.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Os erros ficam em Definições › Diagnóstico, para o utilizador copiar.
+  final log = DiagnosticsLog.instance;
+  final presentError = FlutterError.onError;
+  FlutterError.onError = (details) {
+    log.record('ecrã', details.exception, details.stack);
+    presentError?.call(details);
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    log.record('fundo', error, stack);
+    return false;
+  };
   final config = AppConfig.fromEnvironment();
 
   final overrides = [appConfigProvider.overrideWithValue(config)];

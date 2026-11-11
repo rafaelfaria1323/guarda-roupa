@@ -15,6 +15,7 @@ dart run powersync:setup_web
 tool/models/fetch_models.sh
 flutter build web --release \
   --dart-define-from-file=config/public.json \
+  --dart-define=BUILD_ID="$(git rev-parse --short HEAD 2>/dev/null || echo local) $(date -u +%Y-%m-%dT%H:%MZ)" \
   --no-web-resources-cdn \
   --no-wasm-dry-run
 

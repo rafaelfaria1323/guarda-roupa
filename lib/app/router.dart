@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import '../core/diagnostics/diagnostics_screen.dart';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -59,6 +61,7 @@ abstract final class AppRoutes {
   static const comfortSettings = '/definicoes/conforto';
   static const localAiSettings = '/definicoes/ia-local';
   static const reminderSettings = '/definicoes/lembretes';
+  static const diagnostics = '/definicoes/diagnostico';
   static const wear = '/vesti';
 
   /// "Vesti hoje" com estas peças já escolhidas (por confirmar). Com
@@ -190,6 +193,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.reminderSettings,
         builder: (context, state) => const ReminderSettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.diagnostics,
+        builder: (context, state) => const DiagnosticsScreen(),
       ),
       GoRoute(
         path: AppRoutes.wear,

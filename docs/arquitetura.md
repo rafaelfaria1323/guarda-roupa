@@ -76,6 +76,16 @@ Os repositórios fornecem um snapshot consistente de peças, políticas, histór
 
 Categoria e papel contextual são distintos: a mesma t-shirt pode ser `main_top` num conjunto e `base_layer` noutro. Não duplicar a peça no mesmo conjunto.
 
+## Diagnóstico (2026-11-11)
+
+A app não tem serviço de erros: nada sai do aparelho sozinho. Para se perceber o que falhou no telemóvel, há **Definições › Diagnóstico** (`lib/core/diagnostics/`):
+
+- **O que mostra:** a versão publicada (`BUILD_ID`: o commit e a hora da build, postos por `tool/web/build_pwa.sh`), o browser, o estado da sincronização (ligada, pendentes, conflitos, última vez, erro) e os últimos 40 erros.
+- **O que regista:** os erros que o Flutter apanha (`FlutterError.onError`, "ecrã") e os que ficam por tratar (`PlatformDispatcher.onError`, "fundo"), ligados em `main.dart`. Código novo pode chamar `DiagnosticsLog.instance.record(onde, erro)`.
+- **Cuidados:** cada erro fica com a mensagem e as 3 primeiras linhas da pilha, até 400 caracteres; o que tem cara de chave é retirado (`DiagnosticsLog.redact`: JWT, chaves do Supabase e do atalho, `token=`/`apikey=`/`key=` e `Bearer`); o mesmo erro seguido conta uma vez.
+- **Onde fica:** na Web, no `localStorage` (sobrevive a recarregar a página); no Android, só em memória.
+- **Uso:** "Copiar tudo" põe o texto na área de transferência, para colar a quem ajuda. "Limpar erros" apaga a lista.
+
 ## Desempenho
 
 Queries seletivas, índices orientados às consultas, imagens adequadas ao tamanho visível e listas preguiçosas. Pesquisa de combinações com orçamento explícito e instrumentação.

@@ -154,7 +154,17 @@ class SettingsScreen extends ConsumerWidget {
           ),
           _Group(
             title: l10n.settingsBackup,
-            children: const [ExportBackupTile(), RestoreBackupTile()],
+            children: [
+              const ExportBackupTile(),
+              const RestoreBackupTile(),
+              ListTile(
+                key: const Key('diagnostics'),
+                leading: const Icon(Icons.bug_report_outlined),
+                title: Text(l10n.diagnosticsTitle),
+                subtitle: Text(l10n.diagnosticsSubtitle),
+                onTap: () => context.push(AppRoutes.diagnostics),
+              ),
+            ],
           ),
         ],
       ),
