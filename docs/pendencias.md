@@ -1,13 +1,13 @@
 # Pendências, riscos e provas de viabilidade
 
-Data: 2026-10-31. Nenhuma POC da aplicação foi executada durante a criação deste dossier.
+Criado a 2026-10-31, antes de haver código. Atualizado a 2026-11-12: a app está publicada e em uso no iPhone do utilizador; o que falta é confirmar em aparelho de forma organizada ([lista de 15 minutos](guias/10-verificar-no-iphone.md)).
 
 Uma pendência não deve desaparecer por estar descrita em Markdown. Fechar apenas com decisão/evidência e data.
 
 | ID | Tema e estado | Como fechar | Bloqueia |
 |---|---|---|---|
-| P-01 | Backend — **Decidido 2026-11-03: Supabase Free** | Criar projeto (guia 02) e registar região/limites | Criação da infraestrutura |
-| P-02 | Login — **Decidido 2026-11-03: Google OAuth** | Configurar projeto Google e callbacks (guia 03); demonstrar entrada e recuperação | Fluxo de conta |
+| P-01 | Backend — **Decidido 2026-11-03: Supabase Free; projeto criado e em uso** | Fechado | — |
+| P-02 | Login — **Decidido 2026-11-03: Google OAuth; configurado, o utilizador entra na PWA** | Fechado | — |
 | P-03 | Sync — **Aprovado provisoriamente 2026-11-03: PowerSync + Supabase** (ligação e autenticação a funcionar; testes com dois perfis/dispositivos do [guia 08 §7](guias/08-poc-sincronizacao.md) por fazer) | Executar os testes do §7; se falharem, corrigir ou recorrer ao protocolo próprio | Uso real em dois dispositivos |
 | P-04 | Conflitos e privacidade — **Decidido 2026-11-03: [ADR-008](decisoes/008-conflitos-e-privacidade.md)** | Validar na POC (passos 4–8) e E2E-04/11/14 | Uso da conta em dois dispositivos |
 | P-05 | PWA/fotografias — **Implementado 2026-11-03 sem validação em aparelho** (JPEG/PNG/WebP; HEIC dá erro claro) | Demonstrar armazenamento persistente, quotas, HEIC e reabertura offline no iPhone | Onboarding real |
@@ -49,6 +49,9 @@ Notas para não esquecer (2026-11-04):
 
 8. **Gemini (opcional, 2026-11-06):** criar uma chave grátis no Google AI Studio e guardá-la no GitHub como secret `GEMINI_API_KEY`, pelos [passos](features/ia-gemini.md#criar-a-chave-uma-vez-o-utilizador). Depois ligar em Definições › IA local e experimentar com algumas peças, uma etiqueta e o “Pedir ao stylist” em Hoje, e ver as “Peças que faziam falta” no Resumo do armário. Sem a chave, a app funciona como antes.
 
+9. **Verificar no iPhone (2026-11-12):** fazer a [lista de 15 minutos](guias/10-verificar-no-iphone.md), que junta tudo o que está "por confirmar no iPhone". Se algo falhar, copiar o texto de Definições › Diagnóstico.
+10. **Cores por omissão no motor (2026-11-11, por decidir):** hoje as combinações de cor só ordenam as sugestões quando há uma preferência guardada (P-21). Decidir se o motor passa a puxar para cima, sem preferências, neutras com um só destaque e tons próximos.
+
 Também em aberto: a POC em dois dispositivos (P-03). Com só um iPhone, o segundo dispositivo pode ser o Chrome no Mac, com a mesma conta.
 
 ## O que já não está pendente como requisito
@@ -81,8 +84,8 @@ Idempotência de retries e da mesma entrada de plano não deduplica magicamente 
 
 | ID | Decisão | Responsável | Data | Estado |
 |---|---|---|---|---|
-| P-01 | Supabase Free como backend (Auth, PostgreSQL com RLS, Storage privado) | Utilizador | 2026-11-03 | Decidido; projeto ainda não criado |
-| P-02 | Google OAuth como único método de login inicial | Utilizador | 2026-11-03 | Decidido; não configurado |
+| P-01 | Supabase Free como backend (Auth, PostgreSQL com RLS, Storage privado) | Utilizador | 2026-11-03 | Feito: projeto criado e em uso |
+| P-02 | Google OAuth como único método de login inicial | Utilizador | 2026-11-03 | Feito: configurado e em uso |
 | P-03 | PowerSync + Supabase como motor de sincronização | Utilizador | 2026-11-03 | Aprovado provisoriamente: ligado e sincronizado; testes com dois dispositivos adiados pelo utilizador (problemas tratados quando aparecerem) |
 | P-16 | Apenas o proprietário (e conta de experiência) pode usar a app | Utilizador | 2026-11-03 | Implementado no servidor: `allowed_users`, `is_allowed()` nas políticas e funções, hook “Before User Created” |
 | P-20 | Manequim 3D dos conjuntos fica para mais tarde, no roadmap | Utilizador | 2026-11-04 | Adiado |

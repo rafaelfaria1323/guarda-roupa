@@ -1,6 +1,6 @@
 # Plano de validação E2E
 
-Estado em 2026-10-31: **cenários planeados; nenhum teste da aplicação executado**.
+Estado em 2026-10-31: **cenários planeados; nenhum teste da aplicação executado**. Desde 2026-11-12 há uma [lista curta para o iPhone](guias/10-verificar-no-iphone.md), que cobre o essencial de E2E-01, 02, 07, 08, 11, 12, 13 e 15 na PWA instalada; os resultados registam-se aqui quando o utilizador a fizer.
 
 Plataformas: A = Android, C = Chromium/Web, I = PWA instalada num iPhone real. “Previsto” indica âmbito, não resultado aprovado.
 
