@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Estado vazio honesto: diz o que ainda não existe e quando chega.
 class EmptyState extends StatelessWidget {

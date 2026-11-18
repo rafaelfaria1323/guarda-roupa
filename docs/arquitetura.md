@@ -76,6 +76,12 @@ Os repositórios fornecem um snapshot consistente de peças, políticas, histór
 
 Categoria e papel contextual são distintos: a mesma t-shirt pode ser `main_top` num conjunto e `base_layer` noutro. Não duplicar a peça no mesmo conjunto.
 
+## Versão do Flutter (2026-11-18)
+
+Flutter 3.50.0 com Dart 3.14, fixado em `FLUTTER_VERSION` nos workflows CI e PWA. A Material e a Cupertino saíram do SDK: importar `package:material_ui/material_ui.dart` (e `cupertino_ui` quando preciso), nunca `package:flutter/material.dart`, que está obsoleto e faz falhar o `flutter analyze`. As traduções da Material e da Cupertino (`GlobalMaterialLocalizations`, `GlobalCupertinoLocalizations`) também vêm desses pacotes; do `flutter_localizations` só se usa `GlobalWidgetsLocalizations`.
+
+Para mudar de versão: subir `FLUTTER_VERSION` nos dois workflows, `environment.sdk` no `pubspec.yaml` e a versão no README; depois `flutter pub upgrade --tighten`, `dart fix --apply`, `flutter analyze`, `flutter test` e uma build web.
+
 ## Diagnóstico (2026-11-11)
 
 A app não tem serviço de erros: nada sai do aparelho sozinho. Para se perceber o que falhou no telemóvel, há **Definições › Diagnóstico** (`lib/core/diagnostics/`):

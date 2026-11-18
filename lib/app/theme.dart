@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Visual "fio" (v3, 2026-11-06, do design do Stitch; docs/design-e-fluxos.md):
 /// linho quente, cartões brancos com contorno fino e um só destaque verde

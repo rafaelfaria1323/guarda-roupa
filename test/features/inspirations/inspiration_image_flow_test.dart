@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guarda_roupa/features/wardrobe/application/photo_providers.dart';
 import 'package:guarda_roupa/features/wardrobe/domain/photo_picker.dart';

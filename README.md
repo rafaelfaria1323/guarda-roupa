@@ -15,7 +15,7 @@ O dossier de planeamento está em [`docs/`](docs/README.md). Começar pelo [índ
 
 ## Desenvolvimento
 
-Requer Flutter **3.47.9** (stable). Instalação no Mac: [guia 01](docs/guias/01-ambiente-macos.md).
+Requer Flutter **3.50.0** (stable, Dart 3.14). Os widgets Material e Cupertino vêm dos pacotes `material_ui` e `cupertino_ui` (o `package:flutter/material.dart` ficou obsoleto no 3.50). Instalação no Mac: [guia 01](docs/guias/01-ambiente-macos.md).
 
 ```bash
 flutter pub get
