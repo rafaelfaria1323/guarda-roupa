@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guarda_roupa/features/weather/application/weather_providers.dart';
 import 'package:guarda_roupa/features/weather/data/weather_repository.dart';

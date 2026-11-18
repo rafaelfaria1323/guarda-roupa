@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guarda_roupa/core/domain/result.dart';
 import 'package:guarda_roupa/features/photo_ai/domain/photo_reader.dart';
